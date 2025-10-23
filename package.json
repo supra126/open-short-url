@@ -1,0 +1,54 @@
+{
+  "name": "open-short-url",
+  "version": "1.0.0",
+  "description": "開源、白標化、可自部署的短網址平台",
+  "private": true,
+  "packageManager": "yarn@4.7.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "postinstall": "yarn workspace backend prisma generate",
+    "dev": "concurrently \"yarn workspace backend dev\" \"yarn workspace frontend dev\"",
+    "dev:backend": "yarn workspace backend dev",
+    "dev:frontend": "yarn workspace frontend dev",
+    "build": "yarn workspaces foreach -A -pt --exclude @open-short-url/mcp run build",
+    "build:backend": "yarn workspace backend build",
+    "build:frontend": "yarn workspace frontend build",
+    "build:mcp": "yarn workspace @open-short-url/mcp build",
+    "start": "concurrently \"yarn workspace backend start:prod\" \"yarn workspace frontend start\"",
+    "start:backend": "yarn workspace backend start:prod",
+    "start:frontend": "yarn workspace frontend start",
+    "lint": "yarn workspaces foreach -pt run lint",
+    "type-check": "yarn workspaces foreach -pt run type-check",
+    "test": "yarn workspaces foreach -pt run test",
+    "prisma:generate": "yarn workspace backend prisma generate",
+    "prisma:migrate": "yarn workspace backend prisma migrate dev",
+    "prisma:studio": "yarn workspace backend prisma studio",
+    "generate:api-types": "yarn workspace frontend generate:api-types",
+    "clean": "yarn workspaces foreach -pt run clean && rm -rf node_modules",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.9",
+    "concurrently": "^9.1.2",
+    "eslint": "^9.17.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "yarn": ">=1.22.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/supra126/open-short-url.git"
+  },
+  "author": "supra126",
+  "license": "MIT",
+  "dependencies": {
+    "helmet": "^8.1.0"
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "name": "@open-short-url/mcp",
+  "version": "0.1.0",
+  "description": "Model Context Protocol (MCP) Server for Open Short URL",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "open-short-url-mcp": "dist/index.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/index.js",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf dist",
+    "prepublishOnly": "yarn build"
+  },
+  "keywords": [
+    "open-short-url",
+    "short-url",
+    "url-shortener",
+    "mcp",
+    "model-context-protocol",
+    "vercel-ai"
+  ],
+  "author": "supra126",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.9",
+    "rimraf": "^6.0.1",
+    "tsup": "^8.5.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supra126/open-short-url.git",
+    "directory": "packages/mcp"
+  },
+  "homepage": "https://github.com/supra126/open-short-url/tree/main/packages/mcp#readme",
+  "bugs": {
+    "url": "https://github.com/supra126/open-short-url/issues"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "README.zh-TW.md",
+    "LICENSE"
+  ]
+}

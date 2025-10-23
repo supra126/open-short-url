@@ -1,0 +1,10 @@
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+*.config.js
+*.config.ts
+apps/frontend/src/lib/api/types.ts
+apps/frontend/src/lib/api/openapi.json

@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.next/
+out/
+coverage/
+*.lock
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+apps/frontend/src/lib/api/types.ts
+apps/frontend/src/lib/api/openapi.json

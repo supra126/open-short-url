@@ -1,0 +1,346 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==================== Enums ====================
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+enum UrlStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+}
+
+enum BundleStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+// ==================== Models ====================
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String   // bcrypt hashed
+  name      String?
+  role      UserRole @default(ADMIN)
+  isActive  Boolean  @default(true) // Whether the account is active
+
+  // Two-Factor Authentication
+  twoFactorSecret  String?  // TOTP secret (encrypted)
+  twoFactorEnabled Boolean  @default(false)
+
+  // Relations
+  urls      Url[]
+  apiKeys   ApiKey[]
+  webhooks  Webhook[]
+  bundles   Bundle[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Url {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  originalUrl String
+  title       String?
+
+  // Owner
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Status
+  status      UrlStatus @default(ACTIVE)
+
+  // Analytics
+  clickCount  Int       @default(0)
+
+  // Features
+  password    String?   // bcrypt hashed, optional password protection
+  expiresAt   DateTime? // optional expiration
+
+  // UTM Parameters
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+
+  // Metadata
+  metadata    Json?     @db.JsonB // additional metadata (JsonB for better performance)
+
+  // A/B Testing
+  isAbTest    Boolean      @default(false) // Whether A/B testing is enabled
+  variants    UrlVariant[] // A/B testing variants
+
+  // Relations
+  clicks      Click[]
+  bundles     BundleUrl[]
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Composite indexes - Optimize list queries and sorting
+  @@index([userId, status, createdAt(sort: Desc)]) // URL list filtering and sorting (covers userId single query)
+  @@index([userId, clickCount(sort: Desc)])        // Popular URL sorting
+  @@index([slug])                                   // Short URL lookup (kept for high-frequency queries)
+  @@index([status, expiresAt])                     // Cleanup expired links
+  @@index([expiresAt])                             // Periodic expiration check task
+  @@map("urls")
+}
+
+model Click {
+  id        String   @id @default(cuid())
+
+  // URL relation
+  urlId     String
+  url       Url      @relation(fields: [urlId], references: [id], onDelete: Cascade)
+
+  // A/B Testing variant tracking
+  variantId String?
+  variant   UrlVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  // Visitor information
+  ip        String?
+  userAgent String?
+  referer   String?
+
+  // Parsed user agent data
+  browser   String?
+  os        String?
+  device    String?
+
+  // Bot detection
+  isBot     Boolean  @default(false) // Whether this click is from a bot
+  botName   String?  // Bot name if detected (e.g., "Googlebot", "FacebookBot")
+
+  // Geo-location data
+  country   String?
+  region    String?
+  city      String?
+
+  // UTM Parameters (captured from actual click, not from URL settings)
+  utmSource   String?
+  utmMedium   String?
+  utmCampaign String?
+  utmTerm     String?
+  utmContent  String?
+
+  // Timestamp
+  createdAt DateTime @default(now())
+
+  // Composite indexes - Optimize analytics query performance
+  @@index([urlId, createdAt(sort: Desc)]) // Time series analysis and recent click records (covers urlId single query)
+  @@index([urlId, country])               // Geographic statistics
+  @@index([urlId, browser])               // Browser statistics
+  @@index([urlId, os])                    // Operating system statistics
+  @@index([urlId, device])                // Device statistics
+  @@index([createdAt])                    // Global time series queries (e.g., viewing click trends across all links)
+  @@index([variantId, createdAt])         // A/B testing variant tracking
+  @@map("clicks")
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  name        String
+  key         String   @unique // bcrypt hashed API key
+  keyHash     String?  @unique // SHA-256 hash for fast lookup (nullable for migration)
+  prefix      String
+
+  // Owner
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Metadata
+  lastUsedAt  DateTime?
+  expiresAt   DateTime?
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([keyHash]) // Fast lookup index
+  @@map("api_keys")
+}
+
+model SystemSettings {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       Json     @db.JsonB
+  description String?
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("system_settings")
+}
+
+// ==================== A/B Testing ====================
+
+model UrlVariant {
+  id          String   @id @default(cuid())
+
+  // Related short URL
+  urlId       String
+  url         Url      @relation(fields: [urlId], references: [id], onDelete: Cascade)
+
+  // Variant information
+  name        String   // Variant name (e.g., "Control Group", "Experiment A")
+  targetUrl   String   // Target URL
+  weight      Int      @default(50) // Weight (0-100)
+  isActive    Boolean  @default(true)
+
+  // Statistics
+  clickCount  Int      @default(0)
+
+  // Relations
+  clicks      Click[]
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Indexes
+  @@index([urlId, isActive])
+  @@index([urlId, clickCount(sort: Desc)])
+  @@map("url_variants")
+}
+
+// ==================== Webhooks ====================
+
+model Webhook {
+  id            String   @id @default(cuid())
+
+  // Owner
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Configuration
+  name          String   // Webhook name
+  url           String   // Target URL
+  secret        String   // Signing secret (encrypted)
+  isActive      Boolean  @default(true)
+
+  // Subscribed event types (JSON array)
+  events        Json     @db.JsonB // ["url.created", "url.clicked"]
+
+  // Custom headers (optional)
+  headers       Json?    @db.JsonB // { "Authorization": "Bearer xxx" }
+
+  // Statistics
+  totalSent     Int      @default(0)
+  totalSuccess  Int      @default(0)
+  totalFailed   Int      @default(0)
+  lastSentAt    DateTime?
+  lastError     String?
+
+  // Relations
+  logs          WebhookLog[]
+
+  // Timestamps
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, isActive])
+  @@map("webhooks")
+}
+
+model WebhookLog {
+  id          String   @id @default(cuid())
+
+  // Related webhook
+  webhookId   String
+  webhook     Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  // Event information
+  event       String   // Event type
+  payload     Json     @db.JsonB // Sent payload
+
+  // Delivery result
+  statusCode  Int?     // HTTP status code
+  response    String?  // Response content (truncated to 1000 characters)
+  error       String?  // Error message
+  duration    Int?     // Request duration (milliseconds)
+
+  // Retry information
+  attempt     Int      @default(1) // Attempt number
+  isSuccess   Boolean  @default(false)
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+
+  // Indexes (only keep recent logs)
+  @@index([webhookId, createdAt(sort: Desc)])
+  @@map("webhook_logs")
+}
+
+// ==================== Link Bundles ====================
+
+model Bundle {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  color       String?      @default("#3B82F6") // Default blue color
+  icon        String?      @default("📦") // Default icon
+  status      BundleStatus @default(ACTIVE)
+
+  // Owner
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relations (Many-to-Many with Url)
+  urls        BundleUrl[]
+
+  // Timestamps
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Indexes
+  @@index([userId, status])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("bundles")
+}
+
+// Join table for many-to-many relationship between Bundle and Url
+model BundleUrl {
+  id        String   @id @default(cuid())
+
+  // Bundle relation
+  bundleId  String
+  bundle    Bundle   @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  // URL relation
+  urlId     String
+  url       Url      @relation(fields: [urlId], references: [id], onDelete: Cascade)
+
+  // Order for sorting URLs within a bundle
+  order     Int      @default(0)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+
+  // Unique constraint: a URL can only appear once in a bundle
+  @@unique([bundleId, urlId])
+  @@index([bundleId, order])
+  @@index([urlId])
+  @@map("bundle_urls")
+}

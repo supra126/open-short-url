@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug NestJS Backend",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["start:debug"],
+      "cwd": "${workspaceFolder}/apps/backend",
+      "skipFiles": ["<node_internals>/**"],
+      "restart": true,
+      "console": "integratedTerminal"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Next.js Frontend",
+      "runtimeExecutable": "yarn",
+      "runtimeArgs": ["dev"],
+      "cwd": "${workspaceFolder}/apps/frontend",
+      "skipFiles": ["<node_internals>/**"],
+      "console": "integratedTerminal"
+    }
+  ]
+}
