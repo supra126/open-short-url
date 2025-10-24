@@ -1,7 +1,7 @@
 import { Injectable, NestMiddleware } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import { randomUUID } from 'crypto';
 import { LoggerService } from './logger.service';
-import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class HttpLoggerMiddleware implements NestMiddleware {
@@ -9,7 +9,7 @@ export class HttpLoggerMiddleware implements NestMiddleware {
 
   use(req: Request, res: Response, next: NextFunction) {
     // 為請求生成唯一 ID（用於追蹤）
-    const requestId = uuidv4();
+    const requestId = randomUUID();
     const startTime = Date.now();
 
     // 將 requestId 添加到請求對象
