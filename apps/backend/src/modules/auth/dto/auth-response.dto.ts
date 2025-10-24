@@ -1,44 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-
-export class UserResponseDto {
-  @ApiProperty({
-    description: 'User ID',
-    example: 'clusr123456789',
-  })
-  id!: string;
-
-  @ApiProperty({
-    description: 'Email address',
-    example: 'user@example.com',
-  })
-  email!: string;
-
-  @ApiProperty({
-    description: 'Name',
-    example: 'John Doe',
-    required: false,
-  })
-  name?: string;
-
-  @ApiProperty({
-    description: 'Role',
-    enum: ['ADMIN', 'USER'],
-    example: 'USER',
-  })
-  role!: string;
-
-  @ApiProperty({
-    description: 'Whether two-factor authentication is enabled',
-    example: false,
-  })
-  twoFactorEnabled!: boolean;
-
-  @ApiProperty({
-    description: 'Creation timestamp (ISO 8601 format)',
-    example: '2025-09-15T14:20:30.000Z',
-  })
-  createdAt!: Date;
-}
+import { UserResponseDto } from '@/modules/users/dto/user-response.dto';
 
 export class AuthResponseDto {
   @ApiProperty({

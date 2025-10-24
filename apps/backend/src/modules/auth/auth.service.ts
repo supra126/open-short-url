@@ -12,7 +12,8 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { Verify2FADto } from './dto/verify-2fa.dto';
 import { Disable2FADto } from './dto/disable-2fa.dto';
-import { AuthResponseDto, UserResponseDto } from './dto/auth-response.dto';
+import { AuthResponseDto } from './dto/auth-response.dto';
+import { UserResponseDto } from '@/modules/users/dto/user-response.dto';
 import { Setup2FAResponseDto } from './dto/setup-2fa-response.dto';
 import { SuccessResponseDto } from '@/common/dto/success-response.dto';
 import { TokenBlacklistService } from './services/token-blacklist.service';
@@ -354,8 +355,10 @@ export class AuthService {
       email: user.email,
       name: user.name,
       role: user.role,
+      isActive: user.isActive,
       twoFactorEnabled: user.twoFactorEnabled,
       createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     };
   }
 }
