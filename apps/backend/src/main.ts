@@ -83,7 +83,8 @@ async function bootstrap() {
 
   // HTTP Logger - Register Fastify hooks for request/response logging
   const httpLogger = new HttpLoggerMiddleware(loggerService);
-  httpLogger.registerHooks(app.getHttpServer());
+  const fastifyInstance = app.getHttpAdapter().getInstance();
+  httpLogger.registerHooks(fastifyInstance);
 
   // CORS
   const corsOrigin = configService.get<string>('CORS_ORIGIN', '*');
