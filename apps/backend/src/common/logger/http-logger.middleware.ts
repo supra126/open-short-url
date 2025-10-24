@@ -18,17 +18,17 @@ export class HttpLoggerMiddleware {
   registerHooks(fastifyInstance: any) {
     // Track request timing and metadata
     fastifyInstance.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
-      // 為請求生成唯一 ID（用於追蹤）
+      // Generate unique request ID for tracking
       const requestId = randomUUID();
       const startTime = Date.now();
 
-      // 將 requestId 添加到請求對象
+      // Add requestId to request object
       (req as any).requestId = requestId;
 
-      // 獲取客戶端 IP
+      // Get client IP
       const ip = req.ip || 'unknown';
 
-      // 獲取用戶 ID（如果認證了）
+      // Get user ID (if authenticated)
       const userId = (req as any).user?.id || null;
 
       // Store metadata on request for later use in onResponse hook
@@ -44,7 +44,7 @@ export class HttpLoggerMiddleware {
       const ip = (req as any)._ip || 'unknown';
       const duration = Date.now() - startTime;
 
-      // 記錄響應信息
+      // Log response information
       this.loggerService.logHttpRequest(
         req.method,
         req.url,
@@ -54,14 +54,14 @@ export class HttpLoggerMiddleware {
         ip,
       );
 
-      // 記錄詳細信息
+      // Log detailed information
       const logLevel = reply.statusCode >= 500 ? 'error' : 'log';
       this.loggerService[logLevel](
         `${req.method} ${req.url} - ${reply.statusCode} (${duration}ms)`,
         'HTTP',
       );
 
-      // 如果是錯誤響應，記錄警告信息
+      // If error response, log warning information
       if (reply.statusCode >= 400 && reply.statusCode < 500) {
         this.loggerService.warn(
           `HTTP ${reply.statusCode}: ${req.method} ${req.url}`,

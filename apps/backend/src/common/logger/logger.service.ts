@@ -29,11 +29,11 @@ export class LoggerService implements NestLoggerService {
   }
 
   setContext(context: string) {
-    // 此方法用於設置上下文
+    // This method is used to set the context
   }
 
   /**
-   * 記錄 HTTP 請求信息
+   * Log HTTP request information
    */
   logHttpRequest(
     method: string,
@@ -56,7 +56,7 @@ export class LoggerService implements NestLoggerService {
   }
 
   /**
-   * 記錄數據庫查詢
+   * Log database queries
    */
   logDatabaseQuery(query: string, duration: number, isSlowQuery: boolean = false) {
     const level = isSlowQuery ? 'warn' : 'debug';
@@ -70,7 +70,7 @@ export class LoggerService implements NestLoggerService {
   }
 
   /**
-   * 記錄緩存操作
+   * Log cache operations
    */
   logCacheOperation(
     operation: 'GET' | 'SET' | 'DEL' | 'EXPIRE',

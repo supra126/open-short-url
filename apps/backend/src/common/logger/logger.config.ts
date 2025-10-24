@@ -1,6 +1,6 @@
 import * as winston from 'winston';
 
-// 定義日誌格式
+// Define log format
 const customFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.errors({ stack: true }),
@@ -30,7 +30,7 @@ export const getWinstonConfig = (env: string): winston.LoggerOptions => {
     level: isDevelopment ? 'debug' : 'warn',
     defaultMeta: { service: 'open-short-url' },
     transports: [
-      // Console transport - 所有環境都使用（開發彩色，生產 JSON）
+      // Console transport - all environments (development colored, production JSON)
       new winston.transports.Console({
         format: isDevelopment
           ? winston.format.combine(
