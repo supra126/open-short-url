@@ -99,12 +99,12 @@ const data = {
       title: 'AI',
       items: [
         {
-          title: 'AI 助手',
+          title: t('sidebar.aiAssistant'),
           url: '/ai-chat',
           icon: Bot,
         },
         {
-          title: 'AI 設定',
+          title: t('sidebar.aiSettings'),
           url: '/ai-settings',
           icon: Settings,
         },

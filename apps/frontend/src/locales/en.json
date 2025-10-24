@@ -223,6 +223,8 @@
     "system": "System",
     "apiKeys": "API Keys",
     "users": "User Management",
+    "aiAssistant": "AI Assistant",
+    "aiSettings": "AI Settings",
     "title": "Sidebar",
     "toggle": "Toggle Sidebar"
   },

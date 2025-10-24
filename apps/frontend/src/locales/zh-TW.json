@@ -223,6 +223,8 @@
     "system": "系統",
     "apiKeys": "API 金鑰",
     "users": "使用者管理",
+    "aiAssistant": "AI 助手",
+    "aiSettings": "AI 設定",
     "title": "側邊欄",
     "toggle": "切換側邊欄"
   },
