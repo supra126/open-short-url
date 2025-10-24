@@ -81,8 +81,9 @@ async function bootstrap() {
   // Global exception filters
   app.useGlobalFilters(new AuthExceptionFilter());
 
-  // HTTP Logger middleware
-  app.use(new HttpLoggerMiddleware(loggerService).use.bind(new HttpLoggerMiddleware(loggerService)));
+  // HTTP Logger - Register Fastify hooks for request/response logging
+  const httpLogger = new HttpLoggerMiddleware(loggerService);
+  httpLogger.registerHooks(app.getHttpServer());
 
   // CORS
   const corsOrigin = configService.get<string>('CORS_ORIGIN', '*');
