@@ -1,6 +1,7 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, OnModuleDestroy, Inject } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { ConfigService } from '@nestjs/config';
+import { LoggerService } from '../logger/logger.service';
 
 /**
  * Optimized Prisma Service with connection pool configuration and performance monitoring
@@ -19,10 +20,12 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
-  private readonly logger = new Logger(PrismaService.name);
   private readonly SLOW_QUERY_THRESHOLD = 1000; // 1 second
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private loggerService: LoggerService,
+  ) {
     const isDevelopment = configService.get<string>('NODE_ENV') === 'development';
 
     super({
@@ -47,8 +50,10 @@ export class PrismaService
     if (isDevelopment) {
       this.$on('query' as never, (e: any) => {
         if (e.duration > this.SLOW_QUERY_THRESHOLD) {
-          this.logger.warn(
-            `Slow query detected (${e.duration}ms): ${e.query.substring(0, 100)}...`,
+          this.loggerService.logDatabaseQuery(
+            e.query,
+            e.duration,
+            true,
           );
         }
       });
@@ -58,30 +63,41 @@ export class PrismaService
   async onModuleInit() {
     try {
       await this.$connect();
-      this.logger.log('✅ Database connected successfully');
+      this.loggerService.log(
+        '✅ Database connected successfully',
+        'PrismaService',
+      );
 
       // Log connection pool info
       const dbUrl = this.configService.get<string>('DATABASE_URL');
       if (dbUrl?.includes('connection_limit=')) {
         const match = dbUrl.match(/connection_limit=(\d+)/);
         if (match) {
-          this.logger.log(`📊 Connection pool limit: ${match[1]}`);
+          this.loggerService.log(
+            `📊 Connection pool limit: ${match[1]}`,
+            'PrismaService',
+          );
         }
       } else {
-        this.logger.warn(
+        this.loggerService.warn(
           '⚠️  No connection_limit configured. Using default. ' +
-          'Consider adding connection pool parameters to DATABASE_URL for better performance.'
+          'Consider adding connection pool parameters to DATABASE_URL for better performance.',
+          'PrismaService',
         );
       }
     } catch (error) {
-      this.logger.error('❌ Failed to connect to database', error);
+      this.loggerService.error(
+        '❌ Failed to connect to database',
+        error instanceof Error ? error.stack : String(error),
+        'PrismaService',
+      );
       throw error;
     }
   }
 
   async onModuleDestroy() {
     await this.$disconnect();
-    this.logger.log('👋 Database disconnected');
+    this.loggerService.log('👋 Database disconnected', 'PrismaService');
   }
 
   async cleanDatabase() {
@@ -102,7 +118,11 @@ export class PrismaService
             `TRUNCATE TABLE "public"."${tablename}" CASCADE;`
           );
         } catch (error) {
-          this.logger.error(`Could not truncate ${tablename}`, error);
+          this.loggerService.error(
+            `Could not truncate ${tablename}`,
+            error instanceof Error ? error.stack : String(error),
+            'PrismaService',
+          );
         }
       }
     }

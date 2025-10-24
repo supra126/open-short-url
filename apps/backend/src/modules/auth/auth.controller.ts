@@ -30,13 +30,15 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators';
 import { SuccessResponseDto } from '@/common/dto/success-response.dto';
 import { TurnstileService } from '../turnstile/turnstile.service';
+import { LoggerService } from '@/common/logger/logger.service';
 
 @ApiTags('Authentication')
 @Controller('api/auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly turnstileService: TurnstileService
+    private readonly turnstileService: TurnstileService,
+    private readonly loggerService: LoggerService,
   ) {}
 
   /**
@@ -82,7 +84,10 @@ export class AuthController {
       }
     } catch (error) {
       // URL parsing failed, skip domain setting
-      console.warn('Failed to auto-detect cookie domain:', error);
+      this.loggerService.warn(
+        `Failed to auto-detect cookie domain: ${error instanceof Error ? error.message : String(error)}`,
+        'AuthController',
+      );
     }
 
     return undefined;

@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '@/common/database/prisma.service';
+import { LoggerService } from '@/common/logger/logger.service';
 import { UrlService } from '@/modules/url/url.service';
 import { parseUserAgent } from '@/common/utils/user-agent-parser';
 import { getGeoLocation } from '@/common/utils/geo-location';
@@ -27,11 +28,10 @@ interface ClickRecordedEvent {
  */
 @Injectable()
 export class ClickRecorderService {
-  private readonly logger = new Logger(ClickRecorderService.name);
-
   constructor(
     private prisma: PrismaService,
     private urlService: UrlService,
+    private loggerService: LoggerService,
   ) {}
 
   /**
@@ -65,11 +65,12 @@ export class ClickRecorderService {
 
         await Promise.all(operations);
       }
-    } catch (error) {
+    } catch (error: any) {
       // Log error but don't affect user experience
-      this.logger.error(
+      this.loggerService.error(
         `Failed to record click: ${error.message}`,
         error.stack,
+        'ClickRecorderService',
       );
     }
   }
@@ -101,8 +102,9 @@ export class ClickRecorderService {
     const botName = botDetected ? getBotName(userAgent) : null;
 
     if (botDetected) {
-      this.logger.debug(
+      this.loggerService.debug(
         `Bot detected: ${botName} - UserAgent: ${userAgent?.substring(0, 50)}...`,
+        'ClickRecorderService',
       );
     }
 
@@ -112,7 +114,7 @@ export class ClickRecorderService {
     let city: string | undefined;
 
     if (ip) {
-      const geo = getGeoLocation(ip);
+      const geo = getGeoLocation(ip, this.loggerService);
       if (geo) {
         country = geo.country;
         region = geo.region;

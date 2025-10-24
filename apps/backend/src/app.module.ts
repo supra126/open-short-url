@@ -4,6 +4,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { DatabaseModule } from './common/database/database.module';
 import { CacheModule } from './common/cache/cache.module';
+import { LoggerModule } from './common/logger/logger.module';
 import { ThrottlerStorageModule } from './common/throttler/throttler.module';
 import { HybridThrottlerStorage } from './common/throttler/hybrid-throttler-storage';
 import { AuthModule } from './modules/auth/auth.module';
@@ -59,6 +60,9 @@ import { BundleModule } from './modules/bundle/bundle.module';
 
     // Cache
     CacheModule,
+
+    // Logger
+    LoggerModule,
 
     // Feature modules
     AuthModule,

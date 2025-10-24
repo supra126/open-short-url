@@ -1,10 +1,10 @@
 import {
   Injectable,
-  Logger,
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { LoggerService } from '../logger/logger.service';
 import Redis from 'ioredis';
 
 /**
@@ -23,19 +23,22 @@ import Redis from 'ioredis';
  */
 @Injectable()
 export class CacheService implements OnModuleInit, OnModuleDestroy {
-  private readonly logger = new Logger(CacheService.name);
   private redis: Redis | null = null;
   private redisAvailable: boolean = false;
   private redisConfigured: boolean = false;
   private healthCheckInterval: NodeJS.Timeout;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private loggerService: LoggerService,
+  ) {
     // Check if Redis is configured
     const redisHost = this.configService.get<string>('REDIS_HOST');
 
     if (!redisHost) {
-      this.logger.log(
-        '📝 Redis not configured (REDIS_HOST not set) - caching disabled'
+      this.loggerService.log(
+        '📝 Redis not configured (REDIS_HOST not set) - caching disabled',
+        'CacheService',
       );
       this.redisConfigured = false;
       this.redisAvailable = false;
@@ -82,7 +85,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     // Disconnect from Redis
     if (this.redisAvailable && this.redis) {
       await this.redis.quit();
-      this.logger.log('Redis disconnected');
+      this.loggerService.log('Redis disconnected', 'CacheService');
     }
   }
 
@@ -104,14 +107,23 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       await this.redis.ping();
 
       if (!this.redisAvailable) {
-        this.logger.log('✅ Redis connected - caching enabled');
+        this.loggerService.log(
+          '✅ Redis connected - caching enabled',
+          'CacheService',
+        );
       }
       this.redisAvailable = true;
     } catch (error) {
       if (this.redisAvailable) {
-        this.logger.warn('⚠️  Redis connection lost - caching disabled');
+        this.loggerService.warn(
+          '⚠️  Redis connection lost - caching disabled',
+          'CacheService',
+        );
       } else {
-        this.logger.warn('⚠️  Redis unavailable - caching disabled');
+        this.loggerService.warn(
+          '⚠️  Redis unavailable - caching disabled',
+          'CacheService',
+        );
       }
       this.redisAvailable = false;
     }
@@ -126,7 +138,10 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       await this.checkRedisAvailability();
     }, 60 * 1000);
 
-    this.logger.log('Redis health check started (runs every 60 seconds)');
+    this.loggerService.log(
+      'Redis health check started (runs every 60 seconds)',
+      'CacheService',
+    );
   }
 
   /**
@@ -135,7 +150,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    */
   async get<T>(key: string): Promise<T | null> {
     if (!this.redisAvailable || !this.redis) {
-      this.logger.debug(`Cache disabled - key: ${key}`);
+      this.loggerService.debug(`Cache disabled - key: ${key}`, 'CacheService');
       return null;
     }
 
@@ -143,7 +158,11 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       const value = await this.redis.get(key);
       return value ? JSON.parse(value) : null;
     } catch (error) {
-      this.logger.error(`Cache get error for key ${key}:`, error);
+      this.loggerService.error(
+        `Cache get error for key ${key}`,
+        error instanceof Error ? error.stack : String(error),
+        'CacheService',
+      );
       // Mark Redis as unavailable
       this.redisAvailable = false;
       return null;
@@ -156,7 +175,10 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    */
   async set(key: string, value: any, ttl?: number): Promise<void> {
     if (!this.redisAvailable || !this.redis) {
-      this.logger.debug(`Cache disabled - skipping set for key: ${key}`);
+      this.loggerService.debug(
+        `Cache disabled - skipping set for key: ${key}`,
+        'CacheService',
+      );
       return;
     }
 
@@ -168,7 +190,11 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
         await this.redis.set(key, serialized);
       }
     } catch (error) {
-      this.logger.error(`Cache set error for key ${key}:`, error);
+      this.loggerService.error(
+        `Cache set error for key ${key}`,
+        error instanceof Error ? error.stack : String(error),
+        'CacheService',
+      );
       // Mark Redis as unavailable
       this.redisAvailable = false;
     }
@@ -180,14 +206,21 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    */
   async del(key: string): Promise<void> {
     if (!this.redisAvailable || !this.redis) {
-      this.logger.debug(`Cache disabled - skipping del for key: ${key}`);
+      this.loggerService.debug(
+        `Cache disabled - skipping del for key: ${key}`,
+        'CacheService',
+      );
       return;
     }
 
     try {
       await this.redis.del(key);
     } catch (error) {
-      this.logger.error(`Cache del error for key ${key}:`, error);
+      this.loggerService.error(
+        `Cache del error for key ${key}`,
+        error instanceof Error ? error.stack : String(error),
+        'CacheService',
+      );
       this.redisAvailable = false;
     }
   }
@@ -198,8 +231,9 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    */
   async delPattern(pattern: string): Promise<void> {
     if (!this.redisAvailable || !this.redis) {
-      this.logger.debug(
-        `Cache disabled - skipping delPattern for pattern: ${pattern}`
+      this.loggerService.debug(
+        `Cache disabled - skipping delPattern for pattern: ${pattern}`,
+        'CacheService',
       );
       return;
     }
@@ -210,9 +244,10 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
         await this.redis.del(...keys);
       }
     } catch (error) {
-      this.logger.error(
-        `Cache delPattern error for pattern ${pattern}:`,
-        error
+      this.loggerService.error(
+        `Cache delPattern error for pattern ${pattern}`,
+        error instanceof Error ? error.stack : String(error),
+        'CacheService',
       );
       this.redisAvailable = false;
     }
@@ -224,7 +259,10 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    */
   async exists(key: string): Promise<boolean> {
     if (!this.redisAvailable || !this.redis) {
-      this.logger.debug(`Cache disabled - key exists check: ${key}`);
+      this.loggerService.debug(
+        `Cache disabled - key exists check: ${key}`,
+        'CacheService',
+      );
       return false;
     }
 
@@ -232,7 +270,11 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       const result = await this.redis.exists(key);
       return result === 1;
     } catch (error) {
-      this.logger.error(`Cache exists error for key ${key}:`, error);
+      this.loggerService.error(
+        `Cache exists error for key ${key}`,
+        error instanceof Error ? error.stack : String(error),
+        'CacheService',
+      );
       this.redisAvailable = false;
       return false;
     }
@@ -244,14 +286,21 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    */
   async incr(key: string): Promise<number> {
     if (!this.redisAvailable || !this.redis) {
-      this.logger.debug(`Cache disabled - skipping incr for key: ${key}`);
+      this.loggerService.debug(
+        `Cache disabled - skipping incr for key: ${key}`,
+        'CacheService',
+      );
       return 0;
     }
 
     try {
       return await this.redis.incr(key);
     } catch (error) {
-      this.logger.error(`Cache incr error for key ${key}:`, error);
+      this.loggerService.error(
+        `Cache incr error for key ${key}`,
+        error instanceof Error ? error.stack : String(error),
+        'CacheService',
+      );
       this.redisAvailable = false;
       return 0;
     }
@@ -263,14 +312,21 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    */
   async expire(key: string, seconds: number): Promise<void> {
     if (!this.redisAvailable || !this.redis) {
-      this.logger.debug(`Cache disabled - skipping expire for key: ${key}`);
+      this.loggerService.debug(
+        `Cache disabled - skipping expire for key: ${key}`,
+        'CacheService',
+      );
       return;
     }
 
     try {
       await this.redis.expire(key, seconds);
     } catch (error) {
-      this.logger.error(`Cache expire error for key ${key}:`, error);
+      this.loggerService.error(
+        `Cache expire error for key ${key}`,
+        error instanceof Error ? error.stack : String(error),
+        'CacheService',
+      );
       this.redisAvailable = false;
     }
   }
@@ -281,7 +337,10 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    */
   getClient(): Redis | null {
     if (!this.redisAvailable) {
-      this.logger.warn('Redis client requested but Redis is unavailable');
+      this.loggerService.warn(
+        'Redis client requested but Redis is unavailable',
+        'CacheService',
+      );
       return null;
     }
     return this.redis;

@@ -9,6 +9,8 @@ import {
 } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 import { AuthExceptionFilter } from './common/filters/auth-exception.filter';
+import { LoggerService } from './common/logger/logger.service';
+import { HttpLoggerMiddleware } from './common/logger/http-logger.middleware';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
@@ -18,6 +20,7 @@ async function bootstrap() {
     new FastifyAdapter()
   );
   const configService = app.get(ConfigService);
+  const loggerService = app.get(LoggerService);
 
   // Cookie parser
   const fastifyCookie = require('@fastify/cookie');
@@ -77,6 +80,9 @@ async function bootstrap() {
 
   // Global exception filters
   app.useGlobalFilters(new AuthExceptionFilter());
+
+  // HTTP Logger middleware
+  app.use(new HttpLoggerMiddleware(loggerService).use.bind(new HttpLoggerMiddleware(loggerService)));
 
   // CORS
   const corsOrigin = configService.get<string>('CORS_ORIGIN', '*');
@@ -198,9 +204,9 @@ Visit \`GET /:slug\` to redirect to the original URL
         '../../frontend/src/lib/api/openapi.json'
       );
       writeFileSync(outputPath, JSON.stringify(document, null, 2));
-      console.log(`✅ OpenAPI spec generated: ${outputPath}`);
+      loggerService.log(`✅ OpenAPI spec generated: ${outputPath}`, 'Bootstrap');
     } catch (error) {
-      console.warn('⚠️  Could not generate OpenAPI spec for frontend:', error);
+      loggerService.warn(`⚠️  Could not generate OpenAPI spec for frontend: ${error}`, 'Bootstrap');
     }
   }
 
@@ -208,8 +214,14 @@ Visit \`GET /:slug\` to redirect to the original URL
   const host = configService.get<string>('HOST', '0.0.0.0');
   await app.listen(port, host);
 
-  console.log(`🚀 Application is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation: http://localhost:${port}/api`);
+  loggerService.log(
+    `🚀 Application is running on: http://localhost:${port}`,
+    'Bootstrap',
+  );
+  loggerService.log(
+    `📚 Swagger documentation: http://localhost:${port}/api`,
+    'Bootstrap',
+  );
 }
 
 bootstrap();

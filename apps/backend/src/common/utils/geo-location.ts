@@ -12,11 +12,19 @@ export interface GeoLocation {
 }
 
 /**
+ * Logger interface for type safety
+ */
+export interface ILogger {
+  error(message: string, error?: string | Error, context?: string): void;
+}
+
+/**
  * Get geographic location from IP address
  * @param ip - IP address
+ * @param logger - Optional logger service
  * @returns Geographic location information
  */
-export function getGeoLocation(ip: string): GeoLocation | null {
+export function getGeoLocation(ip: string, logger?: ILogger): GeoLocation | null {
   try {
     // Handle localhost
     if (ip === '127.0.0.1' || ip === '::1' || ip === 'localhost') {
@@ -47,7 +55,13 @@ export function getGeoLocation(ip: string): GeoLocation | null {
         : undefined,
     };
   } catch (error) {
-    console.error('GeoIP lookup error:', error);
+    if (logger) {
+      logger.error(
+        'GeoIP lookup error',
+        error instanceof Error ? error.stack : String(error),
+        'GeoLocation',
+      );
+    }
     return null;
   }
 }

@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '@/common/database/prisma.service';
+import { LoggerService } from '@/common/logger/logger.service';
 import { WebhookService } from './webhook.service';
 import { parseUserAgent } from '@/common/utils/user-agent-parser';
 import { getGeoLocation } from '@/common/utils/geo-location';
@@ -27,13 +28,13 @@ interface WebhookEventPayload {
  */
 @Injectable()
 export class WebhookDeliveryService {
-  private readonly logger = new Logger(WebhookDeliveryService.name);
   private readonly MAX_RETRIES = 3;
   private readonly RETRY_DELAYS = [1000, 5000, 15000]; // 1s, 5s, 15s
 
   constructor(
     private prisma: PrismaService,
     private webhookService: WebhookService,
+    private loggerService: LoggerService,
   ) {}
 
   /**
@@ -68,7 +69,7 @@ export class WebhookDeliveryService {
       });
 
       if (!url) {
-        this.logger.warn(`URL not found for webhook: ${urlId}`);
+        this.loggerService.warn(`URL not found for webhook: ${urlId}`, 'WebhookDeliveryService');
         return;
       }
 
@@ -112,7 +113,7 @@ export class WebhookDeliveryService {
       let country: string | undefined;
 
       if (ip) {
-        const geo = getGeoLocation(ip);
+        const geo = getGeoLocation(ip, this.loggerService);
         if (geo) {
           country = geo.country;
         }
@@ -141,9 +142,10 @@ export class WebhookDeliveryService {
         clickData: enhancedClickData,
       });
     } catch (error: any) {
-      this.logger.error(
+      this.loggerService.error(
         `Failed to process URL clicked event for webhook: ${error.message}`,
         error.stack,
+        'WebhookDeliveryService',
       );
     }
   }
@@ -197,9 +199,10 @@ export class WebhookDeliveryService {
         ),
       );
     } catch (error: any) {
-      this.logger.error(
+      this.loggerService.error(
         `Failed to trigger webhooks for event ${event}: ${error.message}`,
         error.stack,
+        'WebhookDeliveryService',
       );
     }
   }
@@ -255,18 +258,22 @@ export class WebhookDeliveryService {
 
       // Log successful delivery
       if (isSuccess) {
-        this.logger.debug(
+        this.loggerService.debug(
           `Webhook delivered successfully: ${webhook.name} (${webhook.id}) - Event: ${event}`,
+          'WebhookDeliveryService',
         );
       } else {
-        this.logger.warn(
+        this.loggerService.warn(
           `Webhook delivery failed with status ${statusCode}: ${webhook.name} (${webhook.id})`,
+          'WebhookDeliveryService',
         );
       }
     } catch (err: any) {
       error = err.message;
-      this.logger.error(
+      this.loggerService.error(
         `Webhook delivery error: ${webhook.name} (${webhook.id}) - ${error}`,
+        err.stack,
+        'WebhookDeliveryService',
       );
     } finally {
       const duration = Date.now() - startTime;
@@ -291,8 +298,9 @@ export class WebhookDeliveryService {
     // Retry if failed and haven't exceeded max retries
     if (!isSuccess && attempt < this.MAX_RETRIES) {
       const delay = this.RETRY_DELAYS[attempt - 1] || 15000;
-      this.logger.log(
+      this.loggerService.log(
         `Retrying webhook ${webhook.name} (${webhook.id}) in ${delay}ms (attempt ${attempt + 1}/${this.MAX_RETRIES})`,
+        'WebhookDeliveryService',
       );
 
       // Schedule retry with exponential backoff
@@ -330,9 +338,10 @@ export class WebhookDeliveryService {
         },
       });
     } catch (error: any) {
-      this.logger.error(
+      this.loggerService.error(
         `Failed to save webhook log: ${error.message}`,
         error.stack,
+        'WebhookDeliveryService',
       );
     }
   }
@@ -358,9 +367,10 @@ export class WebhookDeliveryService {
         },
       });
     } catch (error: any) {
-      this.logger.error(
+      this.loggerService.error(
         `Failed to update webhook stats: ${error.message}`,
         error.stack,
+        'WebhookDeliveryService',
       );
     }
   }
