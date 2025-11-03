@@ -5,6 +5,17 @@
 
 import { ErrorHandler } from './error-handler';
 
+/**
+ * Paths that should not trigger automatic redirect on 401 errors
+ * 401 errors from these endpoints are business logic errors (e.g., incorrect password) and should be handled by the caller
+ */
+const NO_REDIRECT_401_PATHS = [
+  '/api/auth/login',
+  '/api/auth/password',
+  '/api/auth/2fa/enable',
+  '/api/auth/2fa/disable',
+];
+
 class ApiClient {
   private baseUrl: string;
   private defaultHeaders: Record<string, string>;
@@ -56,21 +67,20 @@ class ApiClient {
       // Log error (development environment)
       ErrorHandler.log(error, 'API Client');
 
-      // If 401, redirect to login page (unless already on login page)
+      // If 401, redirect to login page (unless it's a business logic error)
       // Backend will clear the httpOnly cookie by sending Set-Cookie header
       if (response.status === 401) {
-        const isOnLoginPage = typeof window !== 'undefined' && window.location.pathname === '/login';
+        const url = new URL(response.url);
+        const shouldRedirect = !NO_REDIRECT_401_PATHS.some(path => url.pathname.includes(path));
 
-        if (!isOnLoginPage) {
-          // Not on login page - redirect to login
+        if (shouldRedirect && typeof window !== 'undefined') {
+          // Not a whitelisted path - redirect to login
           // Backend has already cleared the expired cookie via Set-Cookie header
-          if (typeof window !== 'undefined') {
-            const redirectUrl = window.location.pathname + window.location.search;
-            window.location.href = `/login?redirect=${encodeURIComponent(redirectUrl)}`;
-          }
+          const redirectUrl = window.location.pathname + window.location.search;
+          window.location.href = `/login?redirect=${encodeURIComponent(redirectUrl)}`;
         }
-        // If already on login page, let error propagate to login form
-        // so it can display the error message to user
+        // If whitelisted path, let error propagate to caller
+        // so it can display the error message to user (e.g., "Incorrect password")
       }
 
       throw error;

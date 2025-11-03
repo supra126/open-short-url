@@ -122,7 +122,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <div className="flex items-center gap-2 px-2 py-2">
           {process.env.NEXT_PUBLIC_BRAND_ICON_URL ? (
-            <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center">
+            <div className="min-w-5 min-h-5 h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center">
               <img
                 src={process.env.NEXT_PUBLIC_BRAND_ICON_URL}
                 alt="Brand Icon"
@@ -141,7 +141,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 'Open Short URL'}
             </span>
             <span className="truncate text-xs text-muted-foreground">
-              {process.env.NEXT_PUBLIC_BRAND_DESCRIPTION || t('sidebar.appDescription')}
+              {process.env.NEXT_PUBLIC_BRAND_DESCRIPTION ||
+                t('sidebar.appDescription')}
             </span>
           </div>
         </div>
