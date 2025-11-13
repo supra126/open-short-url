@@ -4,6 +4,7 @@ import './globals.css';
 import { QueryProvider } from '@/providers/query-provider';
 import { Toaster } from '@/components/ui/toaster';
 import { ThemeProvider } from '@/providers/theme-provider';
+import { ErrorBoundary } from '@/components/error-boundary';
 import { t } from '@/lib/i18n';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -27,8 +28,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <QueryProvider>{children}</QueryProvider>
-          <Toaster />
+          <ErrorBoundary>
+            <QueryProvider>{children}</QueryProvider>
+            <Toaster />
+          </ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>

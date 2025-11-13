@@ -10,6 +10,7 @@ import {
   ApiKeyResponseDto,
   ApiKeyListResponseDto,
 } from './dto/api-key-response.dto';
+import { ApiKeyQueryDto } from './dto/api-key-query.dto';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcrypt';
@@ -174,13 +175,21 @@ export class ApiKeysService {
   }
 
   /**
-   * Get all API Keys for user
+   * Get all API Keys for user with pagination
    */
-  async findAll(userId: string): Promise<ApiKeyListResponseDto> {
-    const apiKeys = await this.prisma.apiKey.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(userId: string, query: ApiKeyQueryDto): Promise<ApiKeyListResponseDto> {
+    const { page = 1, pageSize = 10 } = query;
+    const skip = (page - 1) * pageSize;
+
+    const [apiKeys, total] = await Promise.all([
+      this.prisma.apiKey.findMany({
+        where: { userId },
+        skip,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.apiKey.count({ where: { userId } }),
+    ]);
 
     return {
       data: apiKeys.map((apiKey) => ({
@@ -192,7 +201,10 @@ export class ApiKeysService {
         createdAt: apiKey.createdAt,
         updatedAt: apiKey.updatedAt,
       })),
-      total: apiKeys.length,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
     };
   }
 

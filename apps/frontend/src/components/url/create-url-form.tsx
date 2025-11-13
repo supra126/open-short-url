@@ -11,10 +11,12 @@ import { useCreateUrl } from '@/hooks/use-url';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 
 export function CreateUrlForm() {
   const router = useRouter();
   const createUrl = useCreateUrl();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     originalUrl: '',
     customSlug: '',
@@ -27,12 +29,10 @@ export function CreateUrlForm() {
     utmTerm: '',
     utmContent: '',
   });
-  const [error, setError] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
 
     try {
       const data: any = {
@@ -52,10 +52,17 @@ export function CreateUrlForm() {
       const result = await createUrl.mutateAsync(data);
 
       // Display success message and navigate to details page
-      alert(t('urls.createSuccess').replace('{slug}', result.slug));
+      toast({
+        title: t('common.success'),
+        description: t('urls.createSuccess').replace('{slug}', result.slug),
+      });
       router.push(`/urls/${result.id}`);
     } catch (err: any) {
-      setError(err.message || t('urls.createError'));
+      toast({
+        title: t('common.error'),
+        description: err.message || t('urls.createError'),
+        variant: 'destructive',
+      });
     }
   };
 
@@ -73,12 +80,6 @@ export function CreateUrlForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
           <Input
             label={t('urls.originalUrl')}
             type="url"

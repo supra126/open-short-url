@@ -10,6 +10,7 @@ import { useUrls, useDeleteUrl } from '@/hooks/use-url';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import {
   Table,
   TableBody,
@@ -18,8 +19,19 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Loading } from '@/components/ui/loading';
 import { formatDateTime, formatNumber, truncateUrl, copyToClipboard } from '@/lib/utils';
+import { toast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Copy, Check } from 'lucide-react';
 
@@ -40,6 +52,9 @@ export function UrlList() {
   const { data, isPending, error } = useUrls({ page, pageSize: 10 });
   const deleteUrl = useDeleteUrl();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [urlToDelete, setUrlToDelete] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleCopy = async (shortUrl: string, id: string) => {
     const success = await copyToClipboard(shortUrl);
@@ -49,13 +64,29 @@ export function UrlList() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm(t('urls.deleteConfirm'))) {
-      try {
-        await deleteUrl.mutateAsync(id);
-      } catch (error) {
-        alert(t('urls.deleteError'));
-      }
+  const handleDeleteClick = (id: string) => {
+    setUrlToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!urlToDelete) return;
+
+    try {
+      await deleteUrl.mutateAsync(urlToDelete);
+      toast({
+        title: t('common.success'),
+        description: t('urls.deleteSuccess'),
+      });
+    } catch (error: any) {
+      toast({
+        title: t('common.error'),
+        description: error.message || t('urls.deleteError'),
+        variant: 'destructive',
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setUrlToDelete(null);
     }
   };
 
@@ -84,6 +115,7 @@ export function UrlList() {
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <CardTitle>{t('urls.listTitle')}</CardTitle>
@@ -159,7 +191,7 @@ export function UrlList() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => handleDelete(url.id)}
+                      onClick={() => handleDeleteClick(url.id)}
                       disabled={deleteUrl.isPending}
                     >
                       {t('common.delete')}
@@ -199,5 +231,27 @@ export function UrlList() {
         )}
       </CardContent>
     </Card>
+
+    {/* Delete Confirmation Dialog */}
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('urls.deleteConfirm')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {t('urls.deleteConfirm')}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {t('common.delete')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 }

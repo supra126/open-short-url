@@ -1,4 +1,13 @@
 {
+  "errors": {
+    "network": "網路連線錯誤，請檢查您的網路連線",
+    "authentication": "登入已過期，請重新登入",
+    "authorization": "您沒有權限執行此操作",
+    "validation": "輸入資料不正確，請檢查後重試",
+    "notFound": "找不到請求的資源",
+    "server": "伺服器發生錯誤，請稍後再試",
+    "unknown": "發生未知錯誤，請稍後再試"
+  },
   "common": {
     "login": "登入",
     "register": "註冊",
@@ -663,6 +672,9 @@
   },
   "bots": {
     "title": "機器人流量統計",
+    "analyticsTitle": "機器人流量分析",
+    "last7DaysStats": "過去 7 天的機器人訪問統計（總計：{total} 次）",
+    "showBots": "顯示機器人",
     "totalBotClicks": "機器人點擊總數",
     "botPercentage": "佔總點擊數 {percentage}%",
     "botTypesTitle": "機器人類型分布",

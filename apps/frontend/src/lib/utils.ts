@@ -4,6 +4,8 @@
 
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { getLocale } from './i18n';
+import { ErrorHandler } from './error-handler';
 
 /**
  * Merge Tailwind CSS class names
@@ -13,11 +15,30 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Get browser locale or fallback to app locale
+ * Maps locale codes to Intl-compatible format
+ */
+function getBrowserLocale(): string {
+  const appLocale = getLocale();
+
+  // Map locale codes to Intl-compatible format
+  const localeMap: Record<string, string> = {
+    'zh-TW': 'zh-TW',
+    'zh-CN': 'zh-CN',
+    'en': 'en-US',
+    'ja': 'ja-JP',
+    'ko': 'ko-KR',
+  };
+
+  return localeMap[appLocale] || appLocale || 'en-US';
+}
+
+/**
  * Format date
  */
 export function formatDate(date: string | Date): string {
   const d = new Date(date);
-  return new Intl.DateTimeFormat('zh-TW', {
+  return new Intl.DateTimeFormat(getBrowserLocale(), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -29,7 +50,7 @@ export function formatDate(date: string | Date): string {
  */
 export function formatDateTime(date: string | Date): string {
   const d = new Date(date);
-  return new Intl.DateTimeFormat('zh-TW', {
+  return new Intl.DateTimeFormat(getBrowserLocale(), {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -46,7 +67,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (error) {
-    console.error('Failed to copy:', error);
+    ErrorHandler.log(error, 'Copy to Clipboard');
     return false;
   }
 }
@@ -55,7 +76,7 @@ export async function copyToClipboard(text: string): Promise<boolean> {
  * Format number (add thousand separators)
  */
 export function formatNumber(num: number): string {
-  return new Intl.NumberFormat('zh-TW').format(num);
+  return new Intl.NumberFormat(getBrowserLocale()).format(num);
 }
 
 /**

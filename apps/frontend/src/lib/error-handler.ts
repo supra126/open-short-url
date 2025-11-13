@@ -2,6 +2,8 @@
  * Unified error handling mechanism
  */
 
+import { t } from './i18n';
+
 /**
  * API error types
  */
@@ -26,20 +28,22 @@ export interface StandardError {
 }
 
 /**
- * Error message mapping (user-friendly messages)
+ * Get error message from i18n
+ * Maps ErrorType to i18n key
  */
-const ERROR_MESSAGES: Record<ErrorType, string> = {
-  [ErrorType.NETWORK]:
-    'Network connection error, please check your network connection',
-  [ErrorType.AUTHENTICATION]: 'Login has expired, please log in again',
-  [ErrorType.AUTHORIZATION]:
-    'You do not have permission to perform this action',
-  [ErrorType.VALIDATION]:
-    'The input data is incorrect, please check and try again',
-  [ErrorType.NOT_FOUND]: 'The requested resource was not found',
-  [ErrorType.SERVER]: 'Server error occurred, please try again later',
-  [ErrorType.UNKNOWN]: 'An unknown error occurred, please try again later',
-};
+function getErrorMessage(type: ErrorType): string {
+  const errorKeys = {
+    [ErrorType.NETWORK]: 'errors.network',
+    [ErrorType.AUTHENTICATION]: 'errors.authentication',
+    [ErrorType.AUTHORIZATION]: 'errors.authorization',
+    [ErrorType.VALIDATION]: 'errors.validation',
+    [ErrorType.NOT_FOUND]: 'errors.notFound',
+    [ErrorType.SERVER]: 'errors.server',
+    [ErrorType.UNKNOWN]: 'errors.unknown',
+  } as const;
+
+  return t(errorKeys[type]);
+}
 
 /**
  * Error handler class
@@ -55,7 +59,7 @@ export class ErrorHandler {
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
       return {
         type: ErrorType.NETWORK,
-        message: ERROR_MESSAGES[ErrorType.NETWORK],
+        message: getErrorMessage(ErrorType.NETWORK),
       };
     }
 
@@ -69,7 +73,7 @@ export class ErrorHandler {
         // Token is cleared by backend (httpOnly cookie is automatically removed)
         return {
           type: ErrorType.AUTHENTICATION,
-          message: data?.message || ERROR_MESSAGES[ErrorType.AUTHENTICATION],
+          message: data?.message || getErrorMessage(ErrorType.AUTHENTICATION),
           statusCode: status,
         };
       }
@@ -78,7 +82,7 @@ export class ErrorHandler {
       if (status === 403) {
         return {
           type: ErrorType.AUTHORIZATION,
-          message: data?.message || ERROR_MESSAGES[ErrorType.AUTHORIZATION],
+          message: data?.message || getErrorMessage(ErrorType.AUTHORIZATION),
           statusCode: status,
         };
       }
@@ -87,7 +91,7 @@ export class ErrorHandler {
       if (status === 404) {
         return {
           type: ErrorType.NOT_FOUND,
-          message: data?.message || ERROR_MESSAGES[ErrorType.NOT_FOUND],
+          message: data?.message || getErrorMessage(ErrorType.NOT_FOUND),
           statusCode: status,
         };
       }
@@ -96,7 +100,7 @@ export class ErrorHandler {
       if (status === 422 || status === 400) {
         return {
           type: ErrorType.VALIDATION,
-          message: data?.message || ERROR_MESSAGES[ErrorType.VALIDATION],
+          message: data?.message || getErrorMessage(ErrorType.VALIDATION),
           statusCode: status,
           details: data?.errors,
         };
@@ -106,7 +110,7 @@ export class ErrorHandler {
       if (status >= 500) {
         return {
           type: ErrorType.SERVER,
-          message: ERROR_MESSAGES[ErrorType.SERVER],
+          message: getErrorMessage(ErrorType.SERVER),
           statusCode: status,
         };
       }
@@ -116,7 +120,7 @@ export class ErrorHandler {
     if (error instanceof Error) {
       return {
         type: ErrorType.UNKNOWN,
-        message: error.message || ERROR_MESSAGES[ErrorType.UNKNOWN],
+        message: error.message || getErrorMessage(ErrorType.UNKNOWN),
       };
     }
 
@@ -131,7 +135,7 @@ export class ErrorHandler {
     // Unknown error
     return {
       type: ErrorType.UNKNOWN,
-      message: ERROR_MESSAGES[ErrorType.UNKNOWN],
+      message: getErrorMessage(ErrorType.UNKNOWN),
     };
   }
 

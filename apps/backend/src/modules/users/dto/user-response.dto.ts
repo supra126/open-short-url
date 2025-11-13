@@ -57,7 +57,7 @@ export class UserListResponseDto {
     description: 'List of users',
     type: [UserResponseDto],
   })
-  users: UserResponseDto[];
+  data: UserResponseDto[];
 
   @ApiProperty({
     description: 'Total number of users',
@@ -75,7 +75,7 @@ export class UserListResponseDto {
     description: 'Number of items per page',
     example: 10,
   })
-  limit: number;
+  pageSize: number;
 
   @ApiProperty({
     description: 'Total number of pages',

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Message, ChatHistory } from '@/types/ai';
 import { getMessageText } from '@/types/ai';
+import { ErrorHandler } from '@/lib/error-handler';
 
 /**
  * localStorage key for storing chat histories
@@ -45,7 +46,7 @@ export function useChatHistory() {
         setHistories(parsed);
       }
     } catch (error) {
-      console.error('Failed to load chat histories:', error);
+      ErrorHandler.log(error, 'Load Chat Histories');
       setHistories([]);
     } finally {
       setIsLoading(false);
@@ -89,7 +90,7 @@ export function useChatHistory() {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
           return trimmed;
         } catch (error) {
-          console.error('Failed to save chat histories:', error);
+          ErrorHandler.log(error, 'Save Chat Histories');
           return prevHistories;
         }
       } else {
@@ -109,7 +110,7 @@ export function useChatHistory() {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
           return trimmed;
         } catch (error) {
-          console.error('Failed to save chat histories:', error);
+          ErrorHandler.log(error, 'Save Chat Histories');
           return prevHistories;
         }
       }
@@ -134,7 +135,7 @@ export function useChatHistory() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
         return trimmed;
       } catch (error) {
-        console.error('Failed to delete chat history:', error);
+        ErrorHandler.log(error, 'Delete Chat History');
         return prevHistories;
       }
     });

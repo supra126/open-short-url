@@ -8,6 +8,7 @@ import {
   registerBundleTools,
 } from '@open-short-url/mcp';
 import { getCookies } from './request-context';
+import { ErrorHandler } from '@/lib/error-handler';
 
 /**
  * MCP to Vercel AI SDK Adapter
@@ -95,7 +96,7 @@ function convertMCPTool(mcpTool: MCPTool) {
         // Fallback: return as-is
         return result;
       } catch (error: any) {
-        console.error('MCP tool execution error:', error);
+        ErrorHandler.log(error, 'MCP Tool Execution');
         return {
           success: false,
           error: error.message || 'Unknown error',

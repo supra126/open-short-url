@@ -36,6 +36,16 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Table,
   TableBody,
   TableCell,
@@ -63,6 +73,8 @@ export default function ApiKeysPage() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createdApiKey, setCreatedApiKey] =
     useState<CreateApiKeyResponse | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [apiKeyToDelete, setApiKeyToDelete] = useState<{ id: string; name: string } | null>(null);
 
   const {
     register,
@@ -99,13 +111,16 @@ export default function ApiKeysPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(t('apiKeys.deleteConfirm').replace('{name}', name))) {
-      return;
-    }
+  const handleDeleteClick = (id: string, name: string) => {
+    setApiKeyToDelete({ id, name });
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!apiKeyToDelete) return;
 
     try {
-      await deleteApiKey.mutateAsync(id);
+      await deleteApiKey.mutateAsync(apiKeyToDelete.id);
       toast({
         title: t('apiKeys.deleteSuccess'),
         description: t('apiKeys.deleteSuccess'),
@@ -116,6 +131,9 @@ export default function ApiKeysPage() {
         description: error.message || t('apiKeys.createErrorDesc'),
         variant: 'destructive',
       });
+    } finally {
+      setDeleteDialogOpen(false);
+      setApiKeyToDelete(null);
     }
   };
 
@@ -156,6 +174,7 @@ export default function ApiKeysPage() {
   }
 
   return (
+    <>
     <div className="p-6">
       <div className="flex items-center justify-between">
         <div>
@@ -358,7 +377,7 @@ export default function ApiKeysPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDelete(apiKey.id, apiKey.name)}
+                        onClick={() => handleDeleteClick(apiKey.id, apiKey.name)}
                         disabled={deleteApiKey.isPending}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -372,5 +391,27 @@ export default function ApiKeysPage() {
         </CardContent>
       </Card>
     </div>
+
+    {/* Delete Confirmation Dialog */}
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('apiKeys.deleteConfirm').replace('{name}', apiKeyToDelete?.name || '')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. The API key will be permanently deleted.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {t('common.delete')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

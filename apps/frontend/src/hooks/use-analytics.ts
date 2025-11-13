@@ -106,6 +106,21 @@ async function getUserBotAnalytics(
   );
 }
 
+async function getUserAbTestAnalytics(
+  params: AnalyticsQueryParams,
+): Promise<UserAbTestAnalyticsResponse> {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      searchParams.append(key, String(value));
+    }
+  });
+
+  return apiClient.get<UserAbTestAnalyticsResponse>(
+    `/api/analytics/ab-tests?${searchParams.toString()}`,
+  );
+}
+
 // ==================== Hooks ====================
 
 /**
@@ -187,24 +202,6 @@ export function useUserBotAnalytics(
 
 /**
  * Get A/B Testing analytics for all user URLs
- */
-async function getUserAbTestAnalytics(
-  params: AnalyticsQueryParams,
-): Promise<UserAbTestAnalyticsResponse> {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      searchParams.append(key, String(value));
-    }
-  });
-
-  return apiClient.get<UserAbTestAnalyticsResponse>(
-    `/api/analytics/ab-tests?${searchParams.toString()}`,
-  );
-}
-
-/**
- * Hook: Get A/B Testing analytics for all user URLs
  */
 export function useUserAbTestAnalytics(
   params: AnalyticsQueryParams = { timeRange: 'last_7_days' },

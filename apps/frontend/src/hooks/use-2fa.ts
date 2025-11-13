@@ -6,6 +6,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { authKeys } from '@/hooks/use-auth';
 import type {
   Verify2FADto,
   Disable2FADto,
@@ -33,7 +34,7 @@ async function disable2FA(data: Disable2FADto): Promise<void> {
  */
 export function useSetup2FA() {
   return useMutation({
-    mutationFn: () => setup2FA(),
+    mutationFn: setup2FA,
   });
 }
 
@@ -47,7 +48,7 @@ export function useEnable2FA() {
     mutationFn: (data: Verify2FADto) => enable2FA(data),
     onSuccess: () => {
       // Re-fetch user information to update 2FA status
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      queryClient.invalidateQueries({ queryKey: authKeys.me() });
     },
   });
 }
@@ -62,7 +63,7 @@ export function useDisable2FA() {
     mutationFn: (data: Disable2FADto) => disable2FA(data),
     onSuccess: () => {
       // Re-fetch user information to update 2FA status
-      queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      queryClient.invalidateQueries({ queryKey: authKeys.me() });
     },
   });
 }

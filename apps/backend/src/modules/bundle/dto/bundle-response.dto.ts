@@ -82,7 +82,7 @@ export class BundleListResponseDto {
   page!: number;
 
   @ApiProperty()
-  limit!: number;
+  pageSize!: number;
 
   @ApiProperty()
   totalPages!: number;

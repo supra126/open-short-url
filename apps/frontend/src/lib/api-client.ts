@@ -100,7 +100,7 @@ class ApiClient {
     try {
       return JSON.parse(text);
     } catch (error) {
-      console.error('Failed to parse JSON response:', error);
+      ErrorHandler.log(error, 'JSON Parse Error');
       return null as T;
     }
   }

@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   UseGuards,
   HttpCode,
   HttpStatus,
@@ -19,6 +20,7 @@ import {
 import { Throttle } from '@nestjs/throttler';
 import { ApiKeysService } from './api-keys.service';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
+import { ApiKeyQueryDto } from './dto/api-key-query.dto';
 import {
   ApiKeyResponseDto,
   ApiKeyListResponseDto,
@@ -72,12 +74,12 @@ export class ApiKeysController {
   }
 
   /**
-   * Get all API Keys
+   * Get all API Keys with pagination
    */
   @Get()
   @ApiOperation({
     summary: 'Get all API Keys',
-    description: 'Retrieve all API Keys for the current user',
+    description: 'Retrieve all API Keys for the current user with pagination support',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -91,8 +93,9 @@ export class ApiKeysController {
   })
   async findAll(
     @CurrentUser() user: IUserFromToken,
+    @Query() query: ApiKeyQueryDto,
   ): Promise<ApiKeyListResponseDto> {
-    return this.apiKeysService.findAll(user.id);
+    return this.apiKeysService.findAll(user.id, query);
   }
 
   /**

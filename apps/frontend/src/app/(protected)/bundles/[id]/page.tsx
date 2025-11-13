@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { t } from '@/lib/i18n';
+import { formatDate } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -358,8 +359,7 @@ export default function BundleDetailPage() {
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
                   labelFormatter={(value) => {
-                    const date = new Date(value as string);
-                    return date.toLocaleDateString('zh-TW');
+                    return formatDate(value as string);
                   }}
                 />
                 <Line
@@ -417,7 +417,7 @@ export default function BundleDetailPage() {
                         {t('bundles.totalClicks')}: {url.clickCount.toLocaleString()}
                       </span>
                       <span>
-                        {t('urls.createdAtCard')}: {new Date(url.createdAt).toLocaleDateString('zh-TW')}
+                        {t('urls.createdAtCard')}: {formatDate(url.createdAt)}
                       </span>
                     </div>
                   </div>

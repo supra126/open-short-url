@@ -6,6 +6,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { urlKeys } from '@/hooks/use-url';
 import type {
   CreateVariantDto,
   UpdateVariantDto,
@@ -104,7 +105,9 @@ export function useCreateVariant() {
         queryKey: variantKeys.list(variables.urlId),
       });
       // Invalidate URL details (to refresh isAbTest flag)
-      queryClient.invalidateQueries({ queryKey: ['urls', variables.urlId] });
+      queryClient.invalidateQueries({
+        queryKey: urlKeys.detail(variables.urlId),
+      });
     },
   });
 }
@@ -153,7 +156,9 @@ export function useDeleteVariant() {
         queryKey: variantKeys.list(variables.urlId),
       });
       // Invalidate URL details (to refresh isAbTest flag if last variant)
-      queryClient.invalidateQueries({ queryKey: ['urls', variables.urlId] });
+      queryClient.invalidateQueries({
+        queryKey: urlKeys.detail(variables.urlId),
+      });
     },
   });
 }

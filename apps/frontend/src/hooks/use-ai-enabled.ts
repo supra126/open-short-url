@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { ErrorHandler } from '@/lib/error-handler';
 
 /**
  * Hook to check if AI functionality is enabled
@@ -11,27 +12,27 @@ export function useAIEnabled() {
   const [isEnabled, setIsEnabled] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    checkAIStatus();
-  }, []);
-
   /**
    * Check AI availability status
    * Since we're client-side, we'll assume enabled by default
    * The actual check happens server-side when making requests
    */
-  const checkAIStatus = async () => {
+  const checkAIStatus = useCallback(async () => {
     try {
       // For now, we'll check if the environment suggests AI is enabled
       // The actual validation happens server-side in the API route
       setIsEnabled(true);
     } catch (error) {
-      console.error('Failed to check AI status:', error);
+      ErrorHandler.log(error, 'AI Status Check');
       setIsEnabled(false);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    checkAIStatus();
+  }, [checkAIStatus]);
 
   return {
     isEnabled,

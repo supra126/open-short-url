@@ -30,6 +30,7 @@ import { useSetup2FA, useEnable2FA, useDisable2FA } from '@/hooks/use-2fa';
 import { User, Mail, Calendar, Loader2, Lock, Shield } from 'lucide-react';
 import Image from 'next/image';
 import { t } from '@/lib/i18n';
+import { formatDate } from '@/lib/utils';
 
 export default function ProfilePage() {
   const { toast } = useToast();
@@ -299,7 +300,7 @@ export default function ProfilePage() {
                 type="text"
                 value={
                   user?.createdAt
-                    ? new Date(user.createdAt).toLocaleDateString('zh-TW')
+                    ? formatDate(user.createdAt)
                     : '-'
                 }
                 disabled

@@ -93,8 +93,8 @@ export class BundleService {
     userId: string,
     query: BundleQueryDto,
   ): Promise<BundleListResponseDto> {
-    const { page = 1, limit = 10, status, search } = query;
-    const skip = (page - 1) * limit;
+    const { page = 1, pageSize = 10, status, search } = query;
+    const skip = (page - 1) * pageSize;
 
     const where: Prisma.BundleWhereInput = {
       userId,
@@ -131,7 +131,7 @@ export class BundleService {
           },
         },
         skip,
-        take: limit,
+        take: pageSize,
         orderBy: {
           createdAt: 'desc',
         },
@@ -145,8 +145,8 @@ export class BundleService {
       data,
       total,
       page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
     };
   }
 

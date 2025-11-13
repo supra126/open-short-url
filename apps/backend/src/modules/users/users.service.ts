@@ -67,8 +67,8 @@ export class UsersService {
    * Get users list with pagination, search, and filters
    */
   async getUsers(query: UserListQueryDto): Promise<UserListResponseDto> {
-    const { page = 1, limit = 10, search, role, isActive } = query;
-    const skip = (page - 1) * limit;
+    const { page = 1, pageSize = 10, search, role, isActive } = query;
+    const skip = (page - 1) * pageSize;
 
     // Build query conditions
     const where: any = {};
@@ -98,7 +98,7 @@ export class UsersService {
     const users = await this.prisma.user.findMany({
       where,
       skip,
-      take: limit,
+      take: pageSize,
       orderBy: { createdAt: 'desc' },
       select: {
         id: true,
@@ -113,11 +113,11 @@ export class UsersService {
     });
 
     return {
-      users: users.map((user) => this.mapUserResponse(user)),
+      data: users.map((user) => this.mapUserResponse(user)),
       total,
       page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
     };
   }
 

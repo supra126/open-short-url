@@ -13,6 +13,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   ArrowLeft,
   Copy,
   ExternalLink,
@@ -30,6 +40,7 @@ import Link from 'next/link';
 import { useUrl, useDeleteUrl, useGenerateQRCode } from '@/hooks/use-url';
 import { useUrlAnalytics, useRecentClicks, useBotAnalytics } from '@/hooks/use-analytics';
 import { useToast } from '@/hooks/use-toast';
+import { formatDateTime, formatDate } from '@/lib/utils';
 import { useState } from 'react';
 import {
   LineChart,
@@ -59,6 +70,9 @@ export default function UrlDetailPage() {
 
   // Bot toggle state
   const [showBots, setShowBots] = useState(false);
+
+  // Delete dialog state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   // Fetch recent click records (with bot filter)
   const { data: recentClicksData } = useRecentClicks(id, 10, showBots);
@@ -118,11 +132,11 @@ export default function UrlDetailPage() {
     });
   };
 
-  const handleDelete = async () => {
-    if (!confirm(t('urls.deleteConfirm'))) {
-      return;
-    }
+  const handleDeleteClick = () => {
+    setDeleteDialogOpen(true);
+  };
 
+  const handleDeleteConfirm = async () => {
     try {
       await deleteUrlMutation.mutateAsync(id);
       toast({
@@ -136,6 +150,8 @@ export default function UrlDetailPage() {
         description: t('urls.deleteError'),
         variant: 'destructive',
       });
+    } finally {
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -164,6 +180,7 @@ export default function UrlDetailPage() {
   const shortUrl = urlData.shortUrl;
 
   return (
+    <>
     <div className="p-6">
       {/* Page Header */}
       <div className="flex items-center justify-between">
@@ -185,7 +202,7 @@ export default function UrlDetailPage() {
               {t('common.edit')}
             </Button>
           </Link>
-          <Button variant="destructive" onClick={handleDelete}>
+          <Button variant="destructive" onClick={handleDeleteClick}>
             <Trash2 className="mr-2 h-4 w-4" />
             {t('common.delete')}
           </Button>
@@ -256,13 +273,13 @@ export default function UrlDetailPage() {
           <CardHeader className="pb-2">
             <CardDescription>{t('urls.createdAtCard')}</CardDescription>
             <CardTitle className="text-lg">
-              {new Date(urlData.createdAt).toLocaleDateString('zh-TW')}
+              {formatDate(urlData.createdAt)}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center text-xs text-muted-foreground">
               <Calendar className="mr-1 h-3 w-3" />
-              {new Date(urlData.createdAt).toLocaleString('zh-TW')}
+              {formatDateTime(urlData.createdAt)}
             </div>
           </CardContent>
         </Card>
@@ -446,8 +463,7 @@ export default function UrlDetailPage() {
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
                   labelFormatter={(value) => {
-                    const date = new Date(value as string);
-                    return date.toLocaleDateString('zh-TW');
+                    return formatDate(value as string);
                   }}
                   formatter={(value: number) => [value, t('urls.clicksLabel')]}
                 />
@@ -477,10 +493,10 @@ export default function UrlDetailPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Bot className="h-5 w-5" />
-                機器人流量分析
+                {t('bots.analyticsTitle')}
               </CardTitle>
               <CardDescription>
-                過去 7 天的機器人訪問統計（總計：{botAnalyticsData.totalBotClicks} 次）
+                {t('bots.last7DaysStats').replace('{total}', String(botAnalyticsData.totalBotClicks))}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -522,7 +538,7 @@ export default function UrlDetailPage() {
                 onCheckedChange={setShowBots}
               />
               <Label htmlFor="show-bots" className="cursor-pointer text-sm">
-                顯示機器人
+                {t('bots.showBots')}
               </Label>
             </div>
           </div>
@@ -565,12 +581,7 @@ export default function UrlDetailPage() {
                               <Bot className="h-3 w-3 text-orange-500" />
                             </span>
                           )}
-                          {new Date(click.createdAt).toLocaleString('zh-TW', {
-                            month: '2-digit',
-                            day: '2-digit',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
+                          {formatDateTime(click.createdAt)}
                         </div>
                       </td>
                       <td className="py-3">
@@ -635,5 +646,27 @@ export default function UrlDetailPage() {
         <VariantList urlId={id} />
       </div>
     </div>
+
+    {/* Delete Confirmation Dialog */}
+    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{t('urls.deleteConfirm')}</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete the short URL and all its analytics data.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {t('common.delete')}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

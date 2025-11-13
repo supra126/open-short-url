@@ -17,7 +17,6 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiParam,
-  ApiQuery,
 } from '@nestjs/swagger';
 import { WebhookService } from './webhook.service';
 import {
@@ -28,6 +27,7 @@ import {
   WebhookLogsListResponseDto,
   WebhookTestResponseDto,
 } from './dto/webhook.dto';
+import { WebhookQueryDto, WebhookLogsQueryDto } from './dto/webhook-query.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
@@ -70,12 +70,12 @@ export class WebhookController {
   }
 
   /**
-   * Get all webhooks
+   * Get all webhooks with pagination
    */
   @Get()
   @ApiOperation({
     summary: 'Get all webhooks',
-    description: 'Get all webhook subscriptions for the current user.',
+    description: 'Get all webhook subscriptions for the current user with pagination support.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -87,8 +87,11 @@ export class WebhookController {
     description: 'Unauthorized',
     type: ErrorResponseDto,
   })
-  async findAll(@CurrentUser() user: any): Promise<WebhookListResponseDto> {
-    return this.webhookService.findAll(user.id, user.role);
+  async findAll(
+    @CurrentUser() user: any,
+    @Query() query: WebhookQueryDto,
+  ): Promise<WebhookListResponseDto> {
+    return this.webhookService.findAll(user.id, query, user.role);
   }
 
   /**
@@ -198,29 +201,17 @@ export class WebhookController {
   }
 
   /**
-   * Get webhook delivery logs
+   * Get webhook delivery logs with pagination
    */
   @Get(':id/logs')
   @ApiOperation({
     summary: 'Get webhook logs',
-    description: 'Get delivery logs for a specific webhook.',
+    description: 'Get delivery logs for a specific webhook with pagination support.',
   })
   @ApiParam({
     name: 'id',
     description: 'Webhook ID',
     example: 'clxxx123456789',
-  })
-  @ApiQuery({
-    name: 'page',
-    required: false,
-    description: 'Page number',
-    example: 1,
-  })
-  @ApiQuery({
-    name: 'pageSize',
-    required: false,
-    description: 'Number of items per page',
-    example: 20,
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -240,16 +231,9 @@ export class WebhookController {
   async getLogs(
     @CurrentUser() user: any,
     @Param('id') id: string,
-    @Query('page') page?: string,
-    @Query('pageSize') pageSize?: string,
+    @Query() query: WebhookLogsQueryDto,
   ): Promise<WebhookLogsListResponseDto> {
-    return this.webhookService.getLogs(
-      id,
-      user.id,
-      page ? parseInt(page) : 1,
-      pageSize ? parseInt(pageSize) : 20,
-      user.role,
-    );
+    return this.webhookService.getLogs(id, user.id, query, user.role);
   }
 
   /**

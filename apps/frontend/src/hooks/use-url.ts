@@ -15,7 +15,7 @@ import type {
 } from '@/types/api';
 
 // Query Keys
-const urlKeys = {
+export const urlKeys = {
   all: ['urls'] as const,
   lists: () => [...urlKeys.all, 'list'] as const,
   list: (params: UrlQueryParams) => [...urlKeys.lists(), params] as const,

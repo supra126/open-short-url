@@ -4,9 +4,10 @@
 
 'use client';
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, QueryCache, MutationCache } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { useState } from 'react';
+import { ErrorHandler } from '@/lib/error-handler';
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -25,6 +26,19 @@ export function QueryProvider({ children }: { children: React.ReactNode }) {
             retry: 0,
           },
         },
+        // Global error handling for queries and mutations
+        queryCache: new QueryCache({
+          onError: (error) => {
+            // Log all query errors globally in development
+            ErrorHandler.log(error, 'React Query');
+          },
+        }),
+        mutationCache: new MutationCache({
+          onError: (error) => {
+            // Log all mutation errors globally
+            ErrorHandler.log(error, 'Mutation');
+          },
+        }),
       }),
   );
 

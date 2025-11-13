@@ -16,6 +16,7 @@ import {
   WebhookLogsListResponseDto,
   WebhookTestResponseDto,
 } from './dto/webhook.dto';
+import { WebhookQueryDto, WebhookLogsQueryDto } from './dto/webhook-query.dto';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -50,23 +51,37 @@ export class WebhookService {
   }
 
   /**
-   * Get all webhooks for a user
+   * Get all webhooks for a user with pagination
    */
   async findAll(
     userId: string,
+    query: WebhookQueryDto,
     userRole?: 'ADMIN' | 'USER',
   ): Promise<WebhookListResponseDto> {
-    const webhooks = await this.prisma.webhook.findMany({
-      where: {
-        // ADMIN can see all webhooks, USER only their own
-        ...(userRole !== 'ADMIN' && { userId }),
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+    const { page = 1, pageSize = 10 } = query;
+    const skip = (page - 1) * pageSize;
+
+    const where = {
+      // ADMIN can see all webhooks, USER only their own
+      ...(userRole !== 'ADMIN' && { userId }),
+    };
+
+    const [webhooks, total] = await Promise.all([
+      this.prisma.webhook.findMany({
+        where,
+        skip,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.webhook.count({ where }),
+    ]);
 
     return {
       data: webhooks.map((w) => this.mapToResponse(w)),
-      total: webhooks.length,
+      total,
+      page,
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
     };
   }
 
@@ -157,10 +172,11 @@ export class WebhookService {
   async getLogs(
     id: string,
     userId: string,
-    page: number = 1,
-    pageSize: number = 20,
+    query: WebhookLogsQueryDto,
     userRole?: 'ADMIN' | 'USER',
   ): Promise<WebhookLogsListResponseDto> {
+    const { page = 1, pageSize = 20 } = query;
+
     // Check if webhook exists and belongs to user
     const webhook = await this.prisma.webhook.findFirst({
       where: {

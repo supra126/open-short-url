@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { MessageList } from './message-list';
 import { ChatInput } from './chat-input';
 import { useChatHistory } from '@/hooks/use-chat-history';
+import { ErrorHandler } from '@/lib/error-handler';
 import { Trash2, History } from 'lucide-react';
 import {
   DropdownMenu,
@@ -33,10 +34,13 @@ export function ChatInterface() {
     // @ts-expect-error - api is valid in AI SDK v5 but TypeScript may not recognize it yet
     api: '/api/chat',
     onError: (error: Error) => {
-      console.error('Chat error:', error);
+      ErrorHandler.log(error, 'Chat Error');
     },
     onFinish: (message) => {
-      console.log('Message finished:', message);
+      // Message finished successfully - no need to log in production
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Message finished:', message);
+      }
     },
   });
 

@@ -28,19 +28,19 @@ interface BundleDialogProps {
   bundle?: BundleResponse;
 }
 
-// 預設顏色選項
+// Preset color options
 const PRESET_COLORS = [
-  '#3B82F6', // 藍色
-  '#10B981', // 綠色
-  '#F59E0B', // 琥珀色
-  '#EF4444', // 紅色
-  '#8B5CF6', // 紫色
-  '#EC4899', // 粉紅色
-  '#14B8A6', // 青色
-  '#F97316', // 橙色
+  '#3B82F6', // Blue
+  '#10B981', // Green
+  '#F59E0B', // Amber
+  '#EF4444', // Red
+  '#8B5CF6', // Purple
+  '#EC4899', // Pink
+  '#14B8A6', // Cyan
+  '#F97316', // Orange
 ];
 
-// 預設圖示選項
+// Preset icon options
 const PRESET_ICONS = [
   '📦', '🎯', '🚀', '💼', '📊', '🎨', '🔗', '⚡',
   '🌟', '💡', '🎁', '🏆', '📱', '💻', '🌐', '📈',
@@ -57,7 +57,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
   const createMutation = useCreateBundle();
   const updateMutation = useUpdateBundle();
 
-  // 只在建立模式時獲取 URLs
+  // Fetch URLs only in create mode
   const { data: urlsData, isLoading: urlsLoading } = useUrls({
     page: 1,
     pageSize: 100,
@@ -67,7 +67,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
   const isEdit = !!bundle;
   const mutation = isEdit ? updateMutation : createMutation;
 
-  // 重置表單當 bundle prop 改變時
+  // Reset form when bundle prop changes
   useEffect(() => {
     if (bundle) {
       setName(bundle.name);
@@ -86,7 +86,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // 表單驗證
+    // Form validation
     if (name.length > 100) {
       toast({
         title: t('common.error'),
@@ -113,7 +113,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
         icon,
       };
 
-      // 只在建立時包含 urlIds
+      // Include urlIds only when creating
       if (!isEdit && selectedUrlIds.length > 0) {
         data.urlIds = selectedUrlIds;
       }
@@ -169,11 +169,11 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
           </DialogHeader>
 
           <div className="grid gap-6 py-4">
-            {/* 基本資訊 */}
+            {/* Basic Information */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium">{t('bundles.form.basicInfo')}</h3>
 
-              {/* 名稱 */}
+              {/* Name */}
               <div className="grid gap-2">
                 <Label htmlFor="name">
                   {t('bundles.name')} <span className="text-destructive">*</span>
@@ -188,7 +188,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
                 />
               </div>
 
-              {/* 描述 */}
+              {/* Description */}
               <div className="grid gap-2">
                 <Label htmlFor="description">{t('bundles.description')}</Label>
                 <Textarea
@@ -205,11 +205,11 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
               </div>
             </div>
 
-            {/* 客製化 */}
+            {/* Customization */}
             <div className="space-y-4">
               <h3 className="text-sm font-medium">{t('bundles.form.customization')}</h3>
 
-              {/* 顏色選擇 */}
+              {/* Color Selection */}
               <div className="grid gap-2">
                 <Label>{t('bundles.color')}</Label>
                 <div className="flex flex-wrap gap-2">
@@ -232,7 +232,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
                 </div>
               </div>
 
-              {/* 圖示選擇 */}
+              {/* Icon Selection */}
               <div className="grid gap-2">
                 <Label>{t('bundles.icon')}</Label>
                 <div className="grid grid-cols-8 gap-2">
@@ -254,7 +254,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
               </div>
             </div>
 
-            {/* URL 選擇 - 僅在建立模式顯示 */}
+            {/* URL Selection - Only shown in create mode */}
             {!isEdit && (
               <div className="space-y-4">
                 <h3 className="text-sm font-medium">{t('bundles.form.selectUrls')}</h3>

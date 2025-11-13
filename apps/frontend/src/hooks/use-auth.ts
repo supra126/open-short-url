@@ -17,7 +17,7 @@ import type {
 } from '@/types/api';
 
 // Query Keys
-const authKeys = {
+export const authKeys = {
   all: ['auth'] as const,
   me: () => [...authKeys.all, 'me'] as const,
 };
@@ -123,10 +123,8 @@ export function useUpdateProfile() {
   return useMutation({
     mutationFn: updateProfile,
     onSuccess: (data) => {
-      // Update cache
+      // Update cache directly with the response
       queryClient.setQueryData(authKeys.me(), data);
-      // Re-fetch user information
-      queryClient.invalidateQueries({ queryKey: authKeys.me() });
     },
   });
 }
