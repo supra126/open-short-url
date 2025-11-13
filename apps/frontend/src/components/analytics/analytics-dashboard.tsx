@@ -268,22 +268,13 @@ export function AnalyticsDashboard() {
           <CardDescription>{t('analytics.geo.description')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
             {topCountries.map((country) => (
-              <div
+              <ProgressBar
                 key={country.name}
-                className="flex items-center justify-between"
-              >
-                <span className="text-sm font-medium">{country.name}</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">
-                    {formatNumber(country.clicks)} {t('analytics.geo.clicks')}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    ({country.percentage.toFixed(1)}%)
-                  </span>
-                </div>
-              </div>
+                name={country.name}
+                percentage={country.percentage}
+              />
             ))}
           </div>
         </CardContent>

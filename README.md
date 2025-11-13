@@ -339,6 +339,8 @@ Manage your URLs through conversational AI directly in the web interface.
 - **Anthropic Claude** (claude-3-5-sonnet, claude-3-5-haiku, etc.)
 - **OpenAI GPT** (gpt-4o, gpt-4o-mini, gpt-4-turbo, etc.)
 - **Google Gemini** (gemini-2.0-flash-exp, gemini-1.5-pro, etc.)
+- **Mistral** (mistral-large-latest, mistral-medium, etc.)
+- **Cohere** (command-r-plus, command-r, etc.)
 
 ### Setup
 
@@ -346,7 +348,7 @@ Configure AI by setting environment variables in your backend `.env.local`:
 
 ```bash
 # Choose your AI provider
-AI_PROVIDER=anthropic  # Options: anthropic, openai, google
+AI_PROVIDER=anthropic  # Options: anthropic, openai, google, mistral, cohere
 
 # Anthropic Claude
 AI_MODEL=claude-3-5-sonnet-20241022
@@ -359,6 +361,14 @@ OPENAI_API_KEY=sk-your-api-key-here
 # Google Gemini
 AI_MODEL=gemini-2.0-flash-exp
 GOOGLE_API_KEY=your-api-key-here
+
+# Mistral
+AI_MODEL=mistral-large-latest
+MISTRAL_API_KEY=your-api-key-here
+
+# Cohere
+AI_MODEL=command-r-plus
+COHERE_API_KEY=your-api-key-here
 ```
 
 ### Features
@@ -671,7 +681,7 @@ app.listen(3000);
 ## Technology Stack
 
 - **Backend**: NestJS, Prisma, PostgreSQL, Redis (optional)
-- **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS, TanStack Query
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS, TanStack Query
 - **Security**: JWT, bcrypt, Cloudflare Turnstile
 - **Analytics**: Real-time click tracking with geographic data, bot detection
 - **Visualization**: Recharts for data visualization

@@ -156,7 +156,7 @@
     "clickTrendDesc": "Visit statistics for the past 30 days",
     "recentClicks": "Recent Visits",
     "recentClicksDesc": "Recent click records",
-    "noData": "No data - This feature is coming soon",
+    "noData": "No click data available",
     "noVisits": "No visit records yet",
     "notFound": "Short URL not found",
     "backToList": "Back to List",

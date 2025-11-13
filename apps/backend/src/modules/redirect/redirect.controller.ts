@@ -33,7 +33,7 @@ export class RedirectController {
   constructor(
     private readonly redirectService: RedirectService,
     private readonly configService: ConfigService,
-    private readonly turnstileService: TurnstileService,
+    private readonly turnstileService: TurnstileService
   ) {}
 
   /**
@@ -50,14 +50,12 @@ export class RedirectController {
    */
   @Get('robots.txt')
   async handleRobots(@Res() reply: FastifyReply) {
-    return reply
-      .type('text/plain')
-      .code(200)
-      .send('User-agent: *\nAllow: /');
+    return reply.type('text/plain').code(200).send('User-agent: *\nAllow: /');
   }
 
   /**
    * Get redirect information (check if password is required)
+   * Route pattern: matches /{slug}/info where slug doesn't start with reserved keywords
    */
   @Get(':slug/info')
   @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 requests per minute
@@ -88,7 +86,9 @@ export class RedirectController {
     description: 'Short URL not found',
     type: ErrorResponseDto,
   })
-  async getInfo(@Param('slug') slug: string) {
+  async getInfo(@Param('slug') slug: string, @Req() request?: FastifyRequest) {
+    // Validate slug - reject reserved paths and API routes
+    this.validateSlug(slug);
     const info = await this.redirectService.getRedirectInfo(slug);
     return {
       requiresPassword: info.requiresPassword,
@@ -97,12 +97,16 @@ export class RedirectController {
 
   /**
    * Execute redirect (no password required)
+   * This catch-all route matches any GET request to /{slug}
+   * More specific routes (like /api/*, /static/*) must be defined before this in the app
+   * Route pattern excludes paths starting with reserved prefixes (api, static, swagger, etc.)
    */
   @Get(':slug')
   @Throttle({ default: { limit: 100, ttl: 60000 } }) // 100 requests per minute
   @ApiOperation({
     summary: 'Redirect to original URL',
-    description: 'Access short URL and redirect to the original URL (when no password is required)',
+    description:
+      'Access short URL and redirect to the original URL (when no password is required)',
   })
   @ApiParam({
     name: 'slug',
@@ -157,12 +161,10 @@ export class RedirectController {
     @Query('utm_content') utmContent?: string,
     @Query('error') error?: string,
     @Req() request?: FastifyRequest,
-    @Res() reply?: FastifyReply,
+    @Res() reply?: FastifyReply
   ) {
-    // Validate slug - reject empty or reserved paths
-    if (!slug || slug.trim() === '') {
-      throw new NotFoundException('Short URL not found');
-    }
+    // Validate slug - reject empty or reserved paths and API routes
+    this.validateSlug(slug);
 
     // Extract click data
     const clickData = {
@@ -186,13 +188,18 @@ export class RedirectController {
       // If password required, return HTML password page
       if (err.status === 401 || err.response?.statusCode === 401) {
         // Get branding settings from environment variables with defaults
-        const brandName = this.configService.get<string>('BRAND_NAME') || 'Open Short URL';
+        const brandName =
+          this.configService.get<string>('BRAND_NAME') || 'Open Short URL';
         const brandLogoUrl = this.configService.get<string>('BRAND_LOGO_URL');
 
         // Only enable Turnstile if BOTH keys are configured
-        const turnstileSiteKey = this.configService.get<string>('TURNSTILE_SITE_KEY');
-        const turnstileSecretKey = this.configService.get<string>('TURNSTILE_SECRET_KEY');
-        const turnstileEnabled = turnstileSiteKey && turnstileSecretKey ? turnstileSiteKey : undefined;
+        const turnstileSiteKey =
+          this.configService.get<string>('TURNSTILE_SITE_KEY');
+        const turnstileSecretKey = this.configService.get<string>(
+          'TURNSTILE_SECRET_KEY'
+        );
+        const turnstileEnabled =
+          turnstileSiteKey && turnstileSecretKey ? turnstileSiteKey : undefined;
 
         // Build UTM parameters string
         const utmParams = new URLSearchParams();
@@ -206,15 +213,15 @@ export class RedirectController {
           slug,
           brandName,
           brandLogoUrl,
-          error: error === 'invalid_password' ? 'Incorrect password, please try again' : undefined,
+          error:
+            error === 'invalid_password'
+              ? 'Incorrect password, please try again'
+              : undefined,
           utmParams: utmParams.toString(),
           turnstileSiteKey: turnstileEnabled,
         });
 
-        return reply
-          ?.type('text/html; charset=utf-8')
-          .code(200)
-          .send(html);
+        return reply?.type('text/html; charset=utf-8').code(200).send(html);
       }
 
       // Throw other errors
@@ -224,6 +231,7 @@ export class RedirectController {
 
   /**
    * Verify password and redirect
+   * Route pattern: matches POST /{slug}/verify where slug doesn't start with reserved keywords
    */
   @Post(':slug/verify')
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute (prevent brute force)
@@ -294,18 +302,24 @@ export class RedirectController {
     @Query('utm_content') utmContent?: string,
     @Ip() clientIp?: string,
     @Req() request?: FastifyRequest,
-    @Res() reply?: FastifyReply,
+    @Res() reply?: FastifyReply
   ) {
+    // Validate slug - reject reserved paths and API routes
+    this.validateSlug(slug);
+
     // Only verify Turnstile if BOTH keys are configured
-    const turnstileSiteKey = this.configService.get<string>('TURNSTILE_SITE_KEY');
-    const turnstileSecretKey = this.configService.get<string>('TURNSTILE_SECRET_KEY');
+    const turnstileSiteKey =
+      this.configService.get<string>('TURNSTILE_SITE_KEY');
+    const turnstileSecretKey = this.configService.get<string>(
+      'TURNSTILE_SECRET_KEY'
+    );
     const turnstileEnabled = turnstileSiteKey && turnstileSecretKey;
 
     if (turnstileEnabled) {
       // Verify Turnstile token first to prevent brute force attacks
       await this.turnstileService.verifyOrThrow(
         verifyPasswordDto.turnstileToken,
-        clientIp,
+        clientIp
       );
     }
 
@@ -326,7 +340,7 @@ export class RedirectController {
       const originalUrl = await this.redirectService.redirectWithPassword(
         slug,
         verifyPasswordDto.password,
-        clickData,
+        clickData
       );
 
       // Return HTML page with JavaScript redirect to avoid CSP issues
@@ -410,12 +424,49 @@ export class RedirectController {
         // Redirect back to short URL page
         return reply?.redirect(
           `/${slug}${utmParams.toString() ? '?' + utmParams.toString() : ''}`,
-          302,
+          302
         );
       }
 
       // Throw other errors
       throw err;
+    }
+  }
+
+  /**
+   * Validate slug - reject empty values and reserved paths
+   */
+  private validateSlug(slug: string): void {
+    if (!slug || slug.trim() === '') {
+      throw new NotFoundException('Short URL not found');
+    }
+
+    // Reject any path containing slashes (these should be API routes)
+    if (slug.includes('/')) {
+      throw new NotFoundException('Short URL not found');
+    }
+
+    // Reject reserved paths
+    const reservedPrefixes = [
+      'api',
+      'api-json',
+      'static',
+      'swagger',
+      'swagger-ui',
+      'info',
+      'verify',
+    ];
+    const slugLower = slug.toLowerCase();
+
+    for (const prefix of reservedPrefixes) {
+      if (slugLower === prefix || slugLower.startsWith(prefix)) {
+        throw new NotFoundException('Short URL not found');
+      }
+    }
+
+    // Validate slug format (alphanumeric, underscore, dot, hyphen only)
+    if (!/^[a-zA-Z0-9_.-]+$/.test(slug)) {
+      throw new NotFoundException('Short URL not found');
     }
   }
 

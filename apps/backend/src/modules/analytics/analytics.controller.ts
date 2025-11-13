@@ -68,7 +68,7 @@ export class AnalyticsController {
     @CurrentUser() user: any,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<AnalyticsResponseDto> {
-    return this.analyticsService.getUrlAnalytics(id, user.id, queryDto);
+    return this.analyticsService.getUrlAnalytics(id, user, queryDto);
   }
 
   /**
@@ -93,7 +93,7 @@ export class AnalyticsController {
     @CurrentUser() user: any,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<AnalyticsResponseDto> {
-    return this.analyticsService.getUserAnalytics(user.id, queryDto);
+    return this.analyticsService.getUserAnalytics(user, queryDto);
   }
 
   /**
@@ -132,7 +132,7 @@ export class AnalyticsController {
   ): Promise<RecentClicksResponseDto> {
     return this.analyticsService.getRecentClicks(
       id,
-      user.id,
+      user,
       limit ? Number(limit) : 20,
       includeBots === 'true',
     );
@@ -171,7 +171,7 @@ export class AnalyticsController {
     @CurrentUser() user: any,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<BotAnalyticsResponseDto> {
-    return this.analyticsService.getBotAnalytics(id, user.id, queryDto);
+    return this.analyticsService.getBotAnalytics(id, user, queryDto);
   }
 
   /**
@@ -196,7 +196,7 @@ export class AnalyticsController {
     @CurrentUser() user: any,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<UserBotAnalyticsResponseDto> {
-    return this.analyticsService.getUserBotAnalytics(user.id, queryDto);
+    return this.analyticsService.getUserBotAnalytics(user, queryDto);
   }
 
   /**
@@ -221,6 +221,6 @@ export class AnalyticsController {
     @CurrentUser() user: any,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<AbTestAnalyticsResponseDto> {
-    return this.analyticsService.getUserAbTestAnalytics(user.id, queryDto);
+    return this.analyticsService.getUserAbTestAnalytics(user, queryDto);
   }
 }

@@ -14,6 +14,7 @@ import {
   RecentClicksResponseDto,
 } from './dto/analytics-response.dto';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
+import { User, UserRole } from '@prisma/client';
 
 @Injectable()
 export class AnalyticsService {
@@ -27,24 +28,37 @@ export class AnalyticsService {
   ) {}
 
   /**
-   * Get analytics data for a URL
+   * Check if user has access to a URL
+   * Admins can access all URLs, regular users can only access their own
    */
-  async getUrlAnalytics(
-    urlId: string,
-    userId: string,
-    queryDto: AnalyticsQueryDto,
-  ): Promise<AnalyticsResponseDto> {
-    // Verify URL exists and belongs to the user
+  private async checkUrlOwnership(urlId: string, user: User): Promise<void> {
+    // Build where condition - admins can access all URLs
+    const whereCondition: any = { id: urlId };
+
+    // Non-admin users can only access their own URLs
+    if (user.role !== UserRole.ADMIN) {
+      whereCondition.userId = user.id;
+    }
+
     const url = await this.prisma.url.findFirst({
-      where: {
-        id: urlId,
-        userId,
-      },
+      where: whereCondition,
     });
 
     if (!url) {
       throw new NotFoundException(ERROR_MESSAGES.URL_NOT_FOUND);
     }
+  }
+
+  /**
+   * Get analytics data for a URL
+   */
+  async getUrlAnalytics(
+    urlId: string,
+    user: User,
+    queryDto: AnalyticsQueryDto,
+  ): Promise<AnalyticsResponseDto> {
+    // Verify URL exists and user has access (admins can access all URLs)
+    await this.checkUrlOwnership(urlId, user);
 
     // Try to get from cache
     const cacheKey = this.getCacheKey(urlId, queryDto);
@@ -57,11 +71,11 @@ export class AnalyticsService {
     const { startDate, endDate } = this.calculateDateRange(queryDto);
 
     // Query click data - optimized to select only necessary fields
-    // Exclude bot traffic from analytics
-    const clicks = await this.prisma.click.findMany({
+    // First, get ALL clicks (including bots) to filter separately
+    // This ensures we capture all valid clicks regardless of bot status
+    const allClicks = await this.prisma.click.findMany({
       where: {
         urlId,
-        isBot: false, // Exclude bot traffic
         createdAt: {
           gte: startDate,
           lte: endDate,
@@ -80,12 +94,16 @@ export class AnalyticsService {
         utmSource: true,
         utmMedium: true,
         utmCampaign: true,
+        isBot: true,
         createdAt: true,
       },
       orderBy: {
         createdAt: 'asc',
       },
     });
+
+    // Filter out bot traffic for analytics
+    const clicks = allClicks.filter((click) => !click.isBot);
 
     // Calculate various statistics
     const overview = await this.calculateOverview(
@@ -131,20 +149,19 @@ export class AnalyticsService {
    * Get analytics data for all user URLs
    */
   async getUserAnalytics(
-    userId: string,
+    user: User,
     queryDto: AnalyticsQueryDto,
   ): Promise<AnalyticsResponseDto> {
     // Calculate date range
     const { startDate, endDate } = this.calculateDateRange(queryDto);
 
     // Query click data for all user URLs - optimized to select only necessary fields
-    // Exclude bot traffic from analytics
-    const clicks = await this.prisma.click.findMany({
+    // First, get ALL clicks (including bots) to filter separately
+    const allClicks = await this.prisma.click.findMany({
       where: {
         url: {
-          userId,
+          userId: user.id,
         },
-        isBot: false, // Exclude bot traffic
         createdAt: {
           gte: startDate,
           lte: endDate,
@@ -163,6 +180,7 @@ export class AnalyticsService {
         utmSource: true,
         utmMedium: true,
         utmCampaign: true,
+        isBot: true,
         createdAt: true,
       },
       orderBy: {
@@ -170,9 +188,12 @@ export class AnalyticsService {
       },
     });
 
+    // Filter out bot traffic for analytics
+    const clicks = allClicks.filter((click) => !click.isBot);
+
     // Calculate statistics (same logic as single URL)
     const overview = await this.calculateUserOverview(
-      userId,
+      user.id,
       clicks,
       startDate,
       endDate,
@@ -207,6 +228,9 @@ export class AnalyticsService {
 
   /**
    * Calculate date range
+   * Returns dates with proper time boundaries:
+   * - startDate: Start of the day (00:00:00)
+   * - endDate: End of current day or specified day (23:59:59.999)
    */
   private calculateDateRange(queryDto: AnalyticsQueryDto): {
     startDate: Date;
@@ -214,15 +238,22 @@ export class AnalyticsService {
   } {
     const now = new Date();
     let startDate: Date;
-    let endDate: Date = now;
+    let endDate: Date;
 
     if (queryDto.timeRange === TimeRange.CUSTOM) {
       if (!queryDto.startDate || !queryDto.endDate) {
         throw new Error('Custom time range requires both startDate and endDate');
       }
       startDate = new Date(queryDto.startDate);
+      startDate.setHours(0, 0, 0, 0); // Start of day
+
       endDate = new Date(queryDto.endDate);
+      endDate.setHours(23, 59, 59, 999); // End of day
     } else {
+      // Set end date to end of today
+      endDate = new Date(now);
+      endDate.setHours(23, 59, 59, 999);
+
       switch (queryDto.timeRange) {
         case TimeRange.LAST_7_DAYS:
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -236,6 +267,9 @@ export class AnalyticsService {
         default:
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       }
+
+      // Set start date to beginning of that day
+      startDate.setHours(0, 0, 0, 0);
     }
 
     return { startDate, endDate };
@@ -347,6 +381,17 @@ export class AnalyticsService {
   /**
    * Calculate time series data
    */
+  /**
+   * Convert Date to YYYY-MM-DD format using server timezone
+   * This ensures consistent date formatting across all operations
+   */
+  private formatDateToString(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
   private calculateTimeSeries(
     clicks: any[],
     startDate: Date,
@@ -355,16 +400,19 @@ export class AnalyticsService {
     const dateMap = new Map<string, number>();
 
     // Initialize all dates to 0
+    // Important: Use server local time, not UTC, to maintain consistency with database records
     const current = new Date(startDate);
     while (current <= endDate) {
-      const dateStr = current.toISOString().split('T')[0];
+      const dateStr = this.formatDateToString(current);
       dateMap.set(dateStr, 0);
       current.setDate(current.getDate() + 1);
     }
 
     // Count daily clicks
     clicks.forEach((click) => {
-      const dateStr = new Date(click.createdAt).toISOString().split('T')[0];
+      // Convert createdAt to local date string consistently
+      const clickDate = new Date(click.createdAt);
+      const dateStr = this.formatDateToString(clickDate);
       const count = dateMap.get(dateStr) || 0;
       dateMap.set(dateStr, count + 1);
     });
@@ -479,21 +527,12 @@ export class AnalyticsService {
    */
   async getRecentClicks(
     urlId: string,
-    userId: string,
+    user: User,
     limit: number = 20,
     includeBots: boolean = false,
   ): Promise<RecentClicksResponseDto> {
-    // Verify URL exists and belongs to the user
-    const url = await this.prisma.url.findFirst({
-      where: {
-        id: urlId,
-        userId,
-      },
-    });
-
-    if (!url) {
-      throw new NotFoundException(ERROR_MESSAGES.URL_NOT_FOUND);
-    }
+    // Verify URL exists and user has access (admins can access all URLs)
+    await this.checkUrlOwnership(urlId, user);
 
     // Build where condition
     const whereCondition: any = { urlId };
@@ -557,23 +596,14 @@ export class AnalyticsService {
    */
   async getBotAnalytics(
     urlId: string,
-    userId: string,
+    user: User,
     queryDto: AnalyticsQueryDto,
   ): Promise<{
     totalBotClicks: number;
     botTypes: { botName: string; clicks: number; percentage: number }[];
   }> {
-    // Verify URL exists and belongs to the user
-    const url = await this.prisma.url.findFirst({
-      where: {
-        id: urlId,
-        userId,
-      },
-    });
-
-    if (!url) {
-      throw new NotFoundException(ERROR_MESSAGES.URL_NOT_FOUND);
-    }
+    // Verify URL exists and user has access (admins can access all URLs)
+    await this.checkUrlOwnership(urlId, user);
 
     // Calculate date range
     const { startDate, endDate } = this.calculateDateRange(queryDto);
@@ -624,7 +654,7 @@ export class AnalyticsService {
    * Get bot analytics for all user URLs
    */
   async getUserBotAnalytics(
-    userId: string,
+    user: User,
     queryDto: AnalyticsQueryDto,
   ): Promise<{
     totalBotClicks: number;
@@ -636,7 +666,7 @@ export class AnalyticsService {
 
     // Get all URLs for the user
     const userUrls = await this.prisma.url.findMany({
-      where: { userId },
+      where: { userId: user.id },
       select: { id: true },
     });
 
@@ -715,7 +745,7 @@ export class AnalyticsService {
    * Aggregates statistics across all URLs with A/B Testing enabled
    */
   async getUserAbTestAnalytics(
-    userId: string,
+    user: User,
     queryDto: AnalyticsQueryDto,
   ): Promise<{
     totalAbTestUrls: number;
@@ -737,7 +767,7 @@ export class AnalyticsService {
     // Get all URLs with A/B Testing enabled for the user
     const abTestUrls = await this.prisma.url.findMany({
       where: {
-        userId,
+        userId: user.id,
         isAbTest: true,
       },
       select: {

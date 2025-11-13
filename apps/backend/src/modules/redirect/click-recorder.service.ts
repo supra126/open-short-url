@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { PrismaService } from '@/common/database/prisma.service';
+import { CacheService } from '@/common/cache/cache.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { UrlService } from '@/modules/url/url.service';
 import { parseUserAgent } from '@/common/utils/user-agent-parser';
@@ -28,9 +29,12 @@ interface ClickRecordedEvent {
  */
 @Injectable()
 export class ClickRecorderService {
+  private readonly ANALYTICS_CACHE_PREFIX = 'analytics:';
+
   constructor(
     private prisma: PrismaService,
     private urlService: UrlService,
+    private cacheService: CacheService,
     private loggerService: LoggerService,
   ) {}
 
@@ -65,6 +69,9 @@ export class ClickRecorderService {
 
         await Promise.all(operations);
       }
+
+      // Clear analytics cache for this URL to ensure fresh data on next query
+      await this.clearAnalyticsCache(urlId);
     } catch (error: any) {
       // Log error but don't affect user experience
       this.loggerService.error(
@@ -155,5 +162,42 @@ export class ClickRecorderService {
         },
       },
     });
+  }
+
+  /**
+   * Clear analytics cache for a URL
+   * This ensures fresh data is retrieved when analytics is queried next
+   */
+  private async clearAnalyticsCache(urlId: string): Promise<void> {
+    try {
+      // Get the URL to find the user ID
+      const url = await this.prisma.url.findUnique({
+        where: { id: urlId },
+        select: { userId: true },
+      });
+
+      if (!url) return;
+
+      // Clear cache keys for this URL's analytics using pattern matching
+      // Format: analytics:{urlId}:{timeRange}:*
+      // The * matches any startDate:endDate combination
+      const urlPattern = `${this.ANALYTICS_CACHE_PREFIX}${urlId}:*`;
+      const userPattern = `${this.ANALYTICS_CACHE_PREFIX}${url.userId}:*`;
+
+      // Use delPattern to clear all matching keys
+      await this.cacheService.delPattern(urlPattern);
+      await this.cacheService.delPattern(userPattern);
+
+      this.loggerService.debug(
+        `Cleared analytics cache for URL: ${urlId} and user: ${url.userId}`,
+        'ClickRecorderService',
+      );
+    } catch (error: any) {
+      // Log but don't fail - cache clearing is non-critical
+      this.loggerService.debug(
+        `Failed to clear analytics cache: ${error.message}`,
+        'ClickRecorderService',
+      );
+    }
   }
 }

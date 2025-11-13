@@ -108,7 +108,7 @@ export class BundleController {
     @CurrentUser() user: any,
     @Query() query: BundleQueryDto,
   ): Promise<BundleListResponseDto> {
-    return this.bundleService.findAll(user.id, query);
+    return this.bundleService.findAll(user.id, query, user.role);
   }
 
   /**
@@ -139,7 +139,7 @@ export class BundleController {
     @CurrentUser() user: any,
     @Param('id') id: string,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.findOne(user.id, id);
+    return this.bundleService.findOne(user.id, id, user.role);
   }
 
   /**
@@ -171,7 +171,7 @@ export class BundleController {
     @Param('id') id: string,
     @Body() updateBundleDto: UpdateBundleDto,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.update(user.id, id, updateBundleDto);
+    return this.bundleService.update(user.id, id, updateBundleDto, user.role);
   }
 
   /**
@@ -202,7 +202,7 @@ export class BundleController {
     @CurrentUser() user: any,
     @Param('id') id: string,
   ): Promise<void> {
-    return this.bundleService.remove(user.id, id);
+    return this.bundleService.remove(user.id, id, user.role);
   }
 
   /**

@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, BundleStatus } from '@prisma/client';
+import { Prisma, BundleStatus, UserRole } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { CreateBundleDto } from './dto/create-bundle.dto';
 import { UpdateBundleDto } from './dto/update-bundle.dto';
@@ -87,17 +87,18 @@ export class BundleService {
   }
 
   /**
-   * Find all bundles for a user
+   * Find all bundles (admins can see all, users see only their own)
    */
   async findAll(
     userId: string,
     query: BundleQueryDto,
+    userRole?: UserRole,
   ): Promise<BundleListResponseDto> {
     const { page = 1, pageSize = 10, status, search } = query;
     const skip = (page - 1) * pageSize;
 
     const where: Prisma.BundleWhereInput = {
-      userId,
+      ...(userRole !== UserRole.ADMIN && { userId }),
       ...(status && { status }),
       ...(search && {
         OR: [
@@ -151,11 +152,14 @@ export class BundleService {
   }
 
   /**
-   * Find a bundle by ID
+   * Find a bundle by ID (admins can access all, users can access only their own)
    */
-  async findOne(userId: string, id: string): Promise<BundleResponseDto> {
+  async findOne(userId: string, id: string, userRole?: UserRole): Promise<BundleResponseDto> {
     const bundle = await this.prisma.bundle.findFirst({
-      where: { id, userId },
+      where: {
+        id,
+        ...(userRole !== UserRole.ADMIN && { userId }),
+      },
       include: {
         urls: {
           include: {
@@ -186,16 +190,20 @@ export class BundleService {
   }
 
   /**
-   * Update a bundle
+   * Update a bundle (admins can update all, users can update only their own)
    */
   async update(
     userId: string,
     id: string,
     updateBundleDto: UpdateBundleDto,
+    userRole?: UserRole,
   ): Promise<BundleResponseDto> {
-    // Check if bundle exists and belongs to user
+    // Check if bundle exists and user has access
     const existingBundle = await this.prisma.bundle.findFirst({
-      where: { id, userId },
+      where: {
+        id,
+        ...(userRole !== UserRole.ADMIN && { userId }),
+      },
     });
 
     if (!existingBundle) {
@@ -231,11 +239,14 @@ export class BundleService {
   }
 
   /**
-   * Delete a bundle
+   * Delete a bundle (admins can delete all, users can delete only their own)
    */
-  async remove(userId: string, id: string): Promise<void> {
+  async remove(userId: string, id: string, userRole?: UserRole): Promise<void> {
     const bundle = await this.prisma.bundle.findFirst({
-      where: { id, userId },
+      where: {
+        id,
+        ...(userRole !== UserRole.ADMIN && { userId }),
+      },
     });
 
     if (!bundle) {

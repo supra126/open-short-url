@@ -339,6 +339,8 @@ yarn dev
 - **Anthropic Claude**（claude-3-5-sonnet、claude-3-5-haiku 等）
 - **OpenAI GPT**（gpt-4o、gpt-4o-mini、gpt-4-turbo 等）
 - **Google Gemini**（gemini-2.0-flash-exp、gemini-1.5-pro 等）
+- **Mistral**（mistral-large-latest、mistral-medium 等）
+- **Cohere**（command-r-plus、command-r 等）
 
 ### 設定方式
 
@@ -346,7 +348,7 @@ yarn dev
 
 ```bash
 # 選擇您的 AI 供應商
-AI_PROVIDER=anthropic  # 選項：anthropic、openai、google
+AI_PROVIDER=anthropic  # 選項：anthropic、openai、google、mistral、cohere
 
 # Anthropic Claude
 AI_MODEL=claude-3-5-sonnet-20241022
@@ -359,6 +361,14 @@ OPENAI_API_KEY=sk-your-api-key-here
 # Google Gemini
 AI_MODEL=gemini-2.0-flash-exp
 GOOGLE_API_KEY=your-api-key-here
+
+# Mistral
+AI_MODEL=mistral-large-latest
+MISTRAL_API_KEY=your-api-key-here
+
+# Cohere
+AI_MODEL=command-r-plus
+COHERE_API_KEY=your-api-key-here
 ```
 
 ### 功能特色
@@ -671,7 +681,7 @@ app.listen(3000);
 ## 技術架構
 
 - **後端**：NestJS、Prisma、PostgreSQL、Redis（選用）
-- **前端**：Next.js 15、React 19、TypeScript、Tailwind CSS、TanStack Query
+- **前端**：Next.js 16、React 19、TypeScript、Tailwind CSS、TanStack Query
 - **安全性**：JWT、bcrypt、Cloudflare Turnstile
 - **分析**：即時點擊追蹤與地理資料、機器人偵測
 - **視覺化**：Recharts 資料視覺化
