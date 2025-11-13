@@ -200,3 +200,84 @@ export class RecentClicksResponseDto {
   @ApiProperty({ description: 'Total number of clicks', example: 250 })
   total!: number;
 }
+
+// Bot type statistics
+export class BotTypeStat {
+  @ApiProperty({ description: 'Bot name', example: 'Googlebot' })
+  botName!: string;
+
+  @ApiProperty({ description: 'Number of clicks', example: 45 })
+  clicks!: number;
+
+  @ApiProperty({ description: 'Percentage', example: 35.2 })
+  percentage!: number;
+}
+
+// Bot analytics response for a single URL
+export class BotAnalyticsResponseDto {
+  @ApiProperty({ description: 'Total bot clicks', example: 128 })
+  totalBotClicks!: number;
+
+  @ApiProperty({
+    description: 'Bot type distribution (Top 10)',
+    type: [BotTypeStat],
+  })
+  botTypes!: BotTypeStat[];
+}
+
+// Bot analytics response for all user URLs
+export class UserBotAnalyticsResponseDto {
+  @ApiProperty({ description: 'Total bot clicks', example: 256 })
+  totalBotClicks!: number;
+
+  @ApiProperty({ description: 'Bot traffic percentage', example: 12.5 })
+  botPercentage!: number;
+
+  @ApiProperty({
+    description: 'Bot type distribution (Top 10)',
+    type: [BotTypeStat],
+  })
+  botTypes!: BotTypeStat[];
+}
+
+// Top performing variant statistics
+export class TopPerformingVariant {
+  @ApiProperty({ description: 'URL slug', example: 'abc123' })
+  urlSlug!: string;
+
+  @ApiProperty({ description: 'Variant name', example: 'Variant A' })
+  variantName!: string;
+
+  @ApiProperty({ description: 'Number of clicks', example: 150 })
+  clicks!: number;
+
+  @ApiProperty({ description: 'Click-through rate (%)', example: 45.5 })
+  clickThroughRate!: number;
+}
+
+// A/B Testing analytics response
+export class AbTestAnalyticsResponseDto {
+  @ApiProperty({ description: 'Total number of URLs with A/B testing enabled', example: 5 })
+  totalAbTestUrls!: number;
+
+  @ApiProperty({ description: 'Total clicks on A/B test URLs', example: 500 })
+  totalTestClicks!: number;
+
+  @ApiProperty({ description: 'Control group clicks', example: 250 })
+  controlGroupClicks!: number;
+
+  @ApiProperty({ description: 'Variant clicks', example: 250 })
+  variantClicks!: number;
+
+  @ApiProperty({ description: 'Control group percentage', example: 50.0 })
+  controlGroupPercentage!: number;
+
+  @ApiProperty({ description: 'Variant percentage', example: 50.0 })
+  variantPercentage!: number;
+
+  @ApiProperty({
+    description: 'Top performing variants',
+    type: [TopPerformingVariant],
+  })
+  topPerformingVariants!: TopPerformingVariant[];
+}

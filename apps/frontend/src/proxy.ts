@@ -2,9 +2,9 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 /**
- * Next.js Middleware for Authentication Guard
+ * Next.js Proxy for Authentication Guard
  *
- * This middleware runs on the Edge Runtime and intercepts requests BEFORE they reach the page.
+ * This proxy runs on the Edge Runtime and intercepts requests BEFORE they reach the page.
  * Benefits:
  * - No page flash/flicker (redirects before React renders)
  * - Better security (server-side check)
@@ -36,15 +36,15 @@ const publicRoutes = [
 // API routes (skip middleware, let API handle auth)
 const apiRoutes = ['/api'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Skip middleware for API routes
+  // Skip proxy for API routes
   if (apiRoutes.some((route) => pathname.startsWith(route))) {
     return NextResponse.next();
   }
 
-  // Skip middleware for static files and Next.js internals
+  // Skip proxy for static files and Next.js internals
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
@@ -80,7 +80,7 @@ export function middleware(request: NextRequest) {
 
     // Has token - allow access
     // Note: The actual JWT validation is still done on the server/backend
-    // This middleware only does a quick check to prevent obvious unauthorized access
+    // This proxy only does a quick check to prevent obvious unauthorized access
     return NextResponse.next();
   }
 
@@ -96,7 +96,7 @@ export function middleware(request: NextRequest) {
   return NextResponse.next();
 }
 
-// Configure which routes the middleware runs on
+// Configure which routes the proxy runs on
 export const config = {
   /*
    * Match all request paths except for:

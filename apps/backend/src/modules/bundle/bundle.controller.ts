@@ -17,6 +17,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
 import { BundleService } from './bundle.service';
@@ -37,6 +38,7 @@ import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 @Controller('api/bundles')
 @UseGuards(JwtOrApiKeyAuthGuard)
 @ApiBearerAuth('JWT-auth')
+@ApiSecurity('API-Key')
 export class BundleController {
   constructor(private readonly bundleService: BundleService) {}
 

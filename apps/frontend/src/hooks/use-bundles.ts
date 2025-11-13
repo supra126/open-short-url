@@ -32,7 +32,7 @@ const bundleKeys = {
 async function getBundles(params?: BundleQueryDto): Promise<BundleListResponse> {
   const queryParams = new URLSearchParams();
   if (params?.page) queryParams.set('page', params.page.toString());
-  if (params?.limit) queryParams.set('limit', params.limit.toString());
+  if (params?.pageSize) queryParams.set('pageSize', params.pageSize.toString());
   if (params?.status) queryParams.set('status', params.status);
   if (params?.search) queryParams.set('search', params.search);
 

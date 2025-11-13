@@ -69,7 +69,7 @@ export default function UsersPage() {
 
   const { data, isLoading } = useUsers({
     page,
-    limit: 10,
+    pageSize: 10,
     search: search || undefined,
     role: roleFilter,
     isActive: statusFilter,
@@ -308,14 +308,14 @@ export default function UsersPage() {
                   {t('common.loading')}
                 </TableCell>
               </TableRow>
-            ) : data?.users.length === 0 ? (
+            ) : data?.data.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center">
                   {t('users.noUsers')}
                 </TableCell>
               </TableRow>
             ) : (
-              data?.users.map((user) => (
+              data?.data.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.email}</TableCell>
                   <TableCell>{user.name || '-'}</TableCell>

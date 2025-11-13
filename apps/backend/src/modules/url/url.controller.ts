@@ -16,6 +16,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
 import { UrlService } from './url.service';
@@ -37,6 +38,7 @@ import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 @Controller('api/urls')
 @UseGuards(JwtOrApiKeyAuthGuard)
 @ApiBearerAuth('JWT-auth')
+@ApiSecurity('API-Key')
 export class UrlController {
   constructor(
     private readonly urlService: UrlService,

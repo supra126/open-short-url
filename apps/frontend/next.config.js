@@ -4,32 +4,35 @@ const withBundleAnalyzer = require('@next/bundle-analyzer')({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 生產模式優化
+  // Production optimization
   compress: true,
 
-  // 圖片優化
+  // Image optimization
   images: {
     formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Next.js 16: minimumCacheTTL default changed from 60s to 4 hours (14400s)
+    // Uncomment to customize if needed
+    // minimumCacheTTL: 14400,
   },
 
-  // 實驗性功能
+  // Experimental features
   experimental: {
     optimizeCss: true,
     optimizePackageImports: ['lucide-react', 'recharts'],
   },
 
-  // 嚴格模式
+  // Strict mode
   reactStrictMode: true,
 
-  // 環境變數
+  // Environment variables
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
   },
 
-  // 安全標頭配置
+  // Security headers configuration
   async headers() {
     return [
       {
@@ -83,7 +86,10 @@ const nextConfig = {
     ];
   },
 
-  // Webpack 配置
+  // Turbopack configuration (Next.js 16+ default)
+  turbopack: {},
+
+  // Webpack configuration (kept for compatibility)
   webpack: (config) => {
     return config;
   },

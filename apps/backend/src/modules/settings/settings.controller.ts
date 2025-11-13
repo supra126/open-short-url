@@ -37,6 +37,8 @@ export class SettingsController {
    * Get all system settings (ADMIN only)
    */
   @Get('system')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Get all system settings',
     description: 'Retrieve all system settings (admin only)',
@@ -51,10 +53,14 @@ export class SettingsController {
     description: 'Unauthorized',
     type: ErrorResponseDto,
   })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Insufficient permissions (admin role required)',
+    type: ErrorResponseDto,
+  })
   async getAllSystemSettings(
     @CurrentUser() _user: any,
   ): Promise<SystemSettingsResponseDto[]> {
-    // TODO: Check if user role is ADMIN
     return this.settingsService.getAllSystemSettings();
   }
 
@@ -96,6 +102,8 @@ export class SettingsController {
    * Update system setting (ADMIN only)
    */
   @Put('system/:key')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Update system setting',
     description: 'Update or create system setting (admin only)',
@@ -115,11 +123,15 @@ export class SettingsController {
     description: 'Unauthorized',
     type: ErrorResponseDto,
   })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Insufficient permissions (admin role required)',
+    type: ErrorResponseDto,
+  })
   async updateSystemSetting(
     @Param('key') key: string,
     @Body() body: { value: any; description?: string },
   ): Promise<SystemSettingsResponseDto> {
-    // TODO: Check if user role is ADMIN
     return this.settingsService.updateSystemSetting(
       key,
       body.value,
@@ -131,6 +143,8 @@ export class SettingsController {
    * Delete system setting (ADMIN only)
    */
   @Delete('system/:key')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete system setting',
@@ -150,8 +164,12 @@ export class SettingsController {
     description: 'Unauthorized',
     type: ErrorResponseDto,
   })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Insufficient permissions (admin role required)',
+    type: ErrorResponseDto,
+  })
   async deleteSystemSetting(@Param('key') key: string): Promise<void> {
-    // TODO: Check if user role is ADMIN
     return this.settingsService.deleteSystemSetting(key);
   }
 }

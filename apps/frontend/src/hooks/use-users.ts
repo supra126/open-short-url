@@ -26,16 +26,16 @@ export interface User {
 }
 
 export interface UserListResponse {
-  users: User[];
+  data: User[];
   total: number;
   page: number;
-  limit: number;
+  pageSize: number;
   totalPages: number;
 }
 
 export interface UserListQuery {
   page?: number;
-  limit?: number;
+  pageSize?: number;
   search?: string;
   role?: UserRole;
   isActive?: boolean;
@@ -75,7 +75,7 @@ const userKeys = {
 async function getUsers(query: UserListQuery): Promise<UserListResponse> {
   const params = new URLSearchParams();
   if (query.page) params.append('page', query.page.toString());
-  if (query.limit) params.append('limit', query.limit.toString());
+  if (query.pageSize) params.append('pageSize', query.pageSize.toString());
   if (query.search) params.append('search', query.search);
   if (query.role) params.append('role', query.role);
   if (query.isActive !== undefined) params.append('isActive', query.isActive.toString());

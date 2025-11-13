@@ -16,6 +16,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
 import { WebhookService } from './webhook.service';
@@ -36,6 +37,7 @@ import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 @Controller('api/webhooks')
 @UseGuards(JwtOrApiKeyAuthGuard)
 @ApiBearerAuth('JWT-auth')
+@ApiSecurity('API-Key')
 export class WebhookController {
   constructor(private readonly webhookService: WebhookService) {}
 

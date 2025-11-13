@@ -193,6 +193,8 @@ Visit \`GET /:slug\` to redirect to the original URL
     .addTag('Analytics', 'URL click analytics and statistics')
     .addTag('Settings', 'Brand settings and system configuration management')
     .addTag('API Keys', 'API Key creation, query and management')
+    .addTag('Bundles', 'Link bundle management for organizing multiple short URLs')
+    .addTag('Webhooks', 'Webhook subscription and event notification management')
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

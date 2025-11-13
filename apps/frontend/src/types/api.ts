@@ -411,13 +411,13 @@ export interface BundleListResponse {
   data: BundleResponse[];
   total: number;
   page: number;
-  limit: number;
+  pageSize: number;
   totalPages: number;
 }
 
 export interface BundleQueryDto {
   page?: number;
-  limit?: number;
+  pageSize?: number;
   status?: 'ACTIVE' | 'ARCHIVED';
   search?: string;
 }

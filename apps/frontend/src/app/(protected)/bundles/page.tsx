@@ -65,12 +65,12 @@ export default function BundlesPage() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ACTIVE');
   const [searchQuery, setSearchQuery] = useState('');
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const pageSize = 10;
 
   // Query
   const { data, isLoading, error } = useBundles({
     page,
-    limit,
+    pageSize,
     status: statusFilter === 'ALL' ? undefined : statusFilter,
     search: searchQuery || undefined,
   });

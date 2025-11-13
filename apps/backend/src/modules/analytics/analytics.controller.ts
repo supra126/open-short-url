@@ -11,6 +11,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
 import { AnalyticsService } from './analytics.service';
@@ -18,6 +19,9 @@ import { AnalyticsQueryDto } from './dto/analytics-query.dto';
 import {
   AnalyticsResponseDto,
   RecentClicksResponseDto,
+  BotAnalyticsResponseDto,
+  UserBotAnalyticsResponseDto,
+  AbTestAnalyticsResponseDto,
 } from './dto/analytics-response.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -27,6 +31,7 @@ import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 @Controller('api/analytics')
 @UseGuards(JwtOrApiKeyAuthGuard)
 @ApiBearerAuth('JWT-auth')
+@ApiSecurity('API-Key')
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
 
@@ -149,6 +154,7 @@ export class AnalyticsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Query successful',
+    type: BotAnalyticsResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -164,7 +170,7 @@ export class AnalyticsController {
     @Param('id') id: string,
     @CurrentUser() user: any,
     @Query() queryDto: AnalyticsQueryDto,
-  ) {
+  ): Promise<BotAnalyticsResponseDto> {
     return this.analyticsService.getBotAnalytics(id, user.id, queryDto);
   }
 
@@ -179,6 +185,7 @@ export class AnalyticsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Query successful',
+    type: UserBotAnalyticsResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -188,7 +195,7 @@ export class AnalyticsController {
   async getUserBotAnalytics(
     @CurrentUser() user: any,
     @Query() queryDto: AnalyticsQueryDto,
-  ) {
+  ): Promise<UserBotAnalyticsResponseDto> {
     return this.analyticsService.getUserBotAnalytics(user.id, queryDto);
   }
 
@@ -203,6 +210,7 @@ export class AnalyticsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Query successful',
+    type: AbTestAnalyticsResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -212,7 +220,7 @@ export class AnalyticsController {
   async getUserAbTestAnalytics(
     @CurrentUser() user: any,
     @Query() queryDto: AnalyticsQueryDto,
-  ) {
+  ): Promise<AbTestAnalyticsResponseDto> {
     return this.analyticsService.getUserAbTestAnalytics(user.id, queryDto);
   }
 }
