@@ -1,6 +1,6 @@
 {
   "name": "@open-short-url/mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Model Context Protocol (MCP) Server for Open Short URL",
   "type": "module",
   "main": "dist/index.js",
@@ -34,7 +34,7 @@
   "author": "supra126",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.20.1"
+    "@modelcontextprotocol/sdk": "^1.24.0"
   },
   "devDependencies": {
     "@types/node": "^20.17.9",
