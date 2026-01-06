@@ -5,7 +5,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '@/common/database/prisma.service';
-import { UserRole } from '@prisma/client';
+import { Prisma, UserRole, User } from '@prisma/client';
 import { hashPassword } from '@/common/utils';
 import {
   UserListQueryDto,
@@ -71,7 +71,7 @@ export class UsersService {
     const skip = (page - 1) * pageSize;
 
     // Build query conditions
-    const where: any = {};
+    const where: Prisma.UserWhereInput = {};
 
     // Search by name or email
     if (search) {
@@ -281,11 +281,20 @@ export class UsersService {
   /**
    * Map user to response DTO
    */
-  private mapUserResponse(user: any): UserResponseDto {
+  private mapUserResponse(user: {
+    id: string;
+    email: string;
+    name: string | null;
+    role: UserRole;
+    isActive: boolean;
+    twoFactorEnabled: boolean;
+    createdAt: Date;
+    updatedAt: Date;
+  }): UserResponseDto {
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: user.name ?? undefined,
       role: user.role,
       isActive: user.isActive,
       twoFactorEnabled: user.twoFactorEnabled,

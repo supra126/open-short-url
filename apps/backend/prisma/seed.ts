@@ -1,13 +1,36 @@
+import 'dotenv/config';
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
+import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 
-const prisma = new PrismaClient();
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
+
+const pool = new Pool({ connectionString: databaseUrl });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log('🌱 Starting database seeding...');
 
+  // Get admin password from environment variable or generate a secure random one
+  let adminPassword = process.env.ADMIN_INITIAL_PASSWORD;
+  let isGeneratedPassword = false;
+
+  if (!adminPassword) {
+    // Generate a secure random password if not provided
+    adminPassword = crypto.randomBytes(16).toString('base64').slice(0, 20);
+    isGeneratedPassword = true;
+    console.log('⚠️  ADMIN_INITIAL_PASSWORD not set, generating random password...');
+  }
+
   // Create admin user
-  const hashedPassword = await bcrypt.hash('admin123', 10);
+  const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
   const admin = await prisma.user.upsert({
     where: { email: 'admin@example.com' },
@@ -92,9 +115,15 @@ async function main() {
   console.log('✅ Created branding system settings:', brandingSettings.length, 'entries');
 
   console.log('🎉 Database seeding completed!');
-  console.log('\n📝 Default credentials:');
+  console.log('\n📝 Admin credentials:');
   console.log('   Email: admin@example.com');
-  console.log('   Password: admin123');
+  if (isGeneratedPassword) {
+    console.log(`   Password: ${adminPassword}`);
+    console.log('\n⚠️  IMPORTANT: Save this password! It will not be shown again.');
+    console.log('   For production, set ADMIN_INITIAL_PASSWORD environment variable.');
+  } else {
+    console.log('   Password: (set via ADMIN_INITIAL_PASSWORD)');
+  }
   console.log('\n🔗 Sample URL: /demo');
 }
 
@@ -105,4 +134,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });

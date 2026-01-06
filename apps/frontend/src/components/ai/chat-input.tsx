@@ -108,8 +108,8 @@ export function ChatInput({
 
       {/* Hint text */}
       <div className="mt-2 text-xs text-muted-foreground">
-        按 <kbd className="px-1 py-0.5 bg-muted rounded">{t('ai.chat.enterKey')}</kbd> 發送訊息，
-        <kbd className="px-1 py-0.5 bg-muted rounded">{t('ai.chat.shiftEnterKey')}</kbd> 換行
+        {t('ai.chat.sendHintPrefix')} <kbd className="px-1 py-0.5 bg-muted rounded">{t('ai.chat.enterKey')}</kbd> {t('ai.chat.sendHintSend')}
+        <kbd className="px-1 py-0.5 bg-muted rounded">{t('ai.chat.shiftEnterKey')}</kbd> {t('ai.chat.sendHintNewLine')}
       </div>
     </form>
   );

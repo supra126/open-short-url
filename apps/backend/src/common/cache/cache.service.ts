@@ -113,7 +113,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
         );
       }
       this.redisAvailable = true;
-    } catch (error) {
+    } catch {
       if (this.redisAvailable) {
         this.loggerService.warn(
           '⚠️  Redis connection lost - caching disabled',
@@ -156,7 +156,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
 
     try {
       const value = await this.redis.get(key);
-      return value ? JSON.parse(value) : null;
+      return value ? (JSON.parse(value) as T) : null;
     } catch (error) {
       this.loggerService.error(
         `Cache get error for key ${key}`,
@@ -173,7 +173,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
    * Set value with optional TTL (in seconds)
    * Skips operation if Redis is unavailable
    */
-  async set(key: string, value: any, ttl?: number): Promise<void> {
+  async set(key: string, value: unknown, ttl?: number): Promise<void> {
     if (!this.redisAvailable || !this.redis) {
       this.loggerService.debug(
         `Cache disabled - skipping set for key: ${key}`,

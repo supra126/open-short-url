@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PaginationMetaDto } from '@/common/dto/paginated-response.dto';
 
 export class ApiKeyResponseDto {
   @ApiProperty({
@@ -51,44 +52,10 @@ export class ApiKeyResponseDto {
   updatedAt!: Date;
 }
 
-export class ApiKeyListResponseDto {
+export class ApiKeyListResponseDto extends PaginationMetaDto {
   @ApiProperty({
     description: 'API Key list',
     type: [ApiKeyResponseDto],
-    example: [
-      {
-        id: 'clkey123456789',
-        name: 'Production API Key',
-        prefix: 'osu_prod_1234...',
-        lastUsedAt: '2025-10-15T08:30:00.000Z',
-        createdAt: '2025-10-01T10:00:00.000Z',
-        updatedAt: '2025-10-17T09:08:52.000Z',
-      },
-    ],
   })
   data!: ApiKeyResponseDto[];
-
-  @ApiProperty({
-    description: 'Total number of records',
-    example: 3,
-  })
-  total!: number;
-
-  @ApiProperty({
-    description: 'Current page number',
-    example: 1,
-  })
-  page!: number;
-
-  @ApiProperty({
-    description: 'Number of items per page',
-    example: 10,
-  })
-  pageSize!: number;
-
-  @ApiProperty({
-    description: 'Total number of pages',
-    example: 1,
-  })
-  totalPages!: number;
 }

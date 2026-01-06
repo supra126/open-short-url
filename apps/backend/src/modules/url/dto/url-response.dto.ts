@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { PaginationMetaDto } from '@/common/dto/paginated-response.dto';
 
 export class UrlResponseDto {
   @ApiProperty({
@@ -105,48 +106,10 @@ export class UrlResponseDto {
   updatedAt!: Date;
 }
 
-export class UrlListResponseDto {
+export class UrlListResponseDto extends PaginationMetaDto {
   @ApiProperty({
     description: 'URL list',
     type: [UrlResponseDto],
-    example: [
-      {
-        id: 'clxxx123456789',
-        slug: 'abc123',
-        originalUrl: 'https://example.com/very-long-url',
-        title: 'My Link',
-        userId: 'clusr123456789',
-        status: 'ACTIVE',
-        clickCount: 142,
-        hasPassword: false,
-        createdAt: '2025-10-01T10:30:00.000Z',
-        updatedAt: '2025-10-17T09:08:52.000Z',
-      },
-    ],
   })
   data!: UrlResponseDto[];
-
-  @ApiProperty({
-    description: 'Total number of records',
-    example: 25,
-  })
-  total!: number;
-
-  @ApiProperty({
-    description: 'Current page number',
-    example: 1,
-  })
-  page!: number;
-
-  @ApiProperty({
-    description: 'Number of records per page',
-    example: 10,
-  })
-  pageSize!: number;
-
-  @ApiProperty({
-    description: 'Total number of pages',
-    example: 3,
-  })
-  totalPages!: number;
 }

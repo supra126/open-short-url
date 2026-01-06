@@ -289,7 +289,7 @@ cd open-short-url
 2. **安裝相依套件**
 
 ```bash
-yarn install
+pnpm install
 ```
 
 3. **設定環境變數**
@@ -309,15 +309,15 @@ cp apps/frontend/.env.example apps/frontend/.env.local
 
 ```bash
 cd apps/backend
-yarn prisma:migrate
-yarn prisma:seed
+pnpm prisma:migrate
+pnpm prisma:seed
 ```
 
 5. **啟動開發伺服器**
 
 ```bash
 # 從專案根目錄
-yarn dev
+pnpm dev
 ```
 
 開啟網址：

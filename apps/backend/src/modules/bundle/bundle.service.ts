@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Prisma, BundleStatus, UserRole } from '@prisma/client';
+import { Prisma, BundleStatus, UserRole, UrlStatus } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { CreateBundleDto } from './dto/create-bundle.dto';
 import { UpdateBundleDto } from './dto/update-bundle.dto';
@@ -17,6 +17,34 @@ import {
   BundleStatsDto,
 } from './dto/bundle-response.dto';
 import { AddUrlToBundleDto, AddMultipleUrlsDto } from './dto/add-url-to-bundle.dto';
+
+/**
+ * Internal type for Prisma bundle query result with URL relations
+ */
+interface BundleWithUrls {
+  id: string;
+  name: string;
+  description: string | null;
+  color: string | null;
+  icon: string | null;
+  status: BundleStatus;
+  userId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  urls?: Array<{
+    id: string;
+    order: number;
+    url: {
+      id: string;
+      slug: string;
+      originalUrl: string;
+      title: string | null;
+      clickCount: number;
+      status: UrlStatus;
+      createdAt: Date;
+    } | null;
+  }>;
+}
 
 @Injectable()
 export class BundleService {
@@ -432,11 +460,14 @@ export class BundleService {
   }
 
   /**
-   * Get bundle statistics
+   * Get bundle statistics (admins can access all, users can access only their own)
    */
-  async getStats(userId: string, bundleId: string): Promise<BundleStatsDto> {
+  async getStats(userId: string, bundleId: string, userRole?: UserRole): Promise<BundleStatsDto> {
     const bundle = await this.prisma.bundle.findFirst({
-      where: { id: bundleId, userId },
+      where: {
+        id: bundleId,
+        ...(userRole !== UserRole.ADMIN && { userId }),
+      },
       include: {
         urls: {
           include: {
@@ -532,41 +563,42 @@ export class BundleService {
   /**
    * Map Prisma bundle to response DTO
    */
-  private mapToResponseDto(bundle: any): BundleResponseDto {
+  private mapToResponseDto(bundle: BundleWithUrls): BundleResponseDto {
     try {
       const totalClicks = bundle.urls?.reduce(
-        (sum: number, bundleUrl: any) => sum + (bundleUrl.url?.clickCount || 0),
+        (sum: number, bundleUrl) => sum + (bundleUrl.url?.clickCount || 0),
         0,
       ) || 0;
+
+      const shortUrlDomain = this.configService.get<string>('SHORT_URL_DOMAIN');
 
       return {
         id: bundle.id,
         name: bundle.name,
-        description: bundle.description,
-        color: bundle.color,
-        icon: bundle.icon,
+        description: bundle.description ?? undefined,
+        color: bundle.color ?? '',
+        icon: bundle.icon ?? '',
         status: bundle.status,
         userId: bundle.userId,
         urlCount: bundle.urls?.length || 0,
         totalClicks,
-        urls: bundle.urls?.map((bundleUrl: any) => {
+        urls: bundle.urls?.map((bundleUrl) => {
           if (!bundleUrl.url) {
             this.logger.warn(`BundleUrl ${bundleUrl.id} is missing url relation`);
             return null;
           }
-          const shortUrlDomain = this.configService.get<string>('SHORT_URL_DOMAIN');
           return {
             id: bundleUrl.url.id,
             slug: bundleUrl.url.slug,
             shortUrl: `${shortUrlDomain}/${bundleUrl.url.slug}`,
             originalUrl: bundleUrl.url.originalUrl,
-            title: bundleUrl.url.title,
+            title: bundleUrl.url.title ?? undefined,
             clickCount: bundleUrl.url.clickCount,
             status: bundleUrl.url.status,
             createdAt: bundleUrl.url.createdAt,
             order: bundleUrl.order,
           };
-        }).filter((url: any) => url !== null),
+        }).filter((url): url is NonNullable<typeof url> => url !== null),
         createdAt: bundle.createdAt,
         updatedAt: bundle.updatedAt,
       };

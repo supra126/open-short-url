@@ -6,17 +6,37 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { buildQueryParams } from '@/lib/utils';
+import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
   AnalyticsQueryParams,
-  AnalyticsResponse,
-  RecentClicksResponse,
-  BotAnalyticsResponse,
-  UserBotAnalyticsResponse,
-  UserAbTestAnalyticsResponse,
-} from '@/types/api';
+  AnalyticsResponseDto,
+  RecentClicksResponseDto,
+  RecentClickDto,
+  BotAnalyticsResponseDto,
+  BotTypeStat,
+  UserBotAnalyticsResponseDto,
+  AbTestAnalyticsResponseDto,
+  TopPerformingVariant,
+  TimeRange,
+} from '@/lib/api/schemas';
 
-// Query Keys
-const analyticsKeys = {
+// Re-export types for consumers of this hook
+export type {
+  AnalyticsQueryParams,
+  AnalyticsResponseDto,
+  RecentClicksResponseDto,
+  RecentClickDto,
+  BotAnalyticsResponseDto,
+  BotTypeStat,
+  UserBotAnalyticsResponseDto,
+  AbTestAnalyticsResponseDto,
+  TopPerformingVariant,
+  TimeRange,
+};
+
+// Query Keys (exported for external cache management)
+export const analyticsKeys = {
   all: ['analytics'] as const,
   url: (id: string, params: AnalyticsQueryParams) =>
     [...analyticsKeys.all, 'url', id, params] as const,
@@ -37,31 +57,19 @@ const analyticsKeys = {
 async function getUrlAnalytics(
   id: string,
   params: AnalyticsQueryParams,
-): Promise<AnalyticsResponse> {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      searchParams.append(key, String(value));
-    }
-  });
-
-  return apiClient.get<AnalyticsResponse>(
-    `/api/analytics/urls/${id}?${searchParams.toString()}`,
+): Promise<AnalyticsResponseDto> {
+  const query = buildQueryParams(params);
+  return apiClient.get<AnalyticsResponseDto>(
+    `/api/analytics/urls/${id}?${query}`,
   );
 }
 
 async function getUserAnalytics(
   params: AnalyticsQueryParams,
-): Promise<AnalyticsResponse> {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      searchParams.append(key, String(value));
-    }
-  });
-
-  return apiClient.get<AnalyticsResponse>(
-    `/api/analytics/overview?${searchParams.toString()}`,
+): Promise<AnalyticsResponseDto> {
+  const query = buildQueryParams(params);
+  return apiClient.get<AnalyticsResponseDto>(
+    `/api/analytics/overview?${query}`,
   );
 }
 
@@ -69,8 +77,8 @@ async function getRecentClicks(
   id: string,
   limit: number,
   includeBots: boolean = false,
-): Promise<RecentClicksResponse> {
-  return apiClient.get<RecentClicksResponse>(
+): Promise<RecentClicksResponseDto> {
+  return apiClient.get<RecentClicksResponseDto>(
     `/api/analytics/urls/${id}/recent-clicks?limit=${limit}&includeBots=${includeBots}`,
   );
 }
@@ -78,46 +86,28 @@ async function getRecentClicks(
 async function getBotAnalytics(
   id: string,
   params: AnalyticsQueryParams,
-): Promise<BotAnalyticsResponse> {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      searchParams.append(key, String(value));
-    }
-  });
-
-  return apiClient.get<BotAnalyticsResponse>(
-    `/api/analytics/urls/${id}/bots?${searchParams.toString()}`,
+): Promise<BotAnalyticsResponseDto> {
+  const query = buildQueryParams(params);
+  return apiClient.get<BotAnalyticsResponseDto>(
+    `/api/analytics/urls/${id}/bots?${query}`,
   );
 }
 
 async function getUserBotAnalytics(
   params: AnalyticsQueryParams,
-): Promise<UserBotAnalyticsResponse> {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      searchParams.append(key, String(value));
-    }
-  });
-
-  return apiClient.get<UserBotAnalyticsResponse>(
-    `/api/analytics/bots?${searchParams.toString()}`,
+): Promise<UserBotAnalyticsResponseDto> {
+  const query = buildQueryParams(params);
+  return apiClient.get<UserBotAnalyticsResponseDto>(
+    `/api/analytics/bots?${query}`,
   );
 }
 
 async function getUserAbTestAnalytics(
   params: AnalyticsQueryParams,
-): Promise<UserAbTestAnalyticsResponse> {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      searchParams.append(key, String(value));
-    }
-  });
-
-  return apiClient.get<UserAbTestAnalyticsResponse>(
-    `/api/analytics/ab-tests?${searchParams.toString()}`,
+): Promise<AbTestAnalyticsResponseDto> {
+  const query = buildQueryParams(params);
+  return apiClient.get<AbTestAnalyticsResponseDto>(
+    `/api/analytics/ab-tests?${query}`,
   );
 }
 
@@ -134,9 +124,7 @@ export function useUrlAnalytics(
     queryKey: analyticsKeys.url(id, params),
     queryFn: () => getUrlAnalytics(id, params),
     enabled: !!id,
-    staleTime: 30 * 1000, // 30 seconds - Refresh more frequently for timely analytics
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchInterval: 60 * 1000, // Auto-refetch every 60 seconds when page is active
+    ...QUERY_CONFIG.LIVE,
   });
 }
 
@@ -149,9 +137,7 @@ export function useUserAnalytics(
   return useQuery({
     queryKey: analyticsKeys.overview(params),
     queryFn: () => getUserAnalytics(params),
-    staleTime: 30 * 1000, // 30 seconds - Refresh more frequently for timely analytics
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchInterval: 60 * 1000, // Auto-refetch every 60 seconds when page is active
+    ...QUERY_CONFIG.LIVE,
   });
 }
 
@@ -163,9 +149,7 @@ export function useRecentClicks(id: string, limit: number = 20, includeBots: boo
     queryKey: analyticsKeys.recentClicks(id, limit, includeBots),
     queryFn: () => getRecentClicks(id, limit, includeBots),
     enabled: !!id,
-    staleTime: 30 * 1000, // 30 seconds - Refresh more frequently for recent clicks
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchInterval: 60 * 1000, // Auto-refetch every 60 seconds when page is active
+    ...QUERY_CONFIG.LIVE,
   });
 }
 
@@ -180,8 +164,7 @@ export function useBotAnalytics(
     queryKey: analyticsKeys.botAnalytics(id, params),
     queryFn: () => getBotAnalytics(id, params),
     enabled: !!id,
-    staleTime: 60 * 1000, // 1 minute - Bot stats change less frequently
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    ...QUERY_CONFIG.STANDARD,
   });
 }
 
@@ -194,9 +177,8 @@ export function useUserBotAnalytics(
   return useQuery({
     queryKey: analyticsKeys.userBotAnalytics(params),
     queryFn: () => getUserBotAnalytics(params),
-    staleTime: 60 * 1000, // 1 minute - Bot stats change less frequently
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchInterval: 120 * 1000, // Auto-refetch every 2 minutes when page is active
+    ...QUERY_CONFIG.STANDARD,
+    refetchInterval: 120 * 1000, // Bot stats change less frequently
   });
 }
 
@@ -209,8 +191,7 @@ export function useUserAbTestAnalytics(
   return useQuery({
     queryKey: analyticsKeys.userAbTestAnalytics(params),
     queryFn: () => getUserAbTestAnalytics(params),
-    staleTime: 60 * 1000, // 1 minute
-    gcTime: 10 * 60 * 1000, // 10 minutes
-    refetchInterval: 120 * 1000, // Auto-refetch every 2 minutes when page is active
+    ...QUERY_CONFIG.STANDARD,
+    refetchInterval: 120 * 1000, // A/B test stats change less frequently
   });
 }

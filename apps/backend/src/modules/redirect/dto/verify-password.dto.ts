@@ -5,10 +5,10 @@ export class VerifyPasswordDto {
   @ApiProperty({
     description: 'Password',
     example: 'mypassword123',
-    minLength: 4,
+    minLength: 6,
   })
   @IsString()
-  @MinLength(4, { message: 'Password must be at least 4 characters' })
+  @MinLength(6, { message: 'Password must be at least 6 characters' })
   password!: string;
 
   @ApiProperty({

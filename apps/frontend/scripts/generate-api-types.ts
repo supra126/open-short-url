@@ -26,7 +26,7 @@ async function generate() {
   } catch (error) {
     console.error('❌ Failed to generate API types:', error);
     console.log('\n💡 Make sure:');
-    console.log('   1. Backend is running (yarn dev:backend)');
+    console.log('   1. Backend is running (pnpm dev:backend)');
     console.log('   2. OpenAPI spec exists at src/lib/api/openapi.json');
     console.log('   3. Backend generated the spec in development mode');
     process.exit(1);

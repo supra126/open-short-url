@@ -124,8 +124,8 @@ npx @open-short-url/mcp
 ```bash
 git clone https://github.com/supra126/open-short-url.git
 cd open-short-url/packages/mcp
-yarn install
-yarn build
+pnpm install
+pnpm build
 ```
 
 ### 2. 獲取 API Key

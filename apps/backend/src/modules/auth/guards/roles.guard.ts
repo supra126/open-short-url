@@ -1,7 +1,15 @@
 import { Injectable, CanActivate, ExecutionContext, ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { UserRole } from '@prisma/client';
+import { FastifyRequest } from 'fastify';
+import { User, UserRole } from '@prisma/client';
 import { ROLES_KEY } from '@/common/decorators/roles.decorator';
+
+/**
+ * Extended Fastify request with user property
+ */
+interface RequestWithUser extends FastifyRequest {
+  user?: User;
+}
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -17,7 +25,7 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
     const user = request.user;
 
     if (!user) {

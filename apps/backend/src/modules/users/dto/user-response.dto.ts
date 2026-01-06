@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { UserRole } from '@prisma/client';
+import { PaginationMetaDto } from '@/common/dto/paginated-response.dto';
 
 export class UserResponseDto {
   @ApiProperty({
@@ -52,34 +53,10 @@ export class UserResponseDto {
   updatedAt: Date;
 }
 
-export class UserListResponseDto {
+export class UserListResponseDto extends PaginationMetaDto {
   @ApiProperty({
     description: 'List of users',
     type: [UserResponseDto],
   })
-  data: UserResponseDto[];
-
-  @ApiProperty({
-    description: 'Total number of users',
-    example: 100,
-  })
-  total: number;
-
-  @ApiProperty({
-    description: 'Current page number',
-    example: 1,
-  })
-  page: number;
-
-  @ApiProperty({
-    description: 'Number of items per page',
-    example: 10,
-  })
-  pageSize: number;
-
-  @ApiProperty({
-    description: 'Total number of pages',
-    example: 10,
-  })
-  totalPages: number;
+  data!: UserResponseDto[];
 }

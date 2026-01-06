@@ -1,20 +1,14 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  darkMode: ['class'],
+  darkMode: 'class',
   content: [
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
-  	container: {
-  		center: true,
-  		padding: '2rem',
-  		screens: {
-  			'2xl': '1400px'
-  		}
-  	},
+  	// Note: container config moved to globals.css using @utility for Tailwind CSS 4
   	extend: {
   		colors: {
   			border: 'hsl(var(--border))',

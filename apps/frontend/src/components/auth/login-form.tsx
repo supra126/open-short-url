@@ -69,8 +69,9 @@ export function LoginForm() {
 
       // Login successful - redirect to original URL or dashboard
       router.push(redirectUrl);
-    } catch (err: any) {
-      setError(err.message || t('auth.loginError'));
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('auth.loginError');
+      setError(message);
     }
   };
 

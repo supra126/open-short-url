@@ -102,14 +102,11 @@ export default function UsersPage() {
         title: t('users.updateRoleSuccess'),
         description: t('users.updateRoleSuccessDesc'),
       });
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        'Failed to update role';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('users.updateRoleErrorFallback');
       toast({
         title: t('users.updateRoleError'),
-        description: Array.isArray(message) ? message[0] : message,
+        description: message,
         variant: 'destructive',
       });
     }
@@ -127,14 +124,11 @@ export default function UsersPage() {
           ? t('users.activateSuccessDesc')
           : t('users.deactivateSuccessDesc'),
       });
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        'Failed to update status';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('users.updateStatusErrorFallback');
       toast({
         title: t('users.updateStatusError'),
-        description: Array.isArray(message) ? message[0] : message,
+        description: message,
         variant: 'destructive',
       });
     }
@@ -149,14 +143,11 @@ export default function UsersPage() {
         title: t('users.deleteSuccess'),
         description: t('users.deleteSuccessDesc'),
       });
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        'Failed to delete user';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('users.deleteErrorFallback');
       toast({
         title: t('users.deleteError'),
-        description: Array.isArray(message) ? message[0] : message,
+        description: message,
         variant: 'destructive',
       });
     }
@@ -175,14 +166,11 @@ export default function UsersPage() {
         title: t('users.resetPasswordSuccess'),
         description: t('users.resetPasswordSuccessDesc'),
       });
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        'Failed to reset password';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('users.resetPasswordErrorFallback');
       toast({
         title: t('users.resetPasswordError'),
-        description: Array.isArray(message) ? message[0] : message,
+        description: message,
         variant: 'destructive',
       });
     }
@@ -203,14 +191,11 @@ export default function UsersPage() {
         title: t('users.createSuccess'),
         description: t('users.createSuccessDesc'),
       });
-    } catch (error: any) {
-      const message =
-        error?.response?.data?.message ||
-        error?.message ||
-        'Failed to create user';
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('users.createErrorFallback');
       toast({
         title: t('users.createError'),
-        description: Array.isArray(message) ? message[0] : message,
+        description: message,
         variant: 'destructive',
       });
     }
@@ -315,10 +300,10 @@ export default function UsersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              data?.data.map((user) => (
+              data?.data.map((user: User) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium">{user.email}</TableCell>
-                  <TableCell>{user.name || '-'}</TableCell>
+                  <TableCell>{user.name || t('common.noValue')}</TableCell>
                   <TableCell>
                     <Badge
                       variant={
@@ -415,14 +400,14 @@ export default function UsersPage() {
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setPage(page - 1)}
               disabled={page === 1}
             >
               {t('common.previous')}
             </Button>
             <Button
               variant="outline"
-              onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
+              onClick={() => setPage(page + 1)}
               disabled={page === data.totalPages}
             >
               {t('common.next')}

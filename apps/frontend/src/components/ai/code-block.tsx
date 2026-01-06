@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, Copy } from 'lucide-react';
 import copy from 'copy-to-clipboard';
+import { t } from '@/lib/i18n';
 
 /**
  * Code Block Component
@@ -49,12 +50,12 @@ export function CodeBlock({ children, language, className = '' }: CodeBlockProps
         {copied ? (
           <>
             <Check className="h-4 w-4 mr-1" />
-            已複製
+            {t('common.copied')}
           </>
         ) : (
           <>
             <Copy className="h-4 w-4 mr-1" />
-            複製
+            {t('common.copy')}
           </>
         )}
       </Button>

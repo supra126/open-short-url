@@ -19,11 +19,11 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateVariant, useUpdateVariant } from '@/hooks/use-variants';
 import { Loader2, Plus } from 'lucide-react';
-import type { VariantResponse } from '@/types/api';
+import type { VariantResponseDto } from '@/hooks/use-variants';
 
 interface VariantDialogProps {
   urlId: string;
-  variant?: VariantResponse;
+  variant?: VariantResponseDto;
   trigger?: React.ReactNode;
 }
 
@@ -74,10 +74,11 @@ export function VariantDialog({ urlId, variant, trigger }: VariantDialogProps) {
         setWeight(50);
         setIsActive(true);
       }
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('variants.createErrorDesc');
       toast({
         title: t('variants.createError'),
-        description: error.message || t('variants.createErrorDesc'),
+        description: message,
         variant: 'destructive',
       });
     }

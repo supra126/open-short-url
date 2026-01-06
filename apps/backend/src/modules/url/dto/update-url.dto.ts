@@ -7,7 +7,13 @@ import {
   IsDateString,
   MinLength,
 } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, TransformFnParams } from 'class-transformer';
+
+/**
+ * Transform helper to convert empty strings to undefined
+ */
+const emptyToUndefined = ({ value }: TransformFnParams): unknown =>
+  value === '' ? undefined : value;
 
 export class UpdateUrlDto {
   @ApiPropertyOptional({
@@ -22,7 +28,7 @@ export class UpdateUrlDto {
     description: 'Title',
     example: 'Updated Title',
   })
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(emptyToUndefined)
   @IsString()
   @IsOptional()
   title?: string;
@@ -32,7 +38,7 @@ export class UpdateUrlDto {
     enum: ['ACTIVE', 'INACTIVE', 'EXPIRED'],
     example: 'ACTIVE',
   })
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(emptyToUndefined)
   @IsEnum(['ACTIVE', 'INACTIVE', 'EXPIRED'], {
     message: 'Status must be ACTIVE, INACTIVE, or EXPIRED',
   })
@@ -60,7 +66,7 @@ export class UpdateUrlDto {
     description: 'UTM Source',
     example: 'newsletter',
   })
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(emptyToUndefined)
   @IsString()
   @IsOptional()
   utmSource?: string;
@@ -69,7 +75,7 @@ export class UpdateUrlDto {
     description: 'UTM Medium',
     example: 'email',
   })
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(emptyToUndefined)
   @IsString()
   @IsOptional()
   utmMedium?: string;
@@ -78,7 +84,7 @@ export class UpdateUrlDto {
     description: 'UTM Campaign',
     example: 'summer_sale',
   })
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(emptyToUndefined)
   @IsString()
   @IsOptional()
   utmCampaign?: string;
@@ -87,7 +93,7 @@ export class UpdateUrlDto {
     description: 'UTM Term',
     example: 'discount',
   })
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(emptyToUndefined)
   @IsString()
   @IsOptional()
   utmTerm?: string;
@@ -96,7 +102,7 @@ export class UpdateUrlDto {
     description: 'UTM Content',
     example: 'banner_top',
   })
-  @Transform(({ value }) => (value === '' ? undefined : value))
+  @Transform(emptyToUndefined)
   @IsString()
   @IsOptional()
   utmContent?: string;

@@ -30,6 +30,21 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { t } from '@/lib/i18n';
+import type { LucideIcon } from 'lucide-react';
+
+// Navigation item type
+interface NavItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  adminOnly?: boolean;
+}
+
+// Navigation group type
+interface NavGroup {
+  title: string;
+  items: NavItem[];
+}
 
 // Menu data
 const data = {
@@ -96,7 +111,7 @@ const data = {
       ],
     },
     {
-      title: 'AI',
+      title: t('sidebar.ai'),
       items: [
         {
           title: t('sidebar.aiAssistant'),
@@ -125,7 +140,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <div className="min-w-5 min-h-5 h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center">
               <img
                 src={process.env.NEXT_PUBLIC_BRAND_ICON_URL}
-                alt="Brand Icon"
+                alt={t('sidebar.brandIconAlt')}
                 className="h-full w-full object-contain brightness-0 dark:invert"
               />
             </div>
@@ -136,9 +151,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           )}
           <div className="grid flex-1 text-left text-sm leading-tight">
             <span className="truncate font-semibold">
-              {process.env.NEXT_PUBLIC_BRAND_NAME ||
-                t('sidebar.appName') ||
-                'Open Short URL'}
+              {process.env.NEXT_PUBLIC_BRAND_NAME || t('sidebar.appName')}
             </span>
             <span className="truncate text-xs text-muted-foreground">
               {process.env.NEXT_PUBLIC_BRAND_DESCRIPTION ||
@@ -149,20 +162,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        {data.navMain.map((group) => (
+        {data.navMain.map((group: NavGroup) => (
           <SidebarGroup key={group.title}>
             <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items
-                  .filter((item: any) => {
+                  .filter((item: NavItem) => {
                     // If admin-only option, check user role
                     if (item.adminOnly && user?.role !== 'ADMIN') {
                       return false;
                     }
                     return true;
                   })
-                  .map((item) => {
+                  .map((item: NavItem) => {
                     const isActive = pathname === item.url;
                     return (
                       <SidebarMenuItem key={item.title}>
@@ -217,7 +230,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       {isLoading ? t('common.loading') : t('common.user')}
                     </span>
                     <span className="truncate text-xs text-muted-foreground">
-                      -
+                      {t('common.noValue')}
                     </span>
                   </div>
                 </>

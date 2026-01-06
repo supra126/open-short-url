@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
-import { useVariants, useDeleteVariant } from '@/hooks/use-variants';
+import { useVariants, useDeleteVariant, type VariantResponseDto, type VariantStatsDto } from '@/hooks/use-variants';
 import { VariantDialog } from './variant-dialog';
 import {
   Edit,
@@ -54,6 +54,13 @@ interface VariantListProps {
   urlId: string;
 }
 
+interface ChartDataEntry {
+  name: string;
+  value: number;
+  percentage: number;
+  color: string;
+}
+
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
 export function VariantList({ urlId }: VariantListProps) {
@@ -75,10 +82,11 @@ export function VariantList({ urlId }: VariantListProps) {
       });
 
       setDeleteVariantId(null);
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('variants.deleteErrorDesc');
       toast({
         title: t('variants.deleteError'),
-        description: error.message || t('variants.deleteErrorDesc'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -126,13 +134,13 @@ export function VariantList({ urlId }: VariantListProps) {
 
   // Extract control group from stats (id: 'control-group')
   const controlGroup = data?.stats.find(
-    (stat) => stat.variant.id === 'control-group'
+    (stat: VariantStatsDto) => stat.variant.id === 'control-group'
   );
   const hasControlGroup = !!controlGroup;
 
   // Prepare chart data (includes control group if exists)
   const chartData =
-    data?.stats.map((stat, index) => ({
+    data?.stats.map((stat: VariantStatsDto, index: number) => ({
       name: stat.variant.name,
       value: stat.variant.clickCount,
       percentage: stat.clickThroughRate,
@@ -189,7 +197,7 @@ export function VariantList({ urlId }: VariantListProps) {
                     <div className="text-2xl font-bold">{variants.length}</div>
                     <p className="text-xs text-muted-foreground">
                       {t('variants.activeCount', {
-                        count: variants.filter((v) => v.isActive).length,
+                        count: variants.filter((v: VariantResponseDto) => v.isActive).length,
                       })}
                     </p>
                   </CardContent>
@@ -225,7 +233,7 @@ export function VariantList({ urlId }: VariantListProps) {
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {t('variants.bestPerformerRate', {
-                        rate: data?.stats[0]?.clickThroughRate.toFixed(1),
+                        rate: data?.stats[0]?.clickThroughRate?.toFixed(1) ?? '0',
                       })}
                     </p>
                   </CardContent>
@@ -248,14 +256,14 @@ export function VariantList({ urlId }: VariantListProps) {
                           cx="50%"
                           cy="50%"
                           labelLine={false}
-                          label={(entry: any) =>
-                            `${entry.name} (${entry.percentage.toFixed(1)}%)`
+                          label={({ name, percent }: { name?: string; percent?: number }) =>
+                            `${name ?? ''} (${((percent ?? 0) * 100).toFixed(1)}%)`
                           }
                           outerRadius={80}
                           fill="#8884d8"
                           dataKey="value"
                         >
-                          {chartData.map((entry, index) => (
+                          {chartData.map((entry: ChartDataEntry, index: number) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
@@ -351,9 +359,9 @@ export function VariantList({ urlId }: VariantListProps) {
                     )}
 
                     {/* Regular Variants */}
-                    {variants.map((variant) => {
+                    {variants.map((variant: VariantResponseDto) => {
                       const stat = data?.stats.find(
-                        (s) => s.variant.id === variant.id
+                        (s: VariantStatsDto) => s.variant.id === variant.id
                       );
                       return (
                         <TableRow key={variant.id}>

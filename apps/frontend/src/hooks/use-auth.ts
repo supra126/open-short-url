@@ -9,12 +9,14 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import type {
   LoginDto,
-  RegisterDto,
-  AuthResponse,
-  UserResponse,
+  AuthResponseDto,
+  UserResponseDto,
   UpdateUserDto,
   ChangePasswordDto,
-} from '@/types/api';
+} from '@/lib/api/schemas';
+
+// Re-export types for consumers of this hook
+export type { LoginDto, AuthResponseDto, UserResponseDto, UpdateUserDto, ChangePasswordDto };
 
 // Query Keys
 export const authKeys = {
@@ -24,20 +26,16 @@ export const authKeys = {
 
 // ==================== API Functions ====================
 
-async function login(data: LoginDto): Promise<AuthResponse> {
-  return apiClient.post<AuthResponse>('/api/auth/login', data);
+async function login(data: LoginDto): Promise<AuthResponseDto> {
+  return apiClient.post<AuthResponseDto>('/api/auth/login', data);
 }
 
-async function register(data: RegisterDto): Promise<AuthResponse> {
-  return apiClient.post<AuthResponse>('/api/auth/register', data);
+async function getCurrentUser(): Promise<UserResponseDto> {
+  return apiClient.get<UserResponseDto>('/api/auth/me');
 }
 
-async function getCurrentUser(): Promise<UserResponse> {
-  return apiClient.get<UserResponse>('/api/auth/me');
-}
-
-async function updateProfile(data: UpdateUserDto): Promise<UserResponse> {
-  return apiClient.put<UserResponse>('/api/auth/me', data);
+async function updateProfile(data: UpdateUserDto): Promise<UserResponseDto> {
+  return apiClient.put<UserResponseDto>('/api/auth/me', data);
 }
 
 async function changePassword(data: ChangePasswordDto): Promise<void> {
@@ -54,21 +52,6 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: login,
-    onSuccess: (data) => {
-      // Update cache (token is in httpOnly cookie, managed by browser)
-      queryClient.setQueryData(authKeys.me(), data.user);
-    },
-  });
-}
-
-/**
- * Register
- */
-export function useRegister() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: register,
     onSuccess: (data) => {
       // Update cache (token is in httpOnly cookie, managed by browser)
       queryClient.setQueryData(authKeys.me(), data.user);

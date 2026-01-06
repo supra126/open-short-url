@@ -47,7 +47,7 @@ prisma/migrations/*_migration/
 
 # OpenAPI
 apps/frontend/src/lib/api/openapi.json
-apps/frontend/src/lib/api/types.ts
+# Note: types.ts is committed because it's needed for Railway builds
 
 # OS
 Thumbs.db

@@ -10,11 +10,30 @@ import {
   DeviceStat,
   RefererStat,
   UtmStat,
-  RecentClickDto,
   RecentClicksResponseDto,
 } from './dto/analytics-response.dto';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
-import { User, UserRole } from '@prisma/client';
+import { User, UserRole, Prisma } from '@prisma/client';
+
+/**
+ * Click data interface for analytics processing
+ */
+interface ClickDataForAnalytics {
+  id: string;
+  ip: string | null;
+  country: string | null;
+  region: string | null;
+  city: string | null;
+  browser: string | null;
+  os: string | null;
+  device: string | null;
+  referer: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  isBot: boolean;
+  createdAt: Date;
+}
 
 @Injectable()
 export class AnalyticsService {
@@ -33,7 +52,7 @@ export class AnalyticsService {
    */
   private async checkUrlOwnership(urlId: string, user: User): Promise<void> {
     // Build where condition - admins can access all URLs
-    const whereCondition: any = { id: urlId };
+    const whereCondition: Prisma.UrlWhereInput = { id: urlId };
 
     // Non-admin users can only access their own URLs
     if (user.role !== UserRole.ADMIN) {
@@ -281,7 +300,7 @@ export class AnalyticsService {
    */
   private async calculateOverview(
     urlId: string,
-    clicks: any[],
+    clicks: ClickDataForAnalytics[],
     startDate: Date,
     endDate: Date,
   ): Promise<OverviewStats> {
@@ -332,7 +351,7 @@ export class AnalyticsService {
    */
   private async calculateUserOverview(
     userId: string,
-    clicks: any[],
+    clicks: ClickDataForAnalytics[],
     startDate: Date,
     endDate: Date,
   ): Promise<OverviewStats> {
@@ -393,7 +412,7 @@ export class AnalyticsService {
   }
 
   private calculateTimeSeries(
-    clicks: any[],
+    clicks: ClickDataForAnalytics[],
     startDate: Date,
     endDate: Date,
   ): TimeSeriesDataPoint[] {
@@ -427,7 +446,7 @@ export class AnalyticsService {
    * Calculate geolocation statistics
    */
   private calculateGeoStats(
-    clicks: any[],
+    clicks: ClickDataForAnalytics[],
     field: 'country' | 'region' | 'city',
   ): GeoLocationStat[] {
     const stats = new Map<string, number>();
@@ -452,7 +471,7 @@ export class AnalyticsService {
    * Calculate device statistics
    */
   private calculateDeviceStats(
-    clicks: any[],
+    clicks: ClickDataForAnalytics[],
     field: 'browser' | 'os' | 'device',
   ): DeviceStat[] {
     const stats = new Map<string, number>();
@@ -476,7 +495,7 @@ export class AnalyticsService {
   /**
    * Calculate referer statistics
    */
-  private calculateRefererStats(clicks: any[]): RefererStat[] {
+  private calculateRefererStats(clicks: ClickDataForAnalytics[]): RefererStat[] {
     const stats = new Map<string, number>();
     const total = clicks.length;
 
@@ -499,7 +518,7 @@ export class AnalyticsService {
    * Calculate UTM parameter statistics
    */
   private calculateUtmStats(
-    clicks: any[],
+    clicks: ClickDataForAnalytics[],
     field: 'utmSource' | 'utmMedium' | 'utmCampaign',
   ): UtmStat[] {
     const stats = new Map<string, number>();
@@ -535,7 +554,7 @@ export class AnalyticsService {
     await this.checkUrlOwnership(urlId, user);
 
     // Build where condition
-    const whereCondition: any = { urlId };
+    const whereCondition: Prisma.ClickWhereInput = { urlId };
     if (!includeBots) {
       whereCondition.isBot = false; // Filter out bots by default
     }

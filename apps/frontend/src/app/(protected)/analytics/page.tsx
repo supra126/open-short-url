@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { Loading } from '@/components/ui/loading';
 import { t } from '@/lib/i18n';
 
-// 動態導入 AnalyticsDashboard 以實現代碼分割和懶載入
+// Dynamically import AnalyticsDashboard for code splitting and lazy loading
 const AnalyticsDashboard = dynamic(
   () =>
     import('@/components/analytics/analytics-dashboard').then(

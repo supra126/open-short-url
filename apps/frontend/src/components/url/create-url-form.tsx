@@ -7,7 +7,7 @@
 import { t } from '@/lib/i18n';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useCreateUrl } from '@/hooks/use-url';
+import { useCreateUrl, type CreateUrlDto } from '@/hooks/use-url';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,19 +35,18 @@ export function CreateUrlForm() {
     e.preventDefault();
 
     try {
-      const data: any = {
+      const data: CreateUrlDto = {
         originalUrl: formData.originalUrl,
+        customSlug: formData.customSlug || undefined,
+        title: formData.title || undefined,
+        password: formData.password || undefined,
+        expiresAt: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : undefined,
+        utmSource: formData.utmSource || undefined,
+        utmMedium: formData.utmMedium || undefined,
+        utmCampaign: formData.utmCampaign || undefined,
+        utmTerm: formData.utmTerm || undefined,
+        utmContent: formData.utmContent || undefined,
       };
-
-      if (formData.customSlug) data.customSlug = formData.customSlug;
-      if (formData.title) data.title = formData.title;
-      if (formData.password) data.password = formData.password;
-      if (formData.expiresAt) data.expiresAt = new Date(formData.expiresAt).toISOString();
-      if (formData.utmSource) data.utmSource = formData.utmSource;
-      if (formData.utmMedium) data.utmMedium = formData.utmMedium;
-      if (formData.utmCampaign) data.utmCampaign = formData.utmCampaign;
-      if (formData.utmTerm) data.utmTerm = formData.utmTerm;
-      if (formData.utmContent) data.utmContent = formData.utmContent;
 
       const result = await createUrl.mutateAsync(data);
 
@@ -57,10 +56,11 @@ export function CreateUrlForm() {
         description: t('urls.createSuccess').replace('{slug}', result.slug),
       });
       router.push(`/urls/${result.id}`);
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('urls.createError');
       toast({
         title: t('common.error'),
-        description: err.message || t('urls.createError'),
+        description: message,
         variant: 'destructive',
       });
     }

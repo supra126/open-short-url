@@ -82,15 +82,32 @@ export function MessageItem({ message }: MessageItemProps) {
           {/* Tool invocations */}
           {isAssistant && toolCalls && toolCalls.length > 0 && (
             <div className="mt-2 space-y-2">
-              {toolCalls.map((toolCall: any, index: number) => (
-                <ToolResult
-                  key={`${message.id}-tool-${index}`}
-                  toolName={toolCall.toolName}
-                  args={toolCall.args}
-                  result={toolCall.result}
-                  state={toolCall.state || 'call'}
-                />
-              ))}
+              {toolCalls.map((toolCall, index: number) => {
+                // Extract tool information - handle different SDK versions
+                const toolInfo = toolCall as {
+                  type: string;
+                  toolName?: string;
+                  title?: string;
+                  args?: Record<string, unknown>;
+                  input?: unknown;
+                  result?: unknown;
+                  output?: unknown;
+                };
+                const toolName = toolInfo.toolName ?? toolInfo.title ?? 'Unknown Tool';
+                const args = (toolInfo.args ?? toolInfo.input ?? {}) as Record<string, unknown>;
+                const result = toolInfo.result ?? toolInfo.output;
+                const hasResult = 'result' in toolInfo || 'output' in toolInfo;
+
+                return (
+                  <ToolResult
+                    key={`${message.id}-tool-${index}`}
+                    toolName={toolName}
+                    args={args}
+                    result={result}
+                    state={hasResult ? 'result' : 'call'}
+                  />
+                );
+              })}
             </div>
           )}
         </Card>

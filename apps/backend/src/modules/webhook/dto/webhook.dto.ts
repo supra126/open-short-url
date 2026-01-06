@@ -9,6 +9,7 @@ import {
   MaxLength,
   ArrayMinSize,
 } from 'class-validator';
+import { PaginationMetaDto } from '@/common/dto/paginated-response.dto';
 
 /**
  * Create Webhook DTO
@@ -139,24 +140,12 @@ export class WebhookResponseDto {
 /**
  * Webhook List Response DTO
  */
-export class WebhookListResponseDto {
+export class WebhookListResponseDto extends PaginationMetaDto {
   @ApiProperty({
     description: 'List of webhooks',
     type: [WebhookResponseDto],
   })
   data!: WebhookResponseDto[];
-
-  @ApiProperty({ description: 'Total number of webhooks' })
-  total!: number;
-
-  @ApiProperty({ description: 'Current page number' })
-  page!: number;
-
-  @ApiProperty({ description: 'Number of items per page' })
-  pageSize!: number;
-
-  @ApiProperty({ description: 'Total number of pages' })
-  totalPages!: number;
 }
 
 /**
@@ -179,7 +168,7 @@ export class WebhookLogResponseDto {
     description: 'Payload sent',
     example: { urlId: 'clx123', slug: 'abc123' },
   })
-  payload!: Record<string, any>;
+  payload!: Record<string, unknown>;
 
   @ApiProperty({
     description: 'HTTP status code',
@@ -225,24 +214,12 @@ export class WebhookLogResponseDto {
 /**
  * Webhook Logs List Response DTO
  */
-export class WebhookLogsListResponseDto {
+export class WebhookLogsListResponseDto extends PaginationMetaDto {
   @ApiProperty({
     description: 'List of webhook logs',
     type: [WebhookLogResponseDto],
   })
   data!: WebhookLogResponseDto[];
-
-  @ApiProperty({ description: 'Total number of logs' })
-  total!: number;
-
-  @ApiProperty({ description: 'Current page' })
-  page!: number;
-
-  @ApiProperty({ description: 'Page size' })
-  pageSize!: number;
-
-  @ApiProperty({ description: 'Total pages' })
-  totalPages!: number;
 }
 
 /**

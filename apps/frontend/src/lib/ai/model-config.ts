@@ -1,3 +1,4 @@
+import type { LanguageModel } from 'ai';
 import {
   getProviderInstance,
   PROVIDER_CONFIGS,
@@ -11,7 +12,7 @@ import type { AIConfig, AIProvider } from '@/types/ai';
  * @param config - AI configuration including provider, model, and parameters
  * @returns Configured language model instance
  */
-export function createLanguageModel(config: AIConfig) {
+export function createLanguageModel(config: AIConfig): LanguageModel {
   const providerInstance = getProviderInstance(config.provider);
 
   // Create model with unified API
@@ -34,7 +35,7 @@ export function getAIConfigFromEnv(): AIConfig {
       maxTokens: parseInt(process.env.AI_MAX_TOKENS || '4096', 10),
       topP: parseFloat(process.env.AI_TOP_P || '1.0'),
     };
-  } catch (error) {
+  } catch {
     // If no providers configured, return a placeholder config
     // The calling code should check isAIEnabled() first
     throw new Error(

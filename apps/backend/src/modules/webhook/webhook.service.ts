@@ -1,12 +1,10 @@
 import {
   Injectable,
   NotFoundException,
-  BadRequestException,
   Logger,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Webhook, WebhookLog } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
-import { ERROR_MESSAGES } from '@/common/constants/errors';
 import {
   CreateWebhookDto,
   UpdateWebhookDto,
@@ -129,7 +127,7 @@ export class WebhookService {
     }
 
     // Encrypt secret if provided
-    const data: any = { ...updateWebhookDto };
+    const data: Prisma.WebhookUpdateInput = { ...updateWebhookDto };
     if (updateWebhookDto.secret) {
       data.secret = this.encryptSecret(updateWebhookDto.secret);
     }
@@ -248,7 +246,7 @@ export class WebhookService {
       const decryptedSecret = this.decryptSecret(webhook.secret);
       const signature = this.generateSignature(testPayload, decryptedSecret);
 
-      const headers: any = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'User-Agent': 'OpenShortURL-Webhook/1.0',
         'X-Webhook-Signature': signature,
@@ -271,11 +269,11 @@ export class WebhookService {
         response: responseText.substring(0, 1000),
         duration,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       const duration = Date.now() - startTime;
       return {
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         duration,
       };
     }
@@ -329,7 +327,7 @@ export class WebhookService {
   /**
    * Generate HMAC-SHA256 signature for webhook payload
    */
-  generateSignature(payload: any, secret: string): string {
+  generateSignature(payload: Record<string, unknown>, secret: string): string {
     const payloadString = JSON.stringify(payload);
     return crypto
       .createHmac('sha256', secret)
@@ -340,7 +338,7 @@ export class WebhookService {
   /**
    * Map webhook to response DTO
    */
-  private mapToResponse(webhook: any): WebhookResponseDto {
+  private mapToResponse(webhook: Webhook): WebhookResponseDto {
     return {
       id: webhook.id,
       userId: webhook.userId,
@@ -352,8 +350,8 @@ export class WebhookService {
       totalSent: webhook.totalSent,
       totalSuccess: webhook.totalSuccess,
       totalFailed: webhook.totalFailed,
-      lastSentAt: webhook.lastSentAt,
-      lastError: webhook.lastError,
+      lastSentAt: webhook.lastSentAt ?? undefined,
+      lastError: webhook.lastError ?? undefined,
       createdAt: webhook.createdAt,
       updatedAt: webhook.updatedAt,
     };
@@ -362,16 +360,16 @@ export class WebhookService {
   /**
    * Map webhook log to response DTO
    */
-  private mapLogToResponse(log: any): WebhookLogResponseDto {
+  private mapLogToResponse(log: WebhookLog): WebhookLogResponseDto {
     return {
       id: log.id,
       webhookId: log.webhookId,
       event: log.event,
-      payload: log.payload as Record<string, any>,
-      statusCode: log.statusCode,
-      response: log.response,
-      error: log.error,
-      duration: log.duration,
+      payload: log.payload as Record<string, unknown>,
+      statusCode: log.statusCode ?? undefined,
+      response: log.response ?? undefined,
+      error: log.error ?? undefined,
+      duration: log.duration ?? undefined,
       attempt: log.attempt,
       isSuccess: log.isSuccess,
       createdAt: log.createdAt,

@@ -72,11 +72,13 @@ export class ClickRecorderService {
 
       // Clear analytics cache for this URL to ensure fresh data on next query
       await this.clearAnalyticsCache(urlId);
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Log error but don't affect user experience
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
-        `Failed to record click: ${error.message}`,
-        error.stack,
+        `Failed to record click: ${errorMessage}`,
+        errorStack,
         'ClickRecorderService',
       );
     }
@@ -192,10 +194,11 @@ export class ClickRecorderService {
         `Cleared analytics cache for URL: ${urlId} and user: ${url.userId}`,
         'ClickRecorderService',
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Log but don't fail - cache clearing is non-critical
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.loggerService.debug(
-        `Failed to clear analytics cache: ${error.message}`,
+        `Failed to clear analytics cache: ${errorMessage}`,
         'ClickRecorderService',
       );
     }

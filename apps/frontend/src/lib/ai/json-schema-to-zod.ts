@@ -5,14 +5,14 @@ import { z } from 'zod';
  * Converts MCP tool JSON Schema definitions to Zod schemas for Vercel AI SDK
  */
 
-type JSONSchema = {
+export type JSONSchema = {
   type?: string;
-  properties?: Record<string, any>;
+  properties?: Record<string, JSONSchema>;
   required?: string[];
   description?: string;
-  enum?: any[];
+  enum?: string[];
   items?: JSONSchema;
-  default?: any;
+  default?: string | number | boolean | null;
 };
 
 /**
@@ -29,31 +29,43 @@ function convertProperty(schema: JSONSchema, isRequired: boolean): z.ZodTypeAny 
   }
 
   // Handle type
-  let zodSchema: any;
+  let zodSchema: z.ZodTypeAny;
 
   switch (schema.type) {
     case 'string':
-      zodSchema = z.string();
+      zodSchema = schema.description
+        ? z.string().describe(schema.description)
+        : z.string();
       break;
 
     case 'number':
+      zodSchema = schema.description
+        ? z.number().describe(schema.description)
+        : z.number();
+      break;
+
     case 'integer':
-      zodSchema = z.number();
-      if (schema.type === 'integer') {
-        zodSchema = zodSchema.int();
-      }
+      zodSchema = schema.description
+        ? z.number().int().describe(schema.description)
+        : z.number().int();
       break;
 
     case 'boolean':
-      zodSchema = z.boolean();
+      zodSchema = schema.description
+        ? z.boolean().describe(schema.description)
+        : z.boolean();
       break;
 
     case 'array':
       if (schema.items) {
         const itemSchema = convertProperty(schema.items, true);
-        zodSchema = z.array(itemSchema);
+        zodSchema = schema.description
+          ? z.array(itemSchema).describe(schema.description)
+          : z.array(itemSchema);
       } else {
-        zodSchema = z.array(z.any());
+        zodSchema = schema.description
+          ? z.array(z.unknown()).describe(schema.description)
+          : z.array(z.unknown());
       }
       break;
 
@@ -66,28 +78,27 @@ function convertProperty(schema: JSONSchema, isRequired: boolean): z.ZodTypeAny 
           shape[key] = convertProperty(prop, required.includes(key));
         }
 
-        zodSchema = z.object(shape);
+        zodSchema = schema.description
+          ? z.object(shape).describe(schema.description)
+          : z.object(shape);
       } else {
-        zodSchema = z.record(z.any());
+        zodSchema = schema.description
+          ? z.record(z.string(), z.unknown()).describe(schema.description)
+          : z.record(z.string(), z.unknown());
       }
       break;
 
     default:
-      zodSchema = z.any();
+      zodSchema = z.unknown();
   }
 
-  // Add description if present
-  if (schema.description && 'describe' in zodSchema) {
-    zodSchema = zodSchema.describe(schema.description);
-  }
-
-  // Add default value if present
-  if (schema.default !== undefined && 'default' in zodSchema) {
+  // Add default value if present (using passthrough since we already handled descriptions)
+  if (schema.default !== undefined) {
     zodSchema = zodSchema.default(schema.default);
   }
 
   // Make optional if not required
-  if (!isRequired && 'optional' in zodSchema) {
+  if (!isRequired) {
     zodSchema = zodSchema.optional();
   }
 

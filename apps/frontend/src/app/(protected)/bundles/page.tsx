@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,8 +47,28 @@ import {
   ArchiveRestore,
   Search,
   ExternalLink,
+  Link2,
+  MousePointerClick,
 } from 'lucide-react';
-import type { BundleResponse } from '@/types/api';
+import type { BundleResponseDto } from '@/hooks/use-bundles';
+
+// 預設顏色列表
+const DEFAULT_COLORS = [
+  '#6366f1', // indigo
+  '#8b5cf6', // violet
+  '#ec4899', // pink
+  '#f43f5e', // rose
+  '#f97316', // orange
+  '#22c55e', // green
+  '#14b8a6', // teal
+  '#06b6d4', // cyan
+  '#3b82f6', // blue
+  '#eab308', // yellow
+];
+
+function getBundleColor(bundle: BundleResponseDto, index: number): string {
+  return bundle.color || DEFAULT_COLORS[index % DEFAULT_COLORS.length];
+}
 
 export default function BundlesPage() {
   const router = useRouter();
@@ -57,22 +77,32 @@ export default function BundlesPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [archiveDialogOpen, setArchiveDialogOpen] = useState(false);
-  const [selectedBundle, setSelectedBundle] = useState<BundleResponse | null>(
+  const [selectedBundle, setSelectedBundle] = useState<BundleResponseDto | null>(
     null,
   );
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVE' | 'ARCHIVED'>('ACTIVE');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 12;
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
 
   // Query
   const { data, isLoading, error } = useBundles({
     page,
     pageSize,
     status: statusFilter === 'ALL' ? undefined : statusFilter,
-    search: searchQuery || undefined,
+    search: debouncedSearch || undefined,
   });
 
   // Mutations
@@ -91,10 +121,11 @@ export default function BundlesPage() {
       });
       setDeleteDialogOpen(false);
       setSelectedBundle(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
-        description: error.message || t('common.tryAgainLater'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -111,30 +142,32 @@ export default function BundlesPage() {
       });
       setArchiveDialogOpen(false);
       setSelectedBundle(null);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
-        description: error.message || t('common.tryAgainLater'),
+        description: message,
         variant: 'destructive',
       });
     }
   };
 
-  const handleRestore = async (bundle: BundleResponse) => {
+  const handleRestore = useCallback(async (bundle: BundleResponseDto) => {
     try {
       await restoreMutation.mutateAsync(bundle.id);
       toast({
         title: t('common.success'),
         description: t('bundles.restoreSuccess'),
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
-        description: error.message || t('common.tryAgainLater'),
+        description: message,
         variant: 'destructive',
       });
     }
-  };
+  }, [restoreMutation, toast]);
 
   const handleViewDetails = (bundleId: string) => {
     router.push(`/bundles/${bundleId}`);
@@ -172,17 +205,14 @@ export default function BundlesPage() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t('bundles.filters.search')}
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(1);
-            }}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="pl-9"
           />
         </div>
         <Select
           value={statusFilter}
-          onValueChange={(value: any) => {
+          onValueChange={(value: 'ALL' | 'ACTIVE' | 'ARCHIVED') => {
             setStatusFilter(value);
             setPage(1);
           }}
@@ -211,116 +241,127 @@ export default function BundlesPage() {
         <>
           {/* Bundle Cards */}
           <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {data.data.map((bundle) => (
-              <Card
-                key={bundle.id}
-                className="cursor-pointer transition-shadow hover:shadow-lg"
-                onClick={() => handleViewDetails(bundle.id)}
-              >
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl">{bundle.icon}</span>
-                      <div>
-                        <CardTitle className="text-lg">
-                          {bundle.name}
-                        </CardTitle>
-                        <Badge
-                          variant={
-                            bundle.status === 'ACTIVE'
-                              ? 'default'
-                              : 'secondary'
-                          }
-                          className="mt-1"
+            {data.data.map((bundle: BundleResponseDto, index: number) => {
+              const color = getBundleColor(bundle, index);
+              const isArchived = bundle.status === 'ARCHIVED';
+
+              return (
+                <Card
+                  key={bundle.id}
+                  className={`
+                    group relative cursor-pointer overflow-hidden
+                    transition-all duration-200
+                    hover:shadow-lg hover:-translate-y-0.5
+                    ${isArchived ? 'opacity-60' : ''}
+                  `}
+                  onClick={() => handleViewDetails(bundle.id)}
+                >
+                  {/* Colored Top Border */}
+                  <div
+                    className="absolute top-0 left-0 right-0 h-1"
+                    style={{ backgroundColor: color }}
+                  />
+
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="flex h-10 w-10 items-center justify-center rounded-lg text-xl"
+                          style={{ backgroundColor: `${color}15` }}
                         >
-                          {bundle.status === 'ACTIVE'
-                            ? t('bundles.active')
-                            : t('bundles.archived')}
-                        </Badge>
+                          {bundle.icon || '📦'}
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg line-clamp-1">
+                            {bundle.name}
+                          </CardTitle>
+                          <Badge
+                            variant={isArchived ? 'secondary' : 'default'}
+                            className="mt-1"
+                          >
+                            {isArchived ? t('bundles.archived') : t('bundles.active')}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      className="flex gap-1"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {bundle.status === 'ACTIVE' ? (
-                        <>
+                      <div
+                        className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {!isArchived ? (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedBundle(bundle);
+                                setEditDialogOpen(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                setSelectedBundle(bundle);
+                                setArchiveDialogOpen(true);
+                              }}
+                            >
+                              <Archive className="h-4 w-4" />
+                            </Button>
+                          </>
+                        ) : (
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {
-                              setSelectedBundle(bundle);
-                              setEditDialogOpen(true);
-                            }}
+                            onClick={() => handleRestore(bundle)}
                           >
-                            <Edit className="h-4 w-4" />
+                            <ArchiveRestore className="h-4 w-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedBundle(bundle);
-                              setArchiveDialogOpen(true);
-                            }}
-                          >
-                            <Archive className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleRestore(bundle)}
+                          onClick={() => {
+                            setSelectedBundle(bundle);
+                            setDeleteDialogOpen(true);
+                          }}
                         >
-                          <ArchiveRestore className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => {
-                          setSelectedBundle(bundle);
-                          setDeleteDialogOpen(true);
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {bundle.description && (
-                    <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
-                      {bundle.description}
-                    </p>
-                  )}
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <p className="text-muted-foreground">
-                        {t('bundles.urlCount')}
+                  </CardHeader>
+                  <CardContent>
+                    {bundle.description && (
+                      <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
+                        {bundle.description}
                       </p>
-                      <p className="font-semibold">{bundle.urlCount}</p>
+                    )}
+                    <div className="flex items-center gap-6 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Link2 className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">{bundle.urlCount}</span>
+                        <span className="text-muted-foreground">{t('bundles.urls')}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MousePointerClick className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-semibold">{bundle.totalClicks.toLocaleString()}</span>
+                        <span className="text-muted-foreground">{t('bundles.clicks')}</span>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-muted-foreground">
-                        {t('bundles.totalClicks')}
-                      </p>
-                      <p className="font-semibold">
-                        {bundle.totalClicks.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-                  <Button
-                    variant="link"
-                    className="mt-4 w-full"
-                    onClick={() => handleViewDetails(bundle.id)}
-                  >
-                    {t('common.view')}
-                    <ExternalLink className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
+                    <Button
+                      variant="link"
+                      className="mt-4 w-full p-0 h-auto"
+                      onClick={() => handleViewDetails(bundle.id)}
+                    >
+                      {t('common.view')}
+                      <ExternalLink className="ml-2 h-4 w-4" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
 
           {/* Pagination */}
@@ -329,18 +370,18 @@ export default function BundlesPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                onClick={() => setPage(page - 1)}
                 disabled={page === 1}
               >
                 {t('common.previous')}
               </Button>
-              <span className="text-sm">
+              <span className="text-sm text-muted-foreground">
                 {t('common.page')} {page} {t('common.of')} {data.totalPages}
               </span>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
+                onClick={() => setPage(page + 1)}
                 disabled={page === data.totalPages}
               >
                 {t('common.next')}

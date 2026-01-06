@@ -19,14 +19,19 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateWebhook, useUpdateWebhook } from '@/hooks/use-webhooks';
 import { Loader2, Plus, Trash2 } from 'lucide-react';
-import type { WebhookResponse } from '@/types/api';
+import type {
+  WebhookResponseDto,
+  CreateWebhookDto,
+  UpdateWebhookDto,
+} from '@/hooks/use-webhooks';
+import type { TranslationKey } from '@/lib/i18n';
 
 interface WebhookDialogProps {
-  webhook?: WebhookResponse;
+  webhook?: WebhookResponseDto;
   trigger?: React.ReactNode;
 }
 
-const AVAILABLE_EVENTS = [
+const AVAILABLE_EVENTS: Array<{ value: string; labelKey: TranslationKey }> = [
   { value: 'url.created', labelKey: 'webhooks.eventUrlCreated' },
   { value: 'url.clicked', labelKey: 'webhooks.eventUrlClicked' },
 ];
@@ -40,7 +45,7 @@ export function WebhookDialog({ webhook, trigger }: WebhookDialogProps) {
   const [isActive, setIsActive] = useState(webhook?.isActive ?? true);
   const [headers, setHeaders] = useState<Array<{ key: string; value: string }>>(
     webhook?.headers
-      ? Object.entries(webhook.headers).map(([key, value]) => ({ key, value }))
+      ? Object.entries(webhook.headers).map(([key, value]) => ({ key, value: String(value) }))
       : []
   );
 
@@ -63,7 +68,7 @@ export function WebhookDialog({ webhook, trigger }: WebhookDialogProps) {
         {} as Record<string, string>
       );
 
-      const data: any = {
+      const baseData = {
         name,
         url,
         events,
@@ -71,18 +76,17 @@ export function WebhookDialog({ webhook, trigger }: WebhookDialogProps) {
         headers: Object.keys(headersObj).length > 0 ? headersObj : undefined,
       };
 
-      // Only include secret if it's provided (for edit mode)
-      if (!isEdit || secret) {
-        data.secret = secret;
-      }
-
       if (isEdit) {
+        // For edit mode, only include secret if it's provided
+        const updateData = secret
+          ? { ...baseData, secret } as UpdateWebhookDto
+          : baseData as UpdateWebhookDto;
         await updateMutation.mutateAsync({
           id: webhook.id,
-          data,
+          data: updateData,
         });
       } else {
-        await createMutation.mutateAsync(data);
+        await createMutation.mutateAsync({ ...baseData, secret } as CreateWebhookDto);
       }
 
       toast({
@@ -103,10 +107,11 @@ export function WebhookDialog({ webhook, trigger }: WebhookDialogProps) {
         setIsActive(true);
         setHeaders([]);
       }
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('webhooks.createErrorDesc');
       toast({
         title: t('webhooks.createError'),
-        description: error.message || t('webhooks.createErrorDesc'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -223,7 +228,7 @@ export function WebhookDialog({ webhook, trigger }: WebhookDialogProps) {
                       htmlFor={event.value}
                       className="text-sm font-normal cursor-pointer"
                     >
-                      {t(event.labelKey as any)}
+                      {t(event.labelKey)}
                     </Label>
                   </div>
                 ))}

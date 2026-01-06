@@ -6,6 +6,21 @@
 import { ErrorHandler } from './error-handler';
 
 /**
+ * API Error interface for typed error handling
+ */
+interface ApiError extends Error {
+  response?: {
+    status: number;
+    data: Record<string, unknown>;
+  };
+}
+
+/**
+ * Request body type for API calls
+ */
+type ApiRequestBody = Record<string, unknown> | unknown[] | FormData;
+
+/**
  * Paths that should not trigger automatic redirect on 401 errors
  * 401 errors from these endpoints are business logic errors (e.g., incorrect password) and should be handled by the caller
  */
@@ -46,19 +61,19 @@ class ApiClient {
    */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      let errorData;
+      let errorData: { message?: string; errors?: Record<string, string[]>; [key: string]: unknown } = { message: 'An error occurred' };
 
       try {
         const text = await response.text();
-        errorData = text ? JSON.parse(text) : { message: 'An error occurred' };
+        errorData = text ? JSON.parse(text) as typeof errorData : { message: 'An error occurred' };
       } catch {
         errorData = { message: 'An error occurred' };
       }
 
       // Create error object containing status code and response data
-      const error: any = new Error(
-        errorData.message || `HTTP error! status: ${response.status}`
-      );
+      const error = new Error(
+        errorData.message ?? `HTTP error! status: ${response.status}`
+      ) as ApiError;
       error.response = {
         status: response.status,
         data: errorData,
@@ -77,7 +92,14 @@ class ApiClient {
           // Not a whitelisted path - redirect to login
           // Backend has already cleared the expired cookie via Set-Cookie header
           const redirectUrl = window.location.pathname + window.location.search;
-          window.location.href = `/login?redirect=${encodeURIComponent(redirectUrl)}`;
+
+          // Validate redirect URL to prevent Open Redirect attacks
+          // Must start with '/' and not contain '//' (prevents //evil.com)
+          const safeRedirect = redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')
+            ? redirectUrl
+            : '/';
+
+          window.location.href = `/login?redirect=${encodeURIComponent(safeRedirect)}`;
         }
         // If whitelisted path, let error propagate to caller
         // so it can display the error message to user (e.g., "Incorrect password")
@@ -98,9 +120,9 @@ class ApiClient {
     }
 
     try {
-      return JSON.parse(text);
-    } catch (error) {
-      ErrorHandler.log(error, 'JSON Parse Error');
+      return JSON.parse(text) as T;
+    } catch (parseError) {
+      ErrorHandler.log(parseError, 'JSON Parse Error');
       return null as T;
     }
   }
@@ -123,7 +145,7 @@ class ApiClient {
    */
   async post<T>(
     endpoint: string,
-    data?: any,
+    data?: ApiRequestBody,
     config?: RequestInit
   ): Promise<T> {
     const hasBody = data !== undefined && data !== null;
@@ -142,7 +164,7 @@ class ApiClient {
    */
   async put<T>(
     endpoint: string,
-    data?: any,
+    data?: ApiRequestBody,
     config?: RequestInit
   ): Promise<T> {
     const hasBody = data !== undefined && data !== null;
@@ -161,7 +183,7 @@ class ApiClient {
    */
   async patch<T>(
     endpoint: string,
-    data?: any,
+    data?: ApiRequestBody,
     config?: RequestInit
   ): Promise<T> {
     const hasBody = data !== undefined && data !== null;

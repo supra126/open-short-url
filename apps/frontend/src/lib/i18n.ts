@@ -23,22 +23,30 @@ type NestedKeyOf<T> = T extends object
 
 export type TranslationKey = NestedKeyOf<Translations>;
 
+// Import all locale files statically
+import zhTWTranslations from '@/locales/zh-TW.json';
+
+// Map of available locales
+const localeMap: Record<string, Translations> = {
+  'en': enTranslations,
+  'zh-TW': zhTWTranslations as Translations,
+};
+
 /**
  * Load translations based on environment variable
  * Falls back to English if locale not found
  */
 function loadTranslations(): Translations {
   const locale = process.env.NEXT_PUBLIC_LOCALE || 'en';
+  const translations = localeMap[locale];
 
-  try {
-    // Dynamically import the locale file
-    const translations = require(`@/locales/${locale}.json`);
+  if (translations) {
     return translations;
-  } catch (error) {
-    // Fallback to English if locale file not found
-    console.warn(`Locale "${locale}" not found, falling back to "en"`);
-    return enTranslations;
   }
+
+  // Fallback to English if locale not found
+  console.warn(`Locale "${locale}" not found, falling back to "en"`);
+  return enTranslations;
 }
 
 // Load translations once at module initialization
@@ -48,8 +56,15 @@ const translations = loadTranslations();
  * Get value from nested object using dot notation
  * Example: get(obj, 'auth.loginTitle') returns obj.auth.loginTitle
  */
-function getNestedValue(obj: any, path: string): string {
-  return path.split('.').reduce((current, key) => current?.[key], obj) ?? path;
+function getNestedValue(obj: Translations, path: string): string {
+  type NestedObject = Record<string, unknown>;
+  const result = path.split('.').reduce<unknown>((current, key) => {
+    if (current && typeof current === 'object' && key in current) {
+      return (current as NestedObject)[key];
+    }
+    return undefined;
+  }, obj);
+  return typeof result === 'string' ? result : path;
 }
 
 /**
@@ -62,18 +77,16 @@ function getNestedValue(obj: any, path: string): string {
  * @example
  * t('auth.loginTitle') // Returns "Login" or localized equivalent
  * t('common.email')    // Returns "Email" or localized equivalent
- * t('webhooks.currentCount', { count: 5 }) // Returns "目前有 5 個 Webhook"
+ * t('webhooks.currentCount', { count: 5 }) // Returns "Currently have 5 Webhooks"
  */
-export function t(key: TranslationKey, vars?: Record<string, any>): string {
+export function t(key: TranslationKey, vars?: Record<string, string | number>): string {
   let translation = getNestedValue(translations, key);
 
   // Replace variables in the format {variableName}
+  // Using replaceAll to avoid ReDoS vulnerability from dynamic regex
   if (vars) {
     Object.entries(vars).forEach(([varKey, varValue]) => {
-      translation = translation.replace(
-        new RegExp(`\\{${varKey}\\}`, 'g'),
-        String(varValue)
-      );
+      translation = translation.replaceAll(`{${varKey}}`, String(varValue));
     });
   }
 

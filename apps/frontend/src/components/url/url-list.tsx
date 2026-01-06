@@ -6,7 +6,7 @@
 
 import { t } from '@/lib/i18n';
 import { useState } from 'react';
-import { useUrls, useDeleteUrl } from '@/hooks/use-url';
+import { useUrls, useDeleteUrl, type UrlResponseDto } from '@/hooks/use-url';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -34,16 +34,18 @@ import { formatDateTime, formatNumber, truncateUrl, copyToClipboard } from '@/li
 import Link from 'next/link';
 import { Copy, Check } from 'lucide-react';
 
-const statusVariant = {
-  ACTIVE: 'success' as const,
-  INACTIVE: 'warning' as const,
-  EXPIRED: 'destructive' as const,
+type UrlStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
+
+const statusVariant: Record<UrlStatus, 'success' | 'warning' | 'destructive'> = {
+  ACTIVE: 'success',
+  INACTIVE: 'warning',
+  EXPIRED: 'destructive',
 };
 
-const statusText = {
-  ACTIVE: 'urls.statusActive' as const,
-  INACTIVE: 'urls.statusInactive' as const,
-  EXPIRED: 'urls.statusExpired' as const,
+const statusText: Record<UrlStatus, string> = {
+  ACTIVE: 'urls.statusActive',
+  INACTIVE: 'urls.statusInactive',
+  EXPIRED: 'urls.statusExpired',
 };
 
 export function UrlList() {
@@ -77,10 +79,11 @@ export function UrlList() {
         title: t('common.success'),
         description: t('urls.deleteSuccess'),
       });
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('urls.deleteError');
       toast({
         title: t('common.error'),
-        description: error.message || t('urls.deleteError'),
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -133,7 +136,7 @@ export function UrlList() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {data.data.map((url) => (
+            {data.data.map((url: UrlResponseDto) => (
               <TableRow key={url.id}>
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
@@ -167,8 +170,8 @@ export function UrlList() {
                 </TableCell>
                 <TableCell>{url.title || '-'}</TableCell>
                 <TableCell>
-                  <Badge variant={statusVariant[url.status]}>
-                    {t(statusText[url.status])}
+                  <Badge variant={statusVariant[url.status as UrlStatus]}>
+                    {t(statusText[url.status as UrlStatus] as Parameters<typeof t>[0])}
                   </Badge>
                 </TableCell>
                 <TableCell className="text-right">

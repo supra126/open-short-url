@@ -28,7 +28,7 @@ export class LoggerService implements NestLoggerService {
     this.logger.debug(message, { context, level: 'verbose' });
   }
 
-  setContext(context: string) {
+  setContext(_context: string) {
     // This method is used to set the context
   }
 

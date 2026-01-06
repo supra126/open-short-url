@@ -1,9 +1,13 @@
-import { streamText, stepCountIs, convertToModelMessages } from 'ai';
+import { streamText, stepCountIs, convertToModelMessages, type UIMessage } from 'ai';
 import { createLanguageModel, getAIConfigFromEnv } from '@/lib/ai/model-config';
 import { isAIEnabled } from '@/lib/ai/provider-registry';
 import { createAllMCPTools } from '@/lib/ai/mcp-adapter';
 import { getSystemPrompt } from '@/lib/ai/prompts';
 import { runWithContext } from '@/lib/ai/request-context';
+
+interface ChatRequestBody {
+  messages: UIMessage[];
+}
 
 /**
  * API Route for AI Chat
@@ -37,7 +41,7 @@ export async function POST(req: Request) {
     }
 
     // Get and validate messages from request
-    const { messages } = await req.json();
+    const { messages } = (await req.json()) as ChatRequestBody;
 
     if (!messages || !Array.isArray(messages)) {
       return new Response(
@@ -62,7 +66,7 @@ export async function POST(req: Request) {
     const model = createLanguageModel(aiConfig);
 
     // Convert UIMessage[] to ModelMessage[] for streamText
-    const modelMessages = convertToModelMessages(messages);
+    const modelMessages = await convertToModelMessages(messages);
 
     // Create all MCP tools dynamically (29 tools auto-generated from packages/mcp)
     const allTools = createAllMCPTools();
@@ -82,11 +86,13 @@ export async function POST(req: Request) {
 
     // Return UI Message stream response compatible with useChat
     return result.toUIMessageStreamResponse();
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Chat API Error:', error);
 
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
     // Handle specific error types
-    if (error.message?.includes('AI not configured')) {
+    if (errorMessage.includes('AI not configured')) {
       return new Response(
         JSON.stringify({
           error: 'AI provider not configured. Please set up environment variables.',
@@ -101,7 +107,7 @@ export async function POST(req: Request) {
     // Generic error response
     return new Response(
       JSON.stringify({
-        error: error.message || 'Internal server error',
+        error: errorMessage || 'Internal server error',
       }),
       {
         status: 500,

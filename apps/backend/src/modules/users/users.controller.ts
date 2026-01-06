@@ -23,7 +23,7 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { CurrentUser } from '@/common/decorators';
-import { UserRole } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
 import { SuccessResponseDto } from '@/common/dto/success-response.dto';
 import {
   UserListQueryDto,
@@ -163,7 +163,7 @@ export class UsersController {
   async updateUserRole(
     @Param('id') id: string,
     @Body() updateRoleDto: UpdateUserRoleDto,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: User,
   ): Promise<UserResponseDto> {
     return this.usersService.updateUserRole(id, updateRoleDto, currentUser.id);
   }
@@ -203,7 +203,7 @@ export class UsersController {
   async updateUserStatus(
     @Param('id') id: string,
     @Body() updateStatusDto: UpdateUserStatusDto,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: User,
   ): Promise<UserResponseDto> {
     return this.usersService.updateUserStatus(id, updateStatusDto, currentUser.id);
   }
@@ -243,7 +243,7 @@ export class UsersController {
   })
   async deleteUser(
     @Param('id') id: string,
-    @CurrentUser() currentUser: any,
+    @CurrentUser() currentUser: User,
   ): Promise<SuccessResponseDto> {
     await this.usersService.deleteUser(id, currentUser.id);
     return {

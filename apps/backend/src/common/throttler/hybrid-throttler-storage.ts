@@ -86,7 +86,7 @@ export class HybridThrottlerStorage
         this.logger.log('✅ Redis available - using Redis for rate limiting');
       }
       this.useRedis = true;
-    } catch (error) {
+    } catch {
       if (this.useRedis) {
         this.logger.warn(
           '⚠️  Redis connection lost - falling back to in-memory rate limiting',
@@ -118,9 +118,9 @@ export class HybridThrottlerStorage
   async increment(
     key: string,
     ttl: number,
-    limit: number,
-    blockDuration: number,
-    throttlerName: string,
+    _limit: number,
+    _blockDuration: number,
+    _throttlerName: string,
   ): Promise<ThrottlerStorageRecord> {
     if (this.useRedis) {
       try {

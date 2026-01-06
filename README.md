@@ -289,7 +289,7 @@ cd open-short-url
 2. **Install dependencies**
 
 ```bash
-yarn install
+pnpm install
 ```
 
 3. **Configure environment**
@@ -309,15 +309,15 @@ cp apps/frontend/.env.example apps/frontend/.env.local
 
 ```bash
 cd apps/backend
-yarn prisma:migrate
-yarn prisma:seed
+pnpm prisma:migrate
+pnpm prisma:seed
 ```
 
 5. **Start development servers**
 
 ```bash
 # From project root
-yarn dev
+pnpm dev
 ```
 
 Visit:

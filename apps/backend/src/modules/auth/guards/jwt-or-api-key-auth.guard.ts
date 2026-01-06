@@ -6,8 +6,22 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthGuard } from '@nestjs/passport';
+import { FastifyRequest } from 'fastify';
+import { User } from '@prisma/client';
 import { ApiKeysService } from '@/modules/api-keys/api-keys.service';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
+
+/**
+ * User info from API key validation (subset of full User)
+ */
+type ApiKeyUser = { id: string; role: string; email: string; isActive: boolean };
+
+/**
+ * Extended Fastify request with user property
+ */
+interface RequestWithUser extends FastifyRequest {
+  user?: User | ApiKeyUser;
+}
 
 /**
  * Combined Guard: Supports both JWT Token and API Key authentication
@@ -21,12 +35,14 @@ export class JwtOrApiKeyAuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
 
     // Check if API Key is present
+    const xApiKey = request.headers['x-api-key'];
+    const authorization = request.headers['authorization'];
     const apiKey =
-      request.headers['x-api-key'] ||
-      this.extractBearerToken(request.headers['authorization']);
+      (typeof xApiKey === 'string' ? xApiKey : undefined) ||
+      this.extractBearerToken(typeof authorization === 'string' ? authorization : undefined);
 
     // If API Key is present and starts with ak_, use API Key authentication
     if (apiKey && apiKey.startsWith('ak_')) {
@@ -37,7 +53,7 @@ export class JwtOrApiKeyAuthGuard implements CanActivate {
           request.user = user;
           return true;
         }
-      } catch (error) {
+      } catch {
         // API Key authentication failed, continue to try JWT
       }
     }
@@ -46,7 +62,7 @@ export class JwtOrApiKeyAuthGuard implements CanActivate {
     const jwtGuard = new (AuthGuard('jwt'))();
     try {
       return (await jwtGuard.canActivate(context)) as boolean;
-    } catch (jwtError) {
+    } catch {
       // If both authentication methods fail, throw unauthorized error
       throw new UnauthorizedException(ERROR_MESSAGES.AUTH_UNAUTHORIZED);
     }

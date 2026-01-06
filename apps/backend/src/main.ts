@@ -7,6 +7,9 @@ import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
+import fastifyCookie from '@fastify/cookie';
+import fastifyStatic from '@fastify/static';
+import helmet from '@fastify/helmet';
 import { AppModule } from './app.module';
 import { AuthExceptionFilter } from './common/filters/auth-exception.filter';
 import { LoggerService } from './common/logger/logger.service';
@@ -23,11 +26,9 @@ async function bootstrap() {
   const loggerService = app.get(LoggerService);
 
   // Cookie parser
-  const fastifyCookie = require('@fastify/cookie');
   await app.register(fastifyCookie);
 
   // Static files (before helmet to allow SVG favicon)
-  const fastifyStatic = require('@fastify/static');
   await app.register(fastifyStatic, {
     root: join(__dirname, '..', 'public'),
     prefix: '/static/',
@@ -35,7 +36,6 @@ async function bootstrap() {
   });
 
   // Security Headers (Helmet)
-  const helmet = require('@fastify/helmet');
   await app.register(helmet, {
     contentSecurityPolicy: {
       directives: {

@@ -86,3 +86,17 @@ export function truncateUrl(url: string, maxLength: number = 50): string {
   if (url.length <= maxLength) return url;
   return url.substring(0, maxLength - 3) + '...';
 }
+
+/**
+ * Build URL query string from params object
+ * Filters out undefined and null values
+ */
+export function buildQueryParams<T extends object>(params: T): string {
+  const searchParams = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) {
+      searchParams.append(key, String(value));
+    }
+  });
+  return searchParams.toString();
+}

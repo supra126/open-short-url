@@ -3,7 +3,6 @@ import {
   IsUrl,
   IsString,
   IsOptional,
-  IsNotEmpty,
   MinLength,
   MaxLength,
   Matches,

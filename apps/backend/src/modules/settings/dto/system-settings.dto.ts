@@ -56,7 +56,7 @@ export class SystemSettingsResponseDto {
     description: 'Setting value (can be any type: string, number, boolean, object)',
     example: true,
   })
-  value!: any;
+  value!: unknown;
 
   @ApiProperty({
     description: 'Setting description',

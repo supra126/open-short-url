@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { MessageList } from './message-list';
 import { ChatInput } from './chat-input';
 import { useChatHistory } from '@/hooks/use-chat-history';
+import type { ChatHistory } from '@/types/ai';
 import { ErrorHandler } from '@/lib/error-handler';
 import { Trash2, History } from 'lucide-react';
 import {
@@ -106,7 +107,7 @@ export function ChatInterface() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
-                {recentHistories.map((history) => (
+                {recentHistories.map((history: ChatHistory) => (
                   <DropdownMenuItem
                     key={history.id}
                     onClick={() => handleLoadHistory(history.id)}

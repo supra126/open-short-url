@@ -73,7 +73,7 @@ export class TokenBlacklistService implements OnModuleInit {
       } else {
         throw new Error('Redis health check failed');
       }
-    } catch (error) {
+    } catch {
       if (this.useRedis) {
         this.logger.warn(
           '⚠️  Redis connection lost - falling back to in-memory storage',

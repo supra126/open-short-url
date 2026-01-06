@@ -32,6 +32,22 @@ interface UrlVariant {
   isActive: boolean;
 }
 
+/**
+ * URL record from database with optional relations
+ */
+interface UrlRecord {
+  id: string;
+  originalUrl: string;
+  password: string | null;
+  isAbTest: boolean;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  utmTerm: string | null;
+  utmContent: string | null;
+  variants?: UrlVariant[];
+}
+
 @Injectable()
 export class RedirectService {
   constructor(
@@ -43,7 +59,7 @@ export class RedirectService {
    * Get redirect information
    */
   async getRedirectInfo(slug: string): Promise<RedirectInfo> {
-    const url = await this.urlService.findBySlug(slug);
+    const url = (await this.urlService.findBySlug(slug)) as UrlRecord;
 
     return {
       originalUrl: url.originalUrl,
@@ -101,7 +117,7 @@ export class RedirectService {
    * Execute redirect (no password required)
    */
   async redirect(slug: string, clickData: ClickData): Promise<string> {
-    const url = await this.urlService.findBySlug(slug);
+    const url = (await this.urlService.findBySlug(slug)) as UrlRecord;
 
     // If password required, throw error
     if (url.password) {
@@ -150,7 +166,7 @@ export class RedirectService {
     password: string,
     clickData: ClickData,
   ): Promise<string> {
-    const url = await this.urlService.findBySlug(slug);
+    const url = (await this.urlService.findBySlug(slug)) as UrlRecord;
 
     // Check if password required
     if (!url.password) {
@@ -204,7 +220,7 @@ export class RedirectService {
    * @param url The URL record with preset UTM parameters
    * @param clickData The click data with dynamic UTM parameters
    */
-  private buildRedirectUrl(targetUrl: string, url: any, clickData: ClickData): string {
+  private buildRedirectUrl(targetUrl: string, url: UrlRecord, clickData: ClickData): string {
     try {
       const redirectUrl = new URL(targetUrl);
 
@@ -225,7 +241,7 @@ export class RedirectService {
       });
 
       return redirectUrl.toString();
-    } catch (error) {
+    } catch {
       // If URL parsing fails, return target URL as-is
       return targetUrl;
     }

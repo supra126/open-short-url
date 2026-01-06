@@ -6,47 +6,61 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
   CreateWebhookDto,
   UpdateWebhookDto,
-  WebhookResponse,
-  WebhookListResponse,
-  WebhookLogsListResponse,
-  WebhookTestResponse,
-} from '@/types/api';
+  WebhookResponseDto,
+  WebhookListResponseDto,
+  WebhookLogResponseDto,
+  WebhookLogsListResponseDto,
+  WebhookTestResponseDto,
+  PaginationParams,
+} from '@/lib/api/schemas';
 
-// Query Keys
-const webhookKeys = {
+// Re-export types for consumers of this hook
+export type {
+  CreateWebhookDto,
+  UpdateWebhookDto,
+  WebhookResponseDto,
+  WebhookListResponseDto,
+  WebhookLogResponseDto,
+  WebhookLogsListResponseDto,
+  WebhookTestResponseDto,
+  PaginationParams,
+};
+
+// Query Keys (exported for external cache management)
+export const webhookKeys = {
   all: ['webhooks'] as const,
   lists: () => [...webhookKeys.all, 'list'] as const,
-  list: () => [...webhookKeys.lists()] as const,
   details: () => [...webhookKeys.all, 'detail'] as const,
   detail: (id: string) => [...webhookKeys.details(), id] as const,
-  logs: (id: string, page: number, pageSize: number) =>
-    [...webhookKeys.all, 'logs', id, page, pageSize] as const,
+  logs: (id: string, params: PaginationParams) =>
+    [...webhookKeys.all, 'logs', id, params] as const,
 };
 
 // ==================== API Functions ====================
 
-async function getWebhooks(): Promise<WebhookListResponse> {
-  return apiClient.get<WebhookListResponse>('/api/webhooks');
+async function getWebhooks(): Promise<WebhookListResponseDto> {
+  return apiClient.get<WebhookListResponseDto>('/api/webhooks');
 }
 
-async function getWebhook(id: string): Promise<WebhookResponse> {
-  return apiClient.get<WebhookResponse>(`/api/webhooks/${id}`);
+async function getWebhook(id: string): Promise<WebhookResponseDto> {
+  return apiClient.get<WebhookResponseDto>(`/api/webhooks/${id}`);
 }
 
 async function createWebhook(
   data: CreateWebhookDto,
-): Promise<WebhookResponse> {
-  return apiClient.post<WebhookResponse>('/api/webhooks', data);
+): Promise<WebhookResponseDto> {
+  return apiClient.post<WebhookResponseDto>('/api/webhooks', data);
 }
 
 async function updateWebhook(
   id: string,
   data: UpdateWebhookDto,
-): Promise<WebhookResponse> {
-  return apiClient.put<WebhookResponse>(`/api/webhooks/${id}`, data);
+): Promise<WebhookResponseDto> {
+  return apiClient.put<WebhookResponseDto>(`/api/webhooks/${id}`, data);
 }
 
 async function deleteWebhook(id: string): Promise<void> {
@@ -55,16 +69,16 @@ async function deleteWebhook(id: string): Promise<void> {
 
 async function getWebhookLogs(
   id: string,
-  page: number = 1,
-  pageSize: number = 20,
-): Promise<WebhookLogsListResponse> {
-  return apiClient.get<WebhookLogsListResponse>(
+  params: PaginationParams = {},
+): Promise<WebhookLogsListResponseDto> {
+  const { page = 1, pageSize = 20 } = params;
+  return apiClient.get<WebhookLogsListResponseDto>(
     `/api/webhooks/${id}/logs?page=${page}&pageSize=${pageSize}`,
   );
 }
 
-async function testWebhook(id: string): Promise<WebhookTestResponse> {
-  return apiClient.post<WebhookTestResponse>(`/api/webhooks/${id}/test`, {});
+async function testWebhook(id: string): Promise<WebhookTestResponseDto> {
+  return apiClient.post<WebhookTestResponseDto>(`/api/webhooks/${id}/test`, {});
 }
 
 // ==================== Hooks ====================
@@ -74,9 +88,9 @@ async function testWebhook(id: string): Promise<WebhookTestResponse> {
  */
 export function useWebhooks() {
   return useQuery({
-    queryKey: webhookKeys.list(),
+    queryKey: webhookKeys.lists(),
     queryFn: getWebhooks,
-    staleTime: 30 * 1000, // 30 seconds
+    ...QUERY_CONFIG.STANDARD,
   });
 }
 
@@ -88,23 +102,19 @@ export function useWebhook(id: string) {
     queryKey: webhookKeys.detail(id),
     queryFn: () => getWebhook(id),
     enabled: !!id,
-    staleTime: 30 * 1000,
+    ...QUERY_CONFIG.DETAIL,
   });
 }
 
 /**
  * Get webhook logs (paginated)
  */
-export function useWebhookLogs(
-  id: string,
-  page: number = 1,
-  pageSize: number = 20,
-) {
+export function useWebhookLogs(id: string, params: PaginationParams = {}) {
   return useQuery({
-    queryKey: webhookKeys.logs(id, page, pageSize),
-    queryFn: () => getWebhookLogs(id, page, pageSize),
+    queryKey: webhookKeys.logs(id, params),
+    queryFn: () => getWebhookLogs(id, params),
     enabled: !!id,
-    staleTime: 15 * 1000, // 15 seconds
+    ...QUERY_CONFIG.LIVE,
   });
 }
 
@@ -117,8 +127,7 @@ export function useCreateWebhook() {
   return useMutation({
     mutationFn: createWebhook,
     onSuccess: () => {
-      // Invalidate webhooks list
-      queryClient.invalidateQueries({ queryKey: webhookKeys.list() });
+      queryClient.invalidateQueries({ queryKey: webhookKeys.lists() });
     },
   });
 }
@@ -133,8 +142,7 @@ export function useUpdateWebhook() {
     mutationFn: ({ id, data }: { id: string; data: UpdateWebhookDto }) =>
       updateWebhook(id, data),
     onSuccess: (_, variables) => {
-      // Invalidate webhooks list and specific webhook
-      queryClient.invalidateQueries({ queryKey: webhookKeys.list() });
+      queryClient.invalidateQueries({ queryKey: webhookKeys.lists() });
       queryClient.invalidateQueries({
         queryKey: webhookKeys.detail(variables.id),
       });
@@ -151,8 +159,7 @@ export function useDeleteWebhook() {
   return useMutation({
     mutationFn: deleteWebhook,
     onSuccess: () => {
-      // Invalidate webhooks list
-      queryClient.invalidateQueries({ queryKey: webhookKeys.list() });
+      queryClient.invalidateQueries({ queryKey: webhookKeys.lists() });
     },
   });
 }

@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { AlertTriangle } from 'lucide-react';
 import { ErrorHandler } from '@/lib/error-handler';
+import { t } from '@/lib/i18n';
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -97,17 +98,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
             <CardHeader>
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-destructive" />
-                <CardTitle>Something went wrong</CardTitle>
+                <CardTitle>{t('errors.boundaryTitle')}</CardTitle>
               </div>
               <CardDescription>
-                An unexpected error occurred. Please try again.
+                {t('errors.boundaryDescription')}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Show error message in development mode */}
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <div className="rounded-md bg-destructive/10 p-3 text-sm">
-                  <p className="font-semibold text-destructive mb-1">Error Details:</p>
+                  <p className="font-semibold text-destructive mb-1">{t('errors.boundaryDetails')}</p>
                   <p className="text-destructive/90 font-mono text-xs break-all">
                     {this.state.error.message}
                   </p>
@@ -116,10 +117,10 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 
               <div className="flex gap-2">
                 <Button onClick={this.handleReset} className="flex-1">
-                  Try Again
+                  {t('errors.boundaryTryAgain')}
                 </Button>
                 <Button onClick={this.handleReload} variant="outline" className="flex-1">
-                  Reload Page
+                  {t('errors.boundaryReload')}
                 </Button>
               </div>
             </CardContent>

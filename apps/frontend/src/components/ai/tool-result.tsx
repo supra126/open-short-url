@@ -6,6 +6,20 @@ import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 import { t } from '@/lib/i18n';
 
 /**
+ * Type guard for result with success/error properties
+ */
+interface ToolResultWithStatus {
+  success?: boolean;
+  error?: string;
+  message?: string;
+  data?: unknown;
+}
+
+function isToolResultWithStatus(value: unknown): value is ToolResultWithStatus {
+  return value !== null && typeof value === 'object';
+}
+
+/**
  * Tool Result Component
  * Displays the result of an AI tool execution
  */
@@ -13,9 +27,9 @@ interface ToolResultProps {
   /** Name of the tool that was executed */
   toolName: string;
   /** Arguments passed to the tool */
-  args: Record<string, any>;
+  args: Record<string, unknown>;
   /** Result from the tool execution */
-  result?: any;
+  result?: unknown;
   /** Current state of the tool execution */
   state: 'call' | 'result' | 'error';
 }
@@ -77,33 +91,36 @@ export function ToolResult({ toolName, args, result, state }: ToolResultProps) {
 
     if (!result) return null;
 
-    // Handle error result
-    if (result.success === false || result.error) {
-      return (
-        <div className="text-sm text-destructive">
-          ❌ {result.error || 'Unknown error'}
-        </div>
-      );
-    }
+    // Check if result has standard status properties
+    if (isToolResultWithStatus(result)) {
+      // Handle error result
+      if (result.success === false || result.error) {
+        return (
+          <div className="text-sm text-destructive">
+            {result.error || 'Unknown error'}
+          </div>
+        );
+      }
 
-    // Handle success result
-    if (result.success === true) {
-      return (
-        <div className="space-y-2">
-          {result.message && (
-            <div className="text-sm text-green-600 dark:text-green-400">
-              ✅ {result.message}
-            </div>
-          )}
-          {result.data && (
-            <div className="text-sm">
-              <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">
-                {JSON.stringify(result.data, null, 2)}
-              </pre>
-            </div>
-          )}
-        </div>
-      );
+      // Handle success result
+      if (result.success === true) {
+        return (
+          <div className="space-y-2">
+            {result.message && (
+              <div className="text-sm text-green-600 dark:text-green-400">
+                {result.message}
+              </div>
+            )}
+            {result.data !== undefined && result.data !== null && (
+              <div className="text-sm">
+                <pre className="bg-muted p-2 rounded text-xs overflow-x-auto">
+                  {JSON.stringify(result.data, null, 2)}
+                </pre>
+              </div>
+            )}
+          </div>
+        );
+      }
     }
 
     // Handle raw result

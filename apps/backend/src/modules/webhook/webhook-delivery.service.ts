@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
+import { Prisma, Webhook } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { WebhookService } from './webhook.service';
 import { parseUserAgent } from '@/common/utils/user-agent-parser';
 import { getGeoLocation } from '@/common/utils/geo-location';
-import { isBot, getBotName } from '@/common/utils/bot-detector';
+import { isBot } from '@/common/utils/bot-detector';
 
 /**
  * Available webhook events
@@ -17,10 +18,47 @@ export enum WebhookEvent {
   URL_CLICKED = 'url.clicked',
 }
 
+interface UrlCreatedPayload {
+  id: string;
+  slug: string;
+  originalUrl: string;
+  userId: string;
+}
+
+interface UrlClickedPayload {
+  urlId: string;
+  variantId?: string | null;
+  clickData: {
+    ip?: string;
+    userAgent?: string;
+    referer?: string;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmTerm?: string;
+    utmContent?: string;
+  };
+}
+
+interface UrlUpdatedPayload {
+  id: string;
+  slug: string;
+  originalUrl: string;
+  userId: string;
+}
+
+interface UrlDeletedPayload {
+  id: string;
+  slug: string;
+  originalUrl: string;
+  userId: string;
+}
+
 interface WebhookEventPayload {
   event: WebhookEvent;
   timestamp: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
+  [key: string]: unknown;
 }
 
 /**
@@ -41,7 +79,7 @@ export class WebhookDeliveryService {
    * Listen to URL created event
    */
   @OnEvent('url.created', { async: true })
-  async handleUrlCreated(payload: any): Promise<void> {
+  async handleUrlCreated(payload: UrlCreatedPayload): Promise<void> {
     await this.triggerWebhooks(WebhookEvent.URL_CREATED, {
       urlId: payload.id,
       slug: payload.slug,
@@ -54,7 +92,7 @@ export class WebhookDeliveryService {
    * Listen to URL clicked event
    */
   @OnEvent('url.clicked', { async: true })
-  async handleUrlClicked(payload: any): Promise<void> {
+  async handleUrlClicked(payload: UrlClickedPayload): Promise<void> {
     try {
       const { urlId, variantId, clickData } = payload;
 
@@ -141,10 +179,12 @@ export class WebhookDeliveryService {
         variantName: variant?.name || null,
         clickData: enhancedClickData,
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
-        `Failed to process URL clicked event for webhook: ${error.message}`,
-        error.stack,
+        `Failed to process URL clicked event for webhook: ${errorMessage}`,
+        errorStack,
         'WebhookDeliveryService',
       );
     }
@@ -154,7 +194,7 @@ export class WebhookDeliveryService {
    * Listen to URL updated event
    */
   @OnEvent('url.updated', { async: true })
-  async handleUrlUpdated(payload: any): Promise<void> {
+  async handleUrlUpdated(payload: UrlUpdatedPayload): Promise<void> {
     await this.triggerWebhooks(WebhookEvent.URL_UPDATED, {
       urlId: payload.id,
       slug: payload.slug,
@@ -167,7 +207,7 @@ export class WebhookDeliveryService {
    * Listen to URL deleted event
    */
   @OnEvent('url.deleted', { async: true })
-  async handleUrlDeleted(payload: any): Promise<void> {
+  async handleUrlDeleted(payload: UrlDeletedPayload): Promise<void> {
     await this.triggerWebhooks(WebhookEvent.URL_DELETED, {
       urlId: payload.id,
       slug: payload.slug,
@@ -181,12 +221,12 @@ export class WebhookDeliveryService {
    */
   private async triggerWebhooks(
     event: WebhookEvent,
-    data: Record<string, any>,
+    data: Record<string, unknown>,
   ): Promise<void> {
     try {
       // Find all active webhooks subscribed to this event
       // Use raw query for JSON array filtering
-      const webhooks = await this.prisma.$queryRaw<any[]>`
+      const webhooks = await this.prisma.$queryRaw<Webhook[]>`
         SELECT * FROM webhooks
         WHERE "isActive" = true
         AND events::jsonb ? ${event}
@@ -194,14 +234,16 @@ export class WebhookDeliveryService {
 
       // Trigger webhooks in parallel
       await Promise.allSettled(
-        webhooks.map((webhook) =>
+        webhooks.map((webhook: Webhook) =>
           this.deliverWebhook(webhook, event, data, 1),
         ),
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
-        `Failed to trigger webhooks for event ${event}: ${error.message}`,
-        error.stack,
+        `Failed to trigger webhooks for event ${event}: ${errorMessage}`,
+        errorStack,
         'WebhookDeliveryService',
       );
     }
@@ -211,9 +253,9 @@ export class WebhookDeliveryService {
    * Deliver webhook with retry mechanism (exponential backoff)
    */
   private async deliverWebhook(
-    webhook: any,
+    webhook: Webhook,
     event: WebhookEvent,
-    data: Record<string, any>,
+    data: Record<string, unknown>,
     attempt: number,
   ): Promise<void> {
     const payload: WebhookEventPayload = {
@@ -230,11 +272,11 @@ export class WebhookDeliveryService {
 
     try {
       // Decrypt secret and generate signature
-      const secret = (webhook.secret as string);
+      const secret = webhook.secret;
       const signature = this.webhookService.generateSignature(payload, secret);
 
       // Prepare headers
-      const headers: any = {
+      const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         'User-Agent': 'OpenShortURL-Webhook/1.0',
         'X-Webhook-Signature': signature,
@@ -268,11 +310,12 @@ export class WebhookDeliveryService {
           'WebhookDeliveryService',
         );
       }
-    } catch (err: any) {
-      error = err.message;
+    } catch (err: unknown) {
+      error = err instanceof Error ? err.message : 'Unknown error';
+      const errStack = err instanceof Error ? err.stack : undefined;
       this.loggerService.error(
         `Webhook delivery error: ${webhook.name} (${webhook.id}) - ${error}`,
-        err.stack,
+        errStack,
         'WebhookDeliveryService',
       );
     } finally {
@@ -315,7 +358,7 @@ export class WebhookDeliveryService {
   private async saveWebhookLog(data: {
     webhookId: string;
     event: string;
-    payload: Record<string, any>;
+    payload: Record<string, unknown>;
     statusCode?: number;
     response?: string;
     error?: string;
@@ -328,7 +371,7 @@ export class WebhookDeliveryService {
         data: {
           webhookId: data.webhookId,
           event: data.event,
-          payload: data.payload,
+          payload: data.payload as Prisma.InputJsonValue,
           statusCode: data.statusCode,
           response: data.response,
           error: data.error,
@@ -337,10 +380,12 @@ export class WebhookDeliveryService {
           isSuccess: data.isSuccess,
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
-        `Failed to save webhook log: ${error.message}`,
-        error.stack,
+        `Failed to save webhook log: ${errorMessage}`,
+        errorStack,
         'WebhookDeliveryService',
       );
     }
@@ -352,7 +397,7 @@ export class WebhookDeliveryService {
   private async updateWebhookStats(
     webhookId: string,
     isSuccess: boolean,
-    error?: string,
+    lastError?: string,
   ): Promise<void> {
     try {
       await this.prisma.webhook.update({
@@ -363,13 +408,15 @@ export class WebhookDeliveryService {
             ? { totalSuccess: { increment: 1 } }
             : { totalFailed: { increment: 1 } }),
           lastSentAt: new Date(),
-          ...(error && { lastError: error }),
+          ...(lastError && { lastError }),
         },
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
-        `Failed to update webhook stats: ${error.message}`,
-        error.stack,
+        `Failed to update webhook stats: ${errorMessage}`,
+        errorStack,
         'WebhookDeliveryService',
       );
     }

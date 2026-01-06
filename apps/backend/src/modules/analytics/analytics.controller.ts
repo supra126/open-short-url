@@ -14,6 +14,7 @@ import {
   ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
+import { User } from '@prisma/client';
 import { AnalyticsService } from './analytics.service';
 import { AnalyticsQueryDto } from './dto/analytics-query.dto';
 import {
@@ -65,7 +66,7 @@ export class AnalyticsController {
   })
   async getUrlAnalytics(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<AnalyticsResponseDto> {
     return this.analyticsService.getUrlAnalytics(id, user, queryDto);
@@ -90,7 +91,7 @@ export class AnalyticsController {
     type: ErrorResponseDto,
   })
   async getUserAnalytics(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<AnalyticsResponseDto> {
     return this.analyticsService.getUserAnalytics(user, queryDto);
@@ -126,7 +127,7 @@ export class AnalyticsController {
   })
   async getRecentClicks(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Query('limit') limit?: number,
     @Query('includeBots') includeBots?: string,
   ): Promise<RecentClicksResponseDto> {
@@ -168,7 +169,7 @@ export class AnalyticsController {
   })
   async getBotAnalytics(
     @Param('id') id: string,
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<BotAnalyticsResponseDto> {
     return this.analyticsService.getBotAnalytics(id, user, queryDto);
@@ -193,7 +194,7 @@ export class AnalyticsController {
     type: ErrorResponseDto,
   })
   async getUserBotAnalytics(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<UserBotAnalyticsResponseDto> {
     return this.analyticsService.getUserBotAnalytics(user, queryDto);
@@ -218,7 +219,7 @@ export class AnalyticsController {
     type: ErrorResponseDto,
   })
   async getUserAbTestAnalytics(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<AbTestAnalyticsResponseDto> {
     return this.analyticsService.getUserAbTestAnalytics(user, queryDto);

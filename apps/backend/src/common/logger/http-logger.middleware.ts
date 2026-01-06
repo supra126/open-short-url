@@ -1,7 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 import { randomUUID } from 'crypto';
 import { LoggerService } from './logger.service';
+import { User } from '@prisma/client';
+
+/**
+ * Extended request interface with custom metadata
+ */
+interface ExtendedRequest extends FastifyRequest {
+  requestId?: string;
+  _startTime?: number;
+  _userId?: string | null;
+  _ip?: string;
+  user?: User;
+}
 
 /**
  * Fastify Hook for HTTP request/response logging
@@ -15,33 +27,35 @@ export class HttpLoggerMiddleware {
    * Register logging hooks on Fastify server
    * Call this in main.ts during bootstrap
    */
-  registerHooks(fastifyInstance: any) {
+  registerHooks(fastifyInstance: FastifyInstance) {
     // Track request timing and metadata
-    fastifyInstance.addHook('onRequest', async (req: FastifyRequest, reply: FastifyReply) => {
+    fastifyInstance.addHook('onRequest', async (req: FastifyRequest, _reply: FastifyReply) => {
+      const extReq = req as ExtendedRequest;
       // Generate unique request ID for tracking
       const requestId = randomUUID();
       const startTime = Date.now();
 
       // Add requestId to request object
-      (req as any).requestId = requestId;
+      extReq.requestId = requestId;
 
       // Get client IP
       const ip = req.ip || 'unknown';
 
       // Get user ID (if authenticated)
-      const userId = (req as any).user?.id || null;
+      const userId = extReq.user?.id || null;
 
       // Store metadata on request for later use in onResponse hook
-      (req as any)._startTime = startTime;
-      (req as any)._userId = userId;
-      (req as any)._ip = ip;
+      extReq._startTime = startTime;
+      extReq._userId = userId;
+      extReq._ip = ip;
     });
 
     // Log response information
     fastifyInstance.addHook('onResponse', async (req: FastifyRequest, reply: FastifyReply) => {
-      const startTime = (req as any)._startTime || Date.now();
-      const userId = (req as any)._userId || null;
-      const ip = (req as any)._ip || 'unknown';
+      const extReq = req as ExtendedRequest;
+      const startTime = extReq._startTime ?? Date.now();
+      const userId = extReq._userId ?? null;
+      const ip = extReq._ip ?? 'unknown';
       const duration = Date.now() - startTime;
 
       // Log response information
@@ -50,7 +64,7 @@ export class HttpLoggerMiddleware {
         req.url,
         reply.statusCode,
         duration,
-        userId,
+        userId ?? undefined,
         ip,
       );
 

@@ -7,15 +7,20 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { urlKeys } from '@/hooks/use-url';
+import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
   CreateVariantDto,
   UpdateVariantDto,
-  VariantResponse,
-  VariantListResponse,
-} from '@/types/api';
+  VariantResponseDto,
+  VariantStatsDto,
+  VariantListResponseDto,
+} from '@/lib/api/schemas';
 
-// Query Keys
-const variantKeys = {
+// Re-export types for consumers of this hook
+export type { CreateVariantDto, UpdateVariantDto, VariantResponseDto, VariantStatsDto, VariantListResponseDto };
+
+// Query Keys (exported for external cache management)
+export const variantKeys = {
   all: ['variants'] as const,
   lists: () => [...variantKeys.all, 'list'] as const,
   list: (urlId: string) => [...variantKeys.lists(), urlId] as const,
@@ -26,15 +31,15 @@ const variantKeys = {
 
 // ==================== API Functions ====================
 
-async function getVariants(urlId: string): Promise<VariantListResponse> {
-  return apiClient.get<VariantListResponse>(`/api/urls/${urlId}/variants`);
+async function getVariants(urlId: string): Promise<VariantListResponseDto> {
+  return apiClient.get<VariantListResponseDto>(`/api/urls/${urlId}/variants`);
 }
 
 async function getVariant(
   urlId: string,
   variantId: string,
-): Promise<VariantResponse> {
-  return apiClient.get<VariantResponse>(
+): Promise<VariantResponseDto> {
+  return apiClient.get<VariantResponseDto>(
     `/api/urls/${urlId}/variants/${variantId}`,
   );
 }
@@ -42,16 +47,16 @@ async function getVariant(
 async function createVariant(
   urlId: string,
   data: CreateVariantDto,
-): Promise<VariantResponse> {
-  return apiClient.post<VariantResponse>(`/api/urls/${urlId}/variants`, data);
+): Promise<VariantResponseDto> {
+  return apiClient.post<VariantResponseDto>(`/api/urls/${urlId}/variants`, data);
 }
 
 async function updateVariant(
   urlId: string,
   variantId: string,
   data: UpdateVariantDto,
-): Promise<VariantResponse> {
-  return apiClient.put<VariantResponse>(
+): Promise<VariantResponseDto> {
+  return apiClient.put<VariantResponseDto>(
     `/api/urls/${urlId}/variants/${variantId}`,
     data,
   );
@@ -74,7 +79,7 @@ export function useVariants(urlId: string) {
     queryKey: variantKeys.list(urlId),
     queryFn: () => getVariants(urlId),
     enabled: !!urlId,
-    staleTime: 30 * 1000, // 30 seconds
+    ...QUERY_CONFIG.STANDARD,
   });
 }
 
@@ -86,7 +91,7 @@ export function useVariant(urlId: string, variantId: string) {
     queryKey: variantKeys.detail(urlId, variantId),
     queryFn: () => getVariant(urlId, variantId),
     enabled: !!urlId && !!variantId,
-    staleTime: 30 * 1000,
+    ...QUERY_CONFIG.DETAIL,
   });
 }
 

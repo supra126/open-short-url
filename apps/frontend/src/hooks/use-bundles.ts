@@ -6,22 +6,38 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { buildQueryParams } from '@/lib/utils';
+import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
   CreateBundleDto,
   UpdateBundleDto,
-  BundleResponse,
-  BundleListResponse,
-  BundleQueryDto,
+  BundleResponseDto,
+  BundleListResponseDto,
+  BundleUrlDto,
+  BundleQueryParams,
   AddUrlToBundleDto,
   AddMultipleUrlsDto,
-  BundleStatsResponse,
-} from '@/types/api';
+  BundleStatsDto,
+} from '@/lib/api/schemas';
 
-// Query Keys
-const bundleKeys = {
+// Re-export types for consumers of this hook
+export type {
+  CreateBundleDto,
+  UpdateBundleDto,
+  BundleResponseDto,
+  BundleListResponseDto,
+  BundleUrlDto,
+  BundleQueryParams,
+  AddUrlToBundleDto,
+  AddMultipleUrlsDto,
+  BundleStatsDto,
+};
+
+// Query Keys (exported for external cache management)
+export const bundleKeys = {
   all: ['bundles'] as const,
   lists: () => [...bundleKeys.all, 'list'] as const,
-  list: (params?: BundleQueryDto) => [...bundleKeys.lists(), params] as const,
+  list: (params?: BundleQueryParams) => [...bundleKeys.lists(), params] as const,
   details: () => [...bundleKeys.all, 'detail'] as const,
   detail: (id: string) => [...bundleKeys.details(), id] as const,
   stats: (id: string) => [...bundleKeys.all, 'stats', id] as const,
@@ -29,32 +45,26 @@ const bundleKeys = {
 
 // ==================== API Functions ====================
 
-async function getBundles(params?: BundleQueryDto): Promise<BundleListResponse> {
-  const queryParams = new URLSearchParams();
-  if (params?.page) queryParams.set('page', params.page.toString());
-  if (params?.pageSize) queryParams.set('pageSize', params.pageSize.toString());
-  if (params?.status) queryParams.set('status', params.status);
-  if (params?.search) queryParams.set('search', params.search);
-
-  const query = queryParams.toString();
-  return apiClient.get<BundleListResponse>(
+async function getBundles(params?: BundleQueryParams): Promise<BundleListResponseDto> {
+  const query = params ? buildQueryParams(params) : '';
+  return apiClient.get<BundleListResponseDto>(
     `/api/bundles${query ? `?${query}` : ''}`,
   );
 }
 
-async function getBundle(id: string): Promise<BundleResponse> {
-  return apiClient.get<BundleResponse>(`/api/bundles/${id}`);
+async function getBundle(id: string): Promise<BundleResponseDto> {
+  return apiClient.get<BundleResponseDto>(`/api/bundles/${id}`);
 }
 
-async function createBundle(data: CreateBundleDto): Promise<BundleResponse> {
-  return apiClient.post<BundleResponse>('/api/bundles', data);
+async function createBundle(data: CreateBundleDto): Promise<BundleResponseDto> {
+  return apiClient.post<BundleResponseDto>('/api/bundles', data);
 }
 
 async function updateBundle(
   id: string,
   data: UpdateBundleDto,
-): Promise<BundleResponse> {
-  return apiClient.put<BundleResponse>(`/api/bundles/${id}`, data);
+): Promise<BundleResponseDto> {
+  return apiClient.put<BundleResponseDto>(`/api/bundles/${id}`, data);
 }
 
 async function deleteBundle(id: string): Promise<void> {
@@ -64,15 +74,15 @@ async function deleteBundle(id: string): Promise<void> {
 async function addUrlToBundle(
   bundleId: string,
   data: AddUrlToBundleDto,
-): Promise<BundleResponse> {
-  return apiClient.post<BundleResponse>(`/api/bundles/${bundleId}/urls`, data);
+): Promise<BundleResponseDto> {
+  return apiClient.post<BundleResponseDto>(`/api/bundles/${bundleId}/urls`, data);
 }
 
 async function addMultipleUrlsToBundle(
   bundleId: string,
   data: AddMultipleUrlsDto,
-): Promise<BundleResponse> {
-  return apiClient.post<BundleResponse>(
+): Promise<BundleResponseDto> {
+  return apiClient.post<BundleResponseDto>(
     `/api/bundles/${bundleId}/urls/batch`,
     data,
   );
@@ -81,8 +91,8 @@ async function addMultipleUrlsToBundle(
 async function removeUrlFromBundle(
   bundleId: string,
   urlId: string,
-): Promise<BundleResponse> {
-  return apiClient.delete<BundleResponse>(
+): Promise<BundleResponseDto> {
+  return apiClient.delete<BundleResponseDto>(
     `/api/bundles/${bundleId}/urls/${urlId}`,
   );
 }
@@ -91,23 +101,23 @@ async function updateUrlOrder(
   bundleId: string,
   urlId: string,
   order: number,
-): Promise<BundleResponse> {
-  return apiClient.patch<BundleResponse>(
+): Promise<BundleResponseDto> {
+  return apiClient.patch<BundleResponseDto>(
     `/api/bundles/${bundleId}/urls/${urlId}/order`,
     { order },
   );
 }
 
-async function getBundleStats(bundleId: string): Promise<BundleStatsResponse> {
-  return apiClient.get<BundleStatsResponse>(`/api/bundles/${bundleId}/stats`);
+async function getBundleStats(bundleId: string): Promise<BundleStatsDto> {
+  return apiClient.get<BundleStatsDto>(`/api/bundles/${bundleId}/stats`);
 }
 
-async function archiveBundle(bundleId: string): Promise<BundleResponse> {
-  return apiClient.post<BundleResponse>(`/api/bundles/${bundleId}/archive`, {});
+async function archiveBundle(bundleId: string): Promise<BundleResponseDto> {
+  return apiClient.post<BundleResponseDto>(`/api/bundles/${bundleId}/archive`, {});
 }
 
-async function restoreBundle(bundleId: string): Promise<BundleResponse> {
-  return apiClient.post<BundleResponse>(`/api/bundles/${bundleId}/restore`, {});
+async function restoreBundle(bundleId: string): Promise<BundleResponseDto> {
+  return apiClient.post<BundleResponseDto>(`/api/bundles/${bundleId}/restore`, {});
 }
 
 // ==================== Hooks ====================
@@ -115,11 +125,11 @@ async function restoreBundle(bundleId: string): Promise<BundleResponse> {
 /**
  * Get all bundles with optional filters
  */
-export function useBundles(params?: BundleQueryDto) {
+export function useBundles(params?: BundleQueryParams) {
   return useQuery({
     queryKey: bundleKeys.list(params),
     queryFn: () => getBundles(params),
-    staleTime: 30 * 1000, // 30 seconds
+    ...QUERY_CONFIG.STANDARD,
   });
 }
 
@@ -131,7 +141,7 @@ export function useBundle(id: string) {
     queryKey: bundleKeys.detail(id),
     queryFn: () => getBundle(id),
     enabled: !!id,
-    staleTime: 30 * 1000, // 30 seconds
+    ...QUERY_CONFIG.DETAIL,
   });
 }
 
@@ -143,7 +153,7 @@ export function useBundleStats(id: string) {
     queryKey: bundleKeys.stats(id),
     queryFn: () => getBundleStats(id),
     enabled: !!id,
-    staleTime: 60 * 1000, // 1 minute
+    ...QUERY_CONFIG.LIVE,
   });
 }
 
@@ -155,11 +165,8 @@ export function useCreateBundle() {
 
   return useMutation({
     mutationFn: createBundle,
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: bundleKeys.lists(),
-        type: 'all',
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bundleKeys.lists() });
     },
   });
 }
@@ -173,16 +180,9 @@ export function useUpdateBundle() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateBundleDto }) =>
       updateBundle(id, data),
-    onSuccess: async (_, variables) => {
-      await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: bundleKeys.lists(),
-          type: 'all',
-        }),
-        queryClient.invalidateQueries({
-          queryKey: bundleKeys.detail(variables.id),
-        }),
-      ]);
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: bundleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: bundleKeys.detail(variables.id) });
     },
   });
 }
@@ -195,11 +195,8 @@ export function useDeleteBundle() {
 
   return useMutation({
     mutationFn: deleteBundle,
-    onSuccess: async () => {
-      await queryClient.refetchQueries({
-        queryKey: bundleKeys.lists(),
-        type: 'all',
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: bundleKeys.lists() });
     },
   });
 }
@@ -218,19 +215,10 @@ export function useAddUrlToBundle() {
       bundleId: string;
       data: AddUrlToBundleDto;
     }) => addUrlToBundle(bundleId, data),
-    onSuccess: async (_, variables) => {
-      await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: bundleKeys.lists(),
-          type: 'all',
-        }),
-        queryClient.invalidateQueries({
-          queryKey: bundleKeys.detail(variables.bundleId),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: bundleKeys.stats(variables.bundleId),
-        }),
-      ]);
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: bundleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: bundleKeys.detail(variables.bundleId) });
+      queryClient.invalidateQueries({ queryKey: bundleKeys.stats(variables.bundleId) });
     },
   });
 }
@@ -249,19 +237,10 @@ export function useAddMultipleUrlsToBundle() {
       bundleId: string;
       data: AddMultipleUrlsDto;
     }) => addMultipleUrlsToBundle(bundleId, data),
-    onSuccess: async (_, variables) => {
-      await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: bundleKeys.lists(),
-          type: 'all',
-        }),
-        queryClient.invalidateQueries({
-          queryKey: bundleKeys.detail(variables.bundleId),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: bundleKeys.stats(variables.bundleId),
-        }),
-      ]);
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: bundleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: bundleKeys.detail(variables.bundleId) });
+      queryClient.invalidateQueries({ queryKey: bundleKeys.stats(variables.bundleId) });
     },
   });
 }
@@ -275,19 +254,10 @@ export function useRemoveUrlFromBundle() {
   return useMutation({
     mutationFn: ({ bundleId, urlId }: { bundleId: string; urlId: string }) =>
       removeUrlFromBundle(bundleId, urlId),
-    onSuccess: async (_, variables) => {
-      await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: bundleKeys.lists(),
-          type: 'all',
-        }),
-        queryClient.invalidateQueries({
-          queryKey: bundleKeys.detail(variables.bundleId),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: bundleKeys.stats(variables.bundleId),
-        }),
-      ]);
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: bundleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: bundleKeys.detail(variables.bundleId) });
+      queryClient.invalidateQueries({ queryKey: bundleKeys.stats(variables.bundleId) });
     },
   });
 }
@@ -308,10 +278,8 @@ export function useUpdateUrlOrder() {
       urlId: string;
       order: number;
     }) => updateUrlOrder(bundleId, urlId, order),
-    onSuccess: async (_, variables) => {
-      await queryClient.invalidateQueries({
-        queryKey: bundleKeys.detail(variables.bundleId),
-      });
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: bundleKeys.detail(variables.bundleId) });
     },
   });
 }
@@ -324,14 +292,9 @@ export function useArchiveBundle() {
 
   return useMutation({
     mutationFn: archiveBundle,
-    onSuccess: async (_, bundleId) => {
-      await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: bundleKeys.lists(),
-          type: 'all',
-        }),
-        queryClient.invalidateQueries({ queryKey: bundleKeys.detail(bundleId) }),
-      ]);
+    onSuccess: (_, bundleId) => {
+      queryClient.invalidateQueries({ queryKey: bundleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: bundleKeys.detail(bundleId) });
     },
   });
 }
@@ -344,14 +307,9 @@ export function useRestoreBundle() {
 
   return useMutation({
     mutationFn: restoreBundle,
-    onSuccess: async (_, bundleId) => {
-      await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: bundleKeys.lists(),
-          type: 'all',
-        }),
-        queryClient.invalidateQueries({ queryKey: bundleKeys.detail(bundleId) }),
-      ]);
+    onSuccess: (_, bundleId) => {
+      queryClient.invalidateQueries({ queryKey: bundleKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: bundleKeys.detail(bundleId) });
     },
   });
 }

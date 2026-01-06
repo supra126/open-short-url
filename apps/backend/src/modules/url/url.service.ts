@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma, UrlStatus } from '@prisma/client';
+import { Prisma, UrlStatus, Url, UrlVariant } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { CacheService } from '@/common/cache/cache.service';
 import { CreateUrlDto } from './dto/create-url.dto';
@@ -28,6 +28,20 @@ import {
 import { hashPassword } from '@/common/utils/password-hasher';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
 import * as QRCode from 'qrcode';
+
+/**
+ * URL with variants for A/B testing
+ */
+interface UrlWithVariants extends Url {
+  variants?: Array<{
+    id: string;
+    name: string;
+    targetUrl: string;
+    weight: number;
+    isActive: boolean;
+    clickCount: number;
+  }>;
+}
 
 @Injectable()
 export class UrlService implements OnModuleInit {
@@ -245,7 +259,7 @@ export class UrlService implements OnModuleInit {
   ): Promise<UrlResponseDto> {
     // Try to get from cache first
     const cacheKey = `${this.CACHE_PREFIX}${id}`;
-    const cached = await this.cacheService.get<any>(cacheKey);
+    const cached = await this.cacheService.get<Url>(cacheKey);
 
     if (cached && (userRole === 'ADMIN' || cached.userId === userId)) {
       return this.mapToResponse(cached);
@@ -273,10 +287,10 @@ export class UrlService implements OnModuleInit {
   /**
    * Find URL by slug (for redirects)
    */
-  async findBySlug(slug: string): Promise<any> {
+  async findBySlug(slug: string): Promise<UrlWithVariants> {
     // Try to get from cache first
     const cacheKey = `${this.CACHE_PREFIX}slug:${slug}`;
-    const cached = await this.cacheService.get<any>(cacheKey);
+    const cached = await this.cacheService.get<UrlWithVariants>(cacheKey);
 
     if (cached) {
       return cached;
@@ -506,7 +520,7 @@ export class UrlService implements OnModuleInit {
   /**
    * Cache URL data with dynamic TTL based on popularity
    */
-  private async cacheUrl(url: any): Promise<void> {
+  private async cacheUrl(url: Url | UrlWithVariants): Promise<void> {
     const ttl = this.getDynamicTTL(url.clickCount);
 
     // Use ID as key
@@ -541,24 +555,24 @@ export class UrlService implements OnModuleInit {
   /**
    * Map to response DTO
    */
-  private mapToResponse(url: any): UrlResponseDto {
+  private mapToResponse(url: Url): UrlResponseDto {
     const shortUrlDomain = this.configService.get<string>('SHORT_URL_DOMAIN');
     return {
       id: url.id,
       slug: url.slug,
       shortUrl: `${shortUrlDomain}/${url.slug}`,
       originalUrl: url.originalUrl,
-      title: url.title,
+      title: url.title ?? undefined,
       userId: url.userId,
       status: url.status,
       clickCount: url.clickCount,
       hasPassword: !!url.password,
-      expiresAt: url.expiresAt,
-      utmSource: url.utmSource,
-      utmMedium: url.utmMedium,
-      utmCampaign: url.utmCampaign,
-      utmTerm: url.utmTerm,
-      utmContent: url.utmContent,
+      expiresAt: url.expiresAt ?? undefined,
+      utmSource: url.utmSource ?? undefined,
+      utmMedium: url.utmMedium ?? undefined,
+      utmCampaign: url.utmCampaign ?? undefined,
+      utmTerm: url.utmTerm ?? undefined,
+      utmContent: url.utmContent ?? undefined,
       createdAt: url.createdAt,
       updatedAt: url.updatedAt,
     };
@@ -877,7 +891,7 @@ export class UrlService implements OnModuleInit {
   /**
    * Map variant to response DTO
    */
-  private mapVariantToResponse(variant: any): VariantResponseDto {
+  private mapVariantToResponse(variant: UrlVariant): VariantResponseDto {
     return {
       id: variant.id,
       urlId: variant.urlId,

@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Put,
-  Post,
   Delete,
   Body,
   Param,
@@ -10,6 +9,7 @@ import {
   HttpStatus,
   HttpCode,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import {
   ApiTags,
   ApiOperation,
@@ -24,7 +24,7 @@ import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
-import { UserRole } from '@prisma/client';
+import { User, UserRole } from '@prisma/client';
 
 @ApiTags('Settings')
 @Controller('api/settings')
@@ -59,7 +59,7 @@ export class SettingsController {
     type: ErrorResponseDto,
   })
   async getAllSystemSettings(
-    @CurrentUser() _user: any,
+    @CurrentUser() _user: User,
   ): Promise<SystemSettingsResponseDto[]> {
     return this.settingsService.getAllSystemSettings();
   }
@@ -130,11 +130,11 @@ export class SettingsController {
   })
   async updateSystemSetting(
     @Param('key') key: string,
-    @Body() body: { value: any; description?: string },
+    @Body() body: { value: unknown; description?: string },
   ): Promise<SystemSettingsResponseDto> {
     return this.settingsService.updateSystemSetting(
       key,
-      body.value,
+      body.value as Prisma.InputJsonValue,
       body.description,
     );
   }

@@ -6,13 +6,18 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { buildQueryParams } from '@/lib/utils';
+import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
   CreateUrlDto,
   UpdateUrlDto,
-  UrlResponse,
-  UrlListResponse,
+  UrlResponseDto,
+  UrlListResponseDto,
   UrlQueryParams,
-} from '@/types/api';
+} from '@/lib/api/schemas';
+
+// Re-export types for consumers of this hook
+export type { CreateUrlDto, UpdateUrlDto, UrlResponseDto, UrlListResponseDto, UrlQueryParams };
 
 // Query Keys
 export const urlKeys = {
@@ -27,34 +32,28 @@ export const urlKeys = {
 
 async function getUrls(
   params: UrlQueryParams,
-): Promise<UrlListResponse> {
-  const searchParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
-    if (value !== undefined && value !== null) {
-      searchParams.append(key, String(value));
-    }
-  });
-
-  return apiClient.get<UrlListResponse>(
-    `/api/urls?${searchParams.toString()}`,
+): Promise<UrlListResponseDto> {
+  const query = buildQueryParams(params);
+  return apiClient.get<UrlListResponseDto>(
+    `/api/urls${query ? `?${query}` : ''}`,
   );
 }
 
-async function getUrl(id: string): Promise<UrlResponse> {
-  return apiClient.get<UrlResponse>(`/api/urls/${id}`);
+async function getUrl(id: string): Promise<UrlResponseDto> {
+  return apiClient.get<UrlResponseDto>(`/api/urls/${id}`);
 }
 
 async function createUrl(
   data: CreateUrlDto,
-): Promise<UrlResponse> {
-  return apiClient.post<UrlResponse>('/api/urls', data);
+): Promise<UrlResponseDto> {
+  return apiClient.post<UrlResponseDto>('/api/urls', data);
 }
 
 async function updateUrl(
   id: string,
   data: UpdateUrlDto,
-): Promise<UrlResponse> {
-  return apiClient.put<UrlResponse>(`/api/urls/${id}`, data);
+): Promise<UrlResponseDto> {
+  return apiClient.put<UrlResponseDto>(`/api/urls/${id}`, data);
 }
 
 async function deleteUrl(id: string): Promise<void> {
@@ -76,8 +75,7 @@ export function useUrls(params: UrlQueryParams = {}) {
   return useQuery({
     queryKey: urlKeys.list(params),
     queryFn: () => getUrls(params),
-    staleTime: 0, // Always fetch fresh data when component mounts
-    gcTime: 5 * 60 * 1000, // 5 minutes - Keep cache for navigation
+    ...QUERY_CONFIG.STANDARD,
   });
 }
 
@@ -89,8 +87,7 @@ export function useUrl(id: string) {
     queryKey: urlKeys.detail(id),
     queryFn: () => getUrl(id),
     enabled: !!id,
-    staleTime: 5 * 60 * 1000, // 5 minutes - Single URL details increased from 1 minute to 5 minutes
-    gcTime: 15 * 60 * 1000, // 15 minutes - Keep cache longer
+    ...QUERY_CONFIG.DETAIL,
   });
 }
 
@@ -102,12 +99,8 @@ export function useCreateUrl() {
 
   return useMutation({
     mutationFn: (data: CreateUrlDto) => createUrl(data),
-    onSuccess: async () => {
-      // Refetch list cache immediately to ensure fresh data on navigation back
-      await queryClient.refetchQueries({
-        queryKey: urlKeys.lists(),
-        type: 'all', // Refetch both active and inactive queries
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: urlKeys.lists() });
     },
   });
 }
@@ -121,17 +114,9 @@ export function useUpdateUrl() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUrlDto }) =>
       updateUrl(id, data),
-    onSuccess: async (_, variables) => {
-      // Refetch list and detail cache
-      await Promise.all([
-        queryClient.refetchQueries({
-          queryKey: urlKeys.lists(),
-          type: 'all',
-        }),
-        queryClient.invalidateQueries({
-          queryKey: urlKeys.detail(variables.id),
-        }),
-      ]);
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: urlKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: urlKeys.detail(variables.id) });
     },
   });
 }
@@ -144,12 +129,8 @@ export function useDeleteUrl() {
 
   return useMutation({
     mutationFn: (id: string) => deleteUrl(id),
-    onSuccess: async () => {
-      // Refetch list cache
-      await queryClient.refetchQueries({
-        queryKey: urlKeys.lists(),
-        type: 'all',
-      });
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: urlKeys.lists() });
     },
   });
 }

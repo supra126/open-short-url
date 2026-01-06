@@ -19,6 +19,7 @@ import {
   ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
+import { User } from '@prisma/client';
 import { UrlService } from './url.service';
 import { CreateUrlDto } from './dto/create-url.dto';
 import { UpdateUrlDto } from './dto/update-url.dto';
@@ -88,7 +89,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Body() createUrlDto: CreateUrlDto,
   ): Promise<UrlResponseDto> {
     return this.urlService.create(user.id, createUrlDto);
@@ -127,7 +128,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async findAll(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Query() queryDto: UrlQueryDto,
   ): Promise<UrlListResponseDto> {
     return this.urlService.findAll(user.id, queryDto, user.role);
@@ -171,7 +172,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async generateQRCode(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Query('width') width?: number,
     @Query('color') color?: string,
@@ -220,7 +221,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async findOne(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<UrlResponseDto> {
     return this.urlService.findOne(id, user.id, user.role);
@@ -260,7 +261,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async update(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() updateUrlDto: UpdateUrlDto,
   ): Promise<UrlResponseDto> {
@@ -296,7 +297,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async delete(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<void> {
     return this.urlService.delete(id, user.id, user.role);
@@ -333,7 +334,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async createVariant(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() createVariantDto: CreateVariantDto,
   ): Promise<VariantResponseDto> {
@@ -369,7 +370,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async findAllVariants(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<VariantListResponseDto> {
     return this.urlService.findAllVariants(id, user.id, user.role);
@@ -409,7 +410,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async findOneVariant(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('variantId') variantId: string,
   ): Promise<VariantResponseDto> {
@@ -450,7 +451,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async updateVariant(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('variantId') variantId: string,
     @Body() updateVariantDto: UpdateVariantDto,
@@ -492,7 +493,7 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async deleteVariant(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('variantId') variantId: string,
   ): Promise<void> {

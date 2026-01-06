@@ -1,7 +1,6 @@
 import {
   Injectable,
   UnauthorizedException,
-  ConflictException,
   BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -17,8 +16,19 @@ import { UserResponseDto } from '@/modules/users/dto/user-response.dto';
 import { Setup2FAResponseDto } from './dto/setup-2fa-response.dto';
 import { SuccessResponseDto } from '@/common/dto/success-response.dto';
 import { TokenBlacklistService } from './services/token-blacklist.service';
+import { User } from '@prisma/client';
 import * as speakeasy from 'speakeasy';
 import * as QRCode from 'qrcode';
+
+/**
+ * JWT Token decoded payload interface
+ */
+interface DecodedToken {
+  sub: string;
+  email: string;
+  exp?: number;
+  iat?: number;
+}
 
 @Injectable()
 export class AuthService {
@@ -91,7 +101,7 @@ export class AuthService {
   async logout(token: string): Promise<SuccessResponseDto> {
     // Decode token to get expiration time
     try {
-      const decoded = this.jwtService.decode(token) as any;
+      const decoded = this.jwtService.decode(token) as DecodedToken | null;
       const expiresAt = decoded?.exp ? decoded.exp * 1000 : undefined;
 
       // Add token to blacklist
@@ -101,7 +111,7 @@ export class AuthService {
         message: 'Logout successful',
         statusCode: 200,
       };
-    } catch (error) {
+    } catch {
       // Add token to blacklist even if decoding fails (using default expiration time)
       await this.tokenBlacklistService.addToBlacklist(token);
       return {
@@ -349,11 +359,11 @@ export class AuthService {
   /**
    * Map user to response DTO
    */
-  private mapUserResponse(user: any): UserResponseDto {
+  private mapUserResponse(user: User): UserResponseDto {
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: user.name ?? undefined,
       role: user.role,
       isActive: user.isActive,
       twoFactorEnabled: user.twoFactorEnabled,

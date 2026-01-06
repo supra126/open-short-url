@@ -10,13 +10,16 @@ import { authKeys } from '@/hooks/use-auth';
 import type {
   Verify2FADto,
   Disable2FADto,
-  Setup2FAResponse,
-} from '@/types/api';
+  Setup2FAResponseDto,
+} from '@/lib/api/schemas';
+
+// Re-export types for consumers of this hook
+export type { Verify2FADto, Disable2FADto, Setup2FAResponseDto };
 
 // ==================== API Functions ====================
 
-async function setup2FA(): Promise<Setup2FAResponse> {
-  return apiClient.post<Setup2FAResponse>('/api/auth/2fa/setup', {});
+async function setup2FA(): Promise<Setup2FAResponseDto> {
+  return apiClient.post<Setup2FAResponseDto>('/api/auth/2fa/setup', {});
 }
 
 async function enable2FA(data: Verify2FADto): Promise<void> {

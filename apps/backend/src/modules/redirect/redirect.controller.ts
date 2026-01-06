@@ -10,7 +10,36 @@ import {
   Query,
   Ip,
   NotFoundException,
+  HttpException,
 } from '@nestjs/common';
+
+/**
+ * Type guard to check if an error is an HTTP exception with status
+ */
+function isHttpException(error: unknown): error is HttpException {
+  return error instanceof HttpException;
+}
+
+/**
+ * Check if error indicates unauthorized (401) status
+ */
+function isUnauthorizedError(error: unknown): boolean {
+  if (isHttpException(error)) {
+    return error.getStatus() === 401;
+  }
+  // Check for response object with statusCode (NestJS format)
+  if (
+    error &&
+    typeof error === 'object' &&
+    'response' in error &&
+    error.response &&
+    typeof error.response === 'object' &&
+    'statusCode' in error.response
+  ) {
+    return error.response.statusCode === 401;
+  }
+  return false;
+}
 import {
   ApiTags,
   ApiOperation,
@@ -23,6 +52,10 @@ import { Throttle } from '@nestjs/throttler';
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { RedirectService } from './redirect.service';
 import { VerifyPasswordDto } from './dto/verify-password.dto';
+import {
+  RedirectInfoResponseDto,
+  VerifyPasswordResponseDto,
+} from './dto/redirect-response.dto';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 import { generatePasswordPage } from './templates/password-page.template';
 import { TurnstileService } from '@/modules/turnstile/turnstile.service';
@@ -71,22 +104,14 @@ export class RedirectController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Query successful',
-    schema: {
-      type: 'object',
-      properties: {
-        requiresPassword: {
-          type: 'boolean',
-          example: true,
-        },
-      },
-    },
+    type: RedirectInfoResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
     description: 'Short URL not found',
     type: ErrorResponseDto,
   })
-  async getInfo(@Param('slug') slug: string, @Req() request?: FastifyRequest) {
+  async getInfo(@Param('slug') slug: string, @Req() _request?: FastifyRequest): Promise<RedirectInfoResponseDto> {
     // Validate slug - reject reserved paths and API routes
     this.validateSlug(slug);
     const info = await this.redirectService.getRedirectInfo(slug);
@@ -184,9 +209,9 @@ export class RedirectController {
 
       // 302 redirect
       return reply?.redirect(originalUrl, 302);
-    } catch (err) {
+    } catch (err: unknown) {
       // If password required, return HTML password page
-      if (err.status === 401 || err.response?.statusCode === 401) {
+      if (isUnauthorizedError(err)) {
         // Get branding settings from environment variables with defaults
         const brandName =
           this.configService.get<string>('BRAND_NAME') || 'Open Short URL';
@@ -272,15 +297,7 @@ export class RedirectController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Verification successful, returns original URL',
-    schema: {
-      type: 'object',
-      properties: {
-        originalUrl: {
-          type: 'string',
-          example: 'https://example.com',
-        },
-      },
-    },
+    type: VerifyPasswordResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
@@ -407,9 +424,9 @@ export class RedirectController {
         ?.type('text/html; charset=utf-8')
         .code(200)
         .send(redirectHtml);
-    } catch (err) {
+    } catch (err: unknown) {
       // Password incorrect, redirect back to short URL page with error
-      if (err.status === 401 || err.response?.statusCode === 401) {
+      if (isUnauthorizedError(err)) {
         // Build UTM parameters
         const utmParams = new URLSearchParams();
         if (utmSource) utmParams.append('utm_source', utmSource);
@@ -472,22 +489,31 @@ export class RedirectController {
 
   /**
    * Extract real IP from request
+   * Only trusts X-Forwarded-For/X-Real-IP when behind a trusted proxy
    */
   private extractIp(request?: FastifyRequest): string | undefined {
     if (!request) return undefined;
 
-    // Priority: X-Forwarded-For or X-Real-IP headers
-    const forwarded = request.headers['x-forwarded-for'] as string;
-    if (forwarded) {
-      return forwarded.split(',')[0].trim();
+    // Check if we're behind a trusted proxy
+    // TRUSTED_PROXY can be 'true', '1', or a comma-separated list of IPs
+    const trustedProxy = this.configService.get<string>('TRUSTED_PROXY', '');
+    const isTrustedProxy = trustedProxy === 'true' || trustedProxy === '1' || trustedProxy.length > 0;
+
+    if (isTrustedProxy) {
+      // Only read proxy headers when behind a trusted proxy
+      const forwarded = request.headers['x-forwarded-for'] as string;
+      if (forwarded) {
+        // Take the first IP (client IP) from the chain
+        return forwarded.split(',')[0].trim();
+      }
+
+      const realIp = request.headers['x-real-ip'] as string;
+      if (realIp) {
+        return realIp;
+      }
     }
 
-    const realIp = request.headers['x-real-ip'] as string;
-    if (realIp) {
-      return realIp;
-    }
-
-    // Fallback: socket IP
+    // Direct connection or untrusted proxy: use socket IP
     return request.ip;
   }
 }

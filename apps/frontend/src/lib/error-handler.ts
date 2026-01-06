@@ -24,7 +24,32 @@ export interface StandardError {
   type: ErrorType;
   message: string;
   statusCode?: number;
-  details?: any;
+  details?: Record<string, string[]>;
+}
+
+/**
+ * Interface for errors with response property (e.g., from HTTP clients)
+ */
+interface ErrorWithResponse {
+  response?: {
+    status: number;
+    data?: {
+      message?: string;
+      errors?: Record<string, string[]>;
+    };
+  };
+}
+
+/**
+ * Type guard to check if error has response property
+ */
+function hasResponse(error: unknown): error is ErrorWithResponse {
+  return (
+    typeof error === 'object' &&
+    error !== null &&
+    'response' in error &&
+    typeof (error as ErrorWithResponse).response === 'object'
+  );
 }
 
 /**
@@ -54,7 +79,7 @@ export class ErrorHandler {
    * @param error - Original error object
    * @returns Standardized error
    */
-  static handle(error: any): StandardError {
+  static handle(error: unknown): StandardError {
     // Network error
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
       return {
@@ -64,16 +89,40 @@ export class ErrorHandler {
     }
 
     // HTTP error
-    if (error.response) {
+    if (hasResponse(error) && error.response) {
       const status = error.response.status;
       const data = error.response.data;
+
+      // Helper to get safe error message (avoid leaking sensitive info in production)
+      const getSafeMessage = (backendMessage: string | undefined, fallback: string): string => {
+        // In production, only use backend message for client-facing errors (4xx)
+        // For security, don't expose internal error details
+        if (process.env.NODE_ENV === 'production') {
+          // Only allow specific safe messages, fallback to generic for others
+          const safePatterns = [
+            /^invalid/i,
+            /^incorrect/i,
+            /^password/i,
+            /^email/i,
+            /^not found/i,
+            /^already exists/i,
+            /^expired/i,
+            /^required/i,
+          ];
+          if (backendMessage && safePatterns.some(p => p.test(backendMessage))) {
+            return backendMessage;
+          }
+          return fallback;
+        }
+        return backendMessage || fallback;
+      };
 
       // 401 Unauthorized
       if (status === 401) {
         // Token is cleared by backend (httpOnly cookie is automatically removed)
         return {
           type: ErrorType.AUTHENTICATION,
-          message: data?.message || getErrorMessage(ErrorType.AUTHENTICATION),
+          message: getSafeMessage(data?.message, getErrorMessage(ErrorType.AUTHENTICATION)),
           statusCode: status,
         };
       }
@@ -82,7 +131,7 @@ export class ErrorHandler {
       if (status === 403) {
         return {
           type: ErrorType.AUTHORIZATION,
-          message: data?.message || getErrorMessage(ErrorType.AUTHORIZATION),
+          message: getSafeMessage(data?.message, getErrorMessage(ErrorType.AUTHORIZATION)),
           statusCode: status,
         };
       }
@@ -91,7 +140,7 @@ export class ErrorHandler {
       if (status === 404) {
         return {
           type: ErrorType.NOT_FOUND,
-          message: data?.message || getErrorMessage(ErrorType.NOT_FOUND),
+          message: getSafeMessage(data?.message, getErrorMessage(ErrorType.NOT_FOUND)),
           statusCode: status,
         };
       }
@@ -100,9 +149,9 @@ export class ErrorHandler {
       if (status === 422 || status === 400) {
         return {
           type: ErrorType.VALIDATION,
-          message: data?.message || getErrorMessage(ErrorType.VALIDATION),
+          message: getSafeMessage(data?.message, getErrorMessage(ErrorType.VALIDATION)),
           statusCode: status,
-          details: data?.errors,
+          details: process.env.NODE_ENV === 'development' ? data?.errors : undefined,
         };
       }
 
@@ -144,7 +193,7 @@ export class ErrorHandler {
    * @param error - Original error
    * @returns User-friendly error message
    */
-  static getMessage(error: any): string {
+  static getMessage(error: unknown): string {
     const standardError = this.handle(error);
     return standardError.message;
   }
@@ -163,7 +212,7 @@ export class ErrorHandler {
    * @param error - Error object
    * @param context - Error context
    */
-  static log(error: any, context?: string): void {
+  static log(error: unknown, context?: string): void {
     if (process.env.NODE_ENV === 'development') {
       const standardError = this.handle(error);
 
@@ -175,7 +224,13 @@ export class ErrorHandler {
 
       console.group(`❌ Error ${context ? `[${context}]` : ''}`);
       console.error('Original Error:', error);
-      console.error('Standardized:', standardError);
+      // Use JSON.stringify to ensure proper serialization in console
+      console.error('Standardized:', {
+        type: standardError.type,
+        message: standardError.message,
+        statusCode: standardError.statusCode,
+        details: standardError.details,
+      });
       console.groupEnd();
     }
   }
@@ -185,7 +240,7 @@ export class ErrorHandler {
    * @param error - Error object
    * @returns Whether it's an authentication error
    */
-  static isAuthError(error: any): boolean {
+  static isAuthError(error: unknown): boolean {
     const standardError = this.handle(error);
     return standardError.type === ErrorType.AUTHENTICATION;
   }
@@ -195,7 +250,7 @@ export class ErrorHandler {
    * @param error - Error object
    * @returns Whether it's a network error
    */
-  static isNetworkError(error: any): boolean {
+  static isNetworkError(error: unknown): boolean {
     const standardError = this.handle(error);
     return standardError.type === ErrorType.NETWORK;
   }

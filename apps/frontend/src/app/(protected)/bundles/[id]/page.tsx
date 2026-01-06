@@ -39,8 +39,9 @@ import {
   useRestoreBundle,
   useRemoveUrlFromBundle,
   useAddUrlToBundle,
+  type BundleUrlDto,
 } from '@/hooks/use-bundles';
-import { useUrls } from '@/hooks/use-url';
+import { useUrls, type UrlResponseDto } from '@/hooks/use-url';
 import { BundleDialog } from '@/components/bundles/bundle-dialog';
 import {
   Package,
@@ -105,10 +106,11 @@ export default function BundleDetailPage() {
         description: t('bundles.deleteSuccess'),
       });
       router.push('/bundles');
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
-        description: error.message || t('common.tryAgainLater'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -122,10 +124,11 @@ export default function BundleDetailPage() {
         description: t('bundles.archiveSuccess'),
       });
       setArchiveDialogOpen(false);
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
-        description: error.message || t('common.tryAgainLater'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -138,10 +141,11 @@ export default function BundleDetailPage() {
         title: t('common.success'),
         description: t('bundles.restoreSuccess'),
       });
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
-        description: error.message || t('common.tryAgainLater'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -158,10 +162,11 @@ export default function BundleDetailPage() {
       });
       setRemoveUrlDialogOpen(false);
       setSelectedUrlId(null);
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
-        description: error.message || t('common.tryAgainLater'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -181,10 +186,11 @@ export default function BundleDetailPage() {
       });
       setAddUrlDialogOpen(false);
       setUrlToAdd('');
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
-        description: error.message || t('common.tryAgainLater'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -221,9 +227,9 @@ export default function BundleDetailPage() {
   }
 
   // Filter available URLs to exclude those already in the bundle
-  const bundleUrlIds = bundle.urls?.map((url) => url.id) || [];
+  const bundleUrlIds = bundle.urls?.map((url: BundleUrlDto) => url.id) || [];
   const filteredAvailableUrls = availableUrls?.data.filter(
-    (url) => !bundleUrlIds.includes(url.id)
+    (url: UrlResponseDto) => !bundleUrlIds.includes(url.id)
   ) || [];
 
   return (
@@ -351,15 +357,15 @@ export default function BundleDetailPage() {
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => {
+                  tickFormatter={(value: string | number) => {
                     const date = new Date(value);
                     return `${date.getMonth() + 1}/${date.getDate()}`;
                   }}
                 />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
-                  labelFormatter={(value) => {
-                    return formatDate(value as string);
+                  labelFormatter={(value: string | number) => {
+                    return formatDate(String(value));
                   }}
                 />
                 <Line
@@ -399,7 +405,7 @@ export default function BundleDetailPage() {
         <CardContent>
           {bundle.urls && bundle.urls.length > 0 ? (
             <div className="space-y-3">
-              {bundle.urls.map((url) => (
+              {bundle.urls.map((url: BundleUrlDto) => (
                 <div
                   key={url.id}
                   className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted/50"
@@ -577,7 +583,7 @@ export default function BundleDetailPage() {
                 <SelectValue placeholder={t('bundles.selectUrls')} />
               </SelectTrigger>
               <SelectContent>
-                {filteredAvailableUrls.map((url) => (
+                {filteredAvailableUrls.map((url: UrlResponseDto) => (
                   <SelectItem key={url.id} value={url.id}>
                     {url.title || url.slug} - {url.originalUrl}
                   </SelectItem>

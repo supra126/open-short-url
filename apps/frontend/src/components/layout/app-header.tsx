@@ -26,7 +26,7 @@ export function AppHeader() {
     try {
       await logoutMutation.mutateAsync();
       router.push('/login');
-    } catch (error) {
+    } catch {
       // Navigate to login page even if logout fails
       router.push('/login');
     }

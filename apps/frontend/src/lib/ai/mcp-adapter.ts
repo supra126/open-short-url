@@ -1,5 +1,6 @@
-import { tool } from 'ai';
-import { jsonSchemaToZod } from './json-schema-to-zod';
+import { tool, type Tool } from 'ai';
+import { z } from 'zod';
+import { jsonSchemaToZod, type JSONSchema } from './json-schema-to-zod';
 import {
   ApiClient,
   registerUrlTools,
@@ -16,20 +17,33 @@ import { ErrorHandler } from '@/lib/error-handler';
  * This eliminates the need to manually define tools in the frontend
  */
 
-type MCPTool = {
+interface MCPContentItem {
+  type: string;
+  text?: string;
+}
+
+interface MCPResult {
+  content?: MCPContentItem[];
+  isError?: boolean;
+}
+
+interface MCPTool {
   description: string;
-  inputSchema: any;
-  handler: (args: any) => Promise<any>;
-};
+  inputSchema: JSONSchema;
+  handler: (args: Record<string, unknown>) => Promise<MCPResult>;
+}
 
 /**
  * Convert a single MCP tool to Vercel AI SDK format
  */
-function convertMCPTool(mcpTool: MCPTool) {
+function convertMCPTool(mcpTool: MCPTool): Tool {
+  // Create the zod schema from JSON Schema
+  const zodInputSchema = jsonSchemaToZod(mcpTool.inputSchema) as z.ZodObject<Record<string, z.ZodTypeAny>>;
+
   return tool({
     description: mcpTool.description,
-    inputSchema: jsonSchemaToZod(mcpTool.inputSchema),
-    execute: async (params: any) => {
+    inputSchema: zodInputSchema,
+    execute: async (params) => {
       try {
         // Get cookies from request context
         const cookies = getCookies();
@@ -47,12 +61,12 @@ function convertMCPTool(mcpTool: MCPTool) {
         const variantTools = registerVariantTools(apiClient);
         const bundleTools = registerBundleTools(apiClient);
 
-        const allMCPTools = {
+        const allMCPTools: Record<string, MCPTool> = {
           ...urlTools,
           ...analyticsTools,
           ...variantTools,
           ...bundleTools,
-        };
+        } as Record<string, MCPTool>;
 
         // Find the matching tool by comparing descriptions
         // (since we don't have the original tool name here)
@@ -71,13 +85,13 @@ function convertMCPTool(mcpTool: MCPTool) {
         if (result.content) {
           // MCP format: { content: [{ type: 'text', text: '...' }] }
           const textContent = result.content
-            .filter((c: any) => c.type === 'text')
-            .map((c: any) => c.text)
+            .filter((c: MCPContentItem) => c.type === 'text')
+            .map((c: MCPContentItem) => c.text ?? '')
             .join('\n');
 
           try {
             // Try to parse as JSON for structured data
-            const parsed = JSON.parse(textContent);
+            const parsed: unknown = JSON.parse(textContent);
             return {
               success: !result.isError,
               data: parsed,
@@ -95,12 +109,13 @@ function convertMCPTool(mcpTool: MCPTool) {
 
         // Fallback: return as-is
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         ErrorHandler.log(error, 'MCP Tool Execution');
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return {
           success: false,
-          error: error.message || 'Unknown error',
-          message: `Error: ${error.message || 'Unknown error'}`,
+          error: errorMessage,
+          message: `Error: ${errorMessage}`,
         };
       }
     },
@@ -124,19 +139,21 @@ export function createAllMCPTools() {
   const variantTools = registerVariantTools(dummyClient);
   const bundleTools = registerBundleTools(dummyClient);
 
-  const allMCPTools = {
+  const allMCPTools: Record<string, MCPTool> = {
     ...urlTools,
     ...analyticsTools,
     ...variantTools,
     ...bundleTools,
-  };
+  } as Record<string, MCPTool>;
 
   // Convert all MCP tools to Vercel AI SDK format
-  const convertedTools: Record<string, any> = {};
+  const convertedTools: Record<string, Tool> = {};
 
-  for (const [name, mcpTool] of Object.entries(allMCPTools)) {
+  for (const name of Object.keys(allMCPTools)) {
+    const mcpTool = allMCPTools[name];
     // Convert snake_case to camelCase for better JS naming
-    const camelCaseName = name.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+    const camelCaseName = name.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     convertedTools[camelCaseName] = convertMCPTool(mcpTool);
   }
 

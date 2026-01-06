@@ -20,6 +20,7 @@ import {
   ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
+import { User } from '@prisma/client';
 import { BundleService } from './bundle.service';
 import { CreateBundleDto } from './dto/create-bundle.dto';
 import { UpdateBundleDto } from './dto/update-bundle.dto';
@@ -74,7 +75,7 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Body() createBundleDto: CreateBundleDto,
   ): Promise<BundleResponseDto> {
     return this.bundleService.create(user.id, createBundleDto);
@@ -105,10 +106,41 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async findAll(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Query() query: BundleQueryDto,
   ): Promise<BundleListResponseDto> {
     return this.bundleService.findAll(user.id, query, user.role);
+  }
+
+  /**
+   * Get bundle statistics
+   * NOTE: This route MUST be defined BEFORE @Get(':id') to avoid route shadowing
+   */
+  @Get(':id/stats')
+  @ApiOperation({
+    summary: 'Get bundle statistics',
+    description: `Get detailed statistics for a bundle including:
+- Total clicks across all URLs
+- URL count
+- Top performing URL
+- Click trend (last 7 days)`,
+  })
+  @ApiParam({ name: 'id', description: 'Bundle ID' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Statistics retrieved successfully',
+    type: BundleStatsDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'Bundle not found',
+    type: ErrorResponseDto,
+  })
+  async getStats(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+  ): Promise<BundleStatsDto> {
+    return this.bundleService.getStats(user.id, id, user.role);
   }
 
   /**
@@ -136,7 +168,7 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async findOne(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<BundleResponseDto> {
     return this.bundleService.findOne(user.id, id, user.role);
@@ -167,7 +199,7 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async update(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() updateBundleDto: UpdateBundleDto,
   ): Promise<BundleResponseDto> {
@@ -199,7 +231,7 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async remove(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<void> {
     return this.bundleService.remove(user.id, id, user.role);
@@ -230,7 +262,7 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async addUrl(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() addUrlDto: AddUrlToBundleDto,
   ): Promise<BundleResponseDto> {
@@ -262,7 +294,7 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async addMultipleUrls(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() addUrlsDto: AddMultipleUrlsDto,
   ): Promise<BundleResponseDto> {
@@ -290,7 +322,7 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async removeUrl(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('urlId') urlId: string,
   ): Promise<BundleResponseDto> {
@@ -318,42 +350,12 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async updateUrlOrder(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('urlId') urlId: string,
     @Body('order') order: number,
   ): Promise<BundleResponseDto> {
     return this.bundleService.updateUrlOrder(user.id, id, urlId, order);
-  }
-
-  /**
-   * Get bundle statistics
-   */
-  @Get(':id/stats')
-  @ApiOperation({
-    summary: 'Get bundle statistics',
-    description: `Get detailed statistics for a bundle including:
-- Total clicks across all URLs
-- URL count
-- Top performing URL
-- Click trend (last 7 days)`,
-  })
-  @ApiParam({ name: 'id', description: 'Bundle ID' })
-  @ApiResponse({
-    status: HttpStatus.OK,
-    description: 'Statistics retrieved successfully',
-    type: BundleStatsDto,
-  })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Bundle not found',
-    type: ErrorResponseDto,
-  })
-  async getStats(
-    @CurrentUser() user: any,
-    @Param('id') id: string,
-  ): Promise<BundleStatsDto> {
-    return this.bundleService.getStats(user.id, id);
   }
 
   /**
@@ -376,7 +378,7 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async archive(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<BundleResponseDto> {
     return this.bundleService.archive(user.id, id);
@@ -402,7 +404,7 @@ export class BundleController {
     type: ErrorResponseDto,
   })
   async restore(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<BundleResponseDto> {
     return this.bundleService.restore(user.id, id);

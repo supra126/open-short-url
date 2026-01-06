@@ -6,84 +6,56 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { buildQueryParams } from '@/lib/utils';
+import { QUERY_CONFIG } from '@/lib/query-config';
+import type {
+  UserResponseDto,
+  UserListResponseDto,
+  CreateUserDto,
+  UpdateUserRoleDto,
+  UpdateUserStatusDto,
+  ResetPasswordDto,
+  UserQueryParams,
+} from '@/lib/api/schemas';
 
-// ==================== Types ====================
+// Re-export types for consumers of this hook
+export type {
+  UserResponseDto,
+  UserListResponseDto,
+  CreateUserDto,
+  UpdateUserRoleDto,
+  UpdateUserStatusDto,
+  ResetPasswordDto,
+  UserQueryParams,
+};
 
+// Type aliases for backward compatibility (exported for consumers)
+export type User = UserResponseDto;
+export type UserListResponse = UserListResponseDto;
+
+// UserRole enum for backward compatibility
 export enum UserRole {
   ADMIN = 'ADMIN',
   USER = 'USER',
 }
 
-export interface User {
-  id: string;
-  email: string;
-  name?: string;
-  role: UserRole;
-  isActive: boolean;
-  twoFactorEnabled: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+// ==================== Query Keys (exported for external cache management) ====================
 
-export interface UserListResponse {
-  data: User[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
-export interface UserListQuery {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  role?: UserRole;
-  isActive?: boolean;
-}
-
-export interface UpdateUserRoleDto {
-  role: UserRole;
-}
-
-export interface UpdateUserStatusDto {
-  isActive: boolean;
-}
-
-export interface ResetPasswordDto {
-  newPassword: string;
-}
-
-export interface CreateUserDto {
-  email: string;
-  password: string;
-  name?: string;
-  role?: UserRole;
-}
-
-// ==================== Query Keys ====================
-
-const userKeys = {
+export const userKeys = {
   all: ['users'] as const,
   lists: () => [...userKeys.all, 'list'] as const,
-  list: (query: UserListQuery) => [...userKeys.lists(), query] as const,
+  list: (query: UserQueryParams) => [...userKeys.lists(), query] as const,
   details: () => [...userKeys.all, 'detail'] as const,
   detail: (id: string) => [...userKeys.details(), id] as const,
 };
 
 // ==================== API Functions ====================
 
-async function getUsers(query: UserListQuery): Promise<UserListResponse> {
-  const params = new URLSearchParams();
-  if (query.page) params.append('page', query.page.toString());
-  if (query.pageSize) params.append('pageSize', query.pageSize.toString());
-  if (query.search) params.append('search', query.search);
-  if (query.role) params.append('role', query.role);
-  if (query.isActive !== undefined) params.append('isActive', query.isActive.toString());
-
-  const queryString = params.toString();
-  const url = `/api/users${queryString ? `?${queryString}` : ''}`;
-
-  return apiClient.get<UserListResponse>(url);
+async function getUsers(query: UserQueryParams): Promise<UserListResponse> {
+  const queryString = buildQueryParams(query);
+  return apiClient.get<UserListResponse>(
+    `/api/users${queryString ? `?${queryString}` : ''}`,
+  );
 }
 
 async function getUserById(id: string): Promise<User> {
@@ -124,12 +96,11 @@ async function createUser(data: CreateUserDto): Promise<User> {
 /**
  * Get user list
  */
-export function useUsers(query: UserListQuery = {}) {
+export function useUsers(query: UserQueryParams = {}) {
   return useQuery({
     queryKey: userKeys.list(query),
     queryFn: () => getUsers(query),
-    staleTime: 0, // Always fetch fresh data
-    gcTime: 5 * 60 * 1000, // 5 minutes - Keep cache for navigation
+    ...QUERY_CONFIG.STANDARD,
   });
 }
 
@@ -141,6 +112,7 @@ export function useUser(id: string) {
     queryKey: userKeys.detail(id),
     queryFn: () => getUserById(id),
     enabled: !!id,
+    ...QUERY_CONFIG.DETAIL,
   });
 }
 
@@ -154,10 +126,9 @@ export function useUpdateUserRole() {
     mutationFn: ({ id, data }: { id: string; data: UpdateUserRoleDto }) =>
       updateUserRole(id, data),
     onSuccess: () => {
-      // Invalidate and refetch all user queries
+      // Invalidate all user queries
       queryClient.invalidateQueries({
         queryKey: userKeys.all,
-        refetchType: 'active'
       });
     },
   });
@@ -173,10 +144,9 @@ export function useUpdateUserStatus() {
     mutationFn: ({ id, data }: { id: string; data: UpdateUserStatusDto }) =>
       updateUserStatus(id, data),
     onSuccess: () => {
-      // Invalidate and refetch all user queries
+      // Invalidate all user queries
       queryClient.invalidateQueries({
         queryKey: userKeys.all,
-        refetchType: 'active'
       });
     },
   });
@@ -191,10 +161,9 @@ export function useDeleteUser() {
   return useMutation({
     mutationFn: (id: string) => deleteUser(id),
     onSuccess: () => {
-      // Invalidate and refetch all user queries
+      // Invalidate all user queries
       queryClient.invalidateQueries({
         queryKey: userKeys.all,
-        refetchType: 'active'
       });
     },
   });
@@ -219,10 +188,9 @@ export function useCreateUser() {
   return useMutation({
     mutationFn: (data: CreateUserDto) => createUser(data),
     onSuccess: () => {
-      // Invalidate and refetch all user queries
+      // Invalidate all user queries
       queryClient.invalidateQueries({
         queryKey: userKeys.all,
-        refetchType: 'active'
       });
     },
   });

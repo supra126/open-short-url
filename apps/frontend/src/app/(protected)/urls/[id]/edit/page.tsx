@@ -3,7 +3,7 @@
 import { t } from '@/lib/i18n';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useUrl, useUpdateUrl } from '@/hooks/use-url';
+import { useUrl, useUpdateUrl, type UpdateUrlDto } from '@/hooks/use-url';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -89,32 +89,23 @@ export default function EditUrlPage() {
     e.preventDefault();
 
     try {
-      const data: any = {
+      // Build the update payload with proper typing
+      // Note: password and expiresAt can be null to remove existing values
+      const data = {
         originalUrl: formData.originalUrl,
         title: formData.title || undefined,
-        status: formData.status,
-      };
-
-      // Handle password
-      if (removePassword) {
-        data.password = null;
-      } else if (formData.password) {
-        data.password = formData.password;
-      }
-
-      // Handle expiration time
-      if (removeExpiry) {
-        data.expiresAt = null;
-      } else if (formData.expiresAt) {
-        data.expiresAt = new Date(formData.expiresAt).toISOString();
-      }
-
-      // Handle UTM parameters
-      if (formData.utmSource) data.utmSource = formData.utmSource;
-      if (formData.utmMedium) data.utmMedium = formData.utmMedium;
-      if (formData.utmCampaign) data.utmCampaign = formData.utmCampaign;
-      if (formData.utmTerm) data.utmTerm = formData.utmTerm;
-      if (formData.utmContent) data.utmContent = formData.utmContent;
+        status: formData.status || undefined,
+        // Handle password
+        password: removePassword ? null : (formData.password || undefined),
+        // Handle expiration time
+        expiresAt: removeExpiry ? null : (formData.expiresAt ? new Date(formData.expiresAt).toISOString() : undefined),
+        // Handle UTM parameters
+        utmSource: formData.utmSource || undefined,
+        utmMedium: formData.utmMedium || undefined,
+        utmCampaign: formData.utmCampaign || undefined,
+        utmTerm: formData.utmTerm || undefined,
+        utmContent: formData.utmContent || undefined,
+      } as UpdateUrlDto;
 
       await updateUrl.mutateAsync({ id, data });
 
@@ -124,10 +115,11 @@ export default function EditUrlPage() {
       });
 
       router.push(`/urls/${id}`);
-    } catch (err: any) {
+    } catch (err) {
+      const message = err instanceof Error ? err.message : t('urls.updateError');
       toast({
         title: t('urls.updateError'),
-        description: err.message || t('urls.updateError'),
+        description: message,
         variant: 'destructive',
       });
     }

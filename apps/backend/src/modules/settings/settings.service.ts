@@ -69,7 +69,7 @@ export class SettingsService {
    */
   async updateSystemSetting(
     key: string,
-    value: any,
+    value: Prisma.InputJsonValue,
     description?: string,
   ): Promise<SystemSettingsResponseDto> {
     const setting = await this.prisma.systemSettings.upsert({

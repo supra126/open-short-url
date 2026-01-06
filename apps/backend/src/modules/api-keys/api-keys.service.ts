@@ -13,7 +13,7 @@ import {
 import { ApiKeyQueryDto } from './dto/api-key-query.dto';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
 import * as crypto from 'crypto';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class ApiKeysService {

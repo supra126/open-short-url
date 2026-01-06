@@ -12,9 +12,10 @@ import {
   useApiKeys,
   useCreateApiKey,
   useDeleteApiKey,
+  type ApiKeyResponseDto,
 } from '@/hooks/use-api-keys';
 import { Button } from '@/components/ui/button';
-import { t } from '@/lib/i18n';
+import { t, getLocale } from '@/lib/i18n';
 import {
   Card,
   CardContent,
@@ -55,7 +56,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Copy, Key, Plus, Trash2 } from 'lucide-react';
-import type { CreateApiKeyResponse } from '@/types/api-keys';
+import type { CreateApiKeyResponseDto } from '@/hooks/use-api-keys';
 
 const createApiKeySchema = z.object({
   name: z.string().min(1, t('apiKeys.nameRequired')),
@@ -72,7 +73,7 @@ export default function ApiKeysPage() {
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [createdApiKey, setCreatedApiKey] =
-    useState<CreateApiKeyResponse | null>(null);
+    useState<CreateApiKeyResponseDto | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [apiKeyToDelete, setApiKeyToDelete] = useState<{ id: string; name: string } | null>(null);
 
@@ -102,10 +103,11 @@ export default function ApiKeysPage() {
         title: t('apiKeys.createSuccess'),
         description: t('apiKeys.createSuccessDesc'),
       });
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('apiKeys.createErrorDesc');
       toast({
         title: t('apiKeys.createError'),
-        description: error.message || t('apiKeys.createErrorDesc'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -125,10 +127,11 @@ export default function ApiKeysPage() {
         title: t('apiKeys.deleteSuccess'),
         description: t('apiKeys.deleteSuccess'),
       });
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('apiKeys.createErrorDesc');
       toast({
         title: t('apiKeys.deleteError'),
-        description: error.message || t('apiKeys.createErrorDesc'),
+        description: message,
         variant: 'destructive',
       });
     } finally {
@@ -144,7 +147,7 @@ export default function ApiKeysPage() {
         title: t('apiKeys.copySuccess'),
         description: t('apiKeys.copySuccessDesc'),
       });
-    } catch (error) {
+    } catch {
       toast({
         title: t('apiKeys.copyError'),
         description: t('apiKeys.copyErrorDesc'),
@@ -153,9 +156,10 @@ export default function ApiKeysPage() {
     }
   };
 
-  const formatDate = (date?: Date) => {
-    if (!date) return '-';
-    return new Date(date).toLocaleString('zh-TW', {
+  const formatDate = (date?: string | Date) => {
+    if (!date) return t('common.noValue');
+    const locale = getLocale() === 'zh-TW' ? 'zh-TW' : 'en-US';
+    return new Date(date).toLocaleString(locale, {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit',
@@ -164,7 +168,7 @@ export default function ApiKeysPage() {
     });
   };
 
-  const isExpired = (expiresAt?: Date) => {
+  const isExpired = (expiresAt?: string | Date) => {
     if (!expiresAt) return false;
     return new Date(expiresAt) < new Date();
   };
@@ -342,7 +346,7 @@ export default function ApiKeysPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {apiKeys.data.map((apiKey) => (
+                {apiKeys.data.map((apiKey: ApiKeyResponseDto) => (
                   <TableRow key={apiKey.id}>
                     <TableCell className="font-medium">{apiKey.name}</TableCell>
                     <TableCell>
@@ -398,7 +402,7 @@ export default function ApiKeysPage() {
         <AlertDialogHeader>
           <AlertDialogTitle>{t('apiKeys.deleteConfirm').replace('{name}', apiKeyToDelete?.name || '')}</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. The API key will be permanently deleted.
+            {t('apiKeys.deleteConfirmDesc')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

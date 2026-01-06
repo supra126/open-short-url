@@ -41,6 +41,8 @@ import {
   useDeleteWebhook,
   useTestWebhook,
   useWebhookLogs,
+  type WebhookResponseDto,
+  type WebhookLogResponseDto,
 } from '@/hooks/use-webhooks';
 import { WebhookDialog } from '@/components/webhooks/webhook-dialog';
 import {
@@ -79,10 +81,11 @@ export default function WebhooksPage() {
       });
 
       setDeleteWebhookId(null);
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('webhooks.deleteErrorDesc');
       toast({
         title: t('webhooks.deleteError'),
-        description: error.message || t('webhooks.deleteErrorDesc'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -104,10 +107,11 @@ export default function WebhooksPage() {
           variant: 'destructive',
         });
       }
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('webhooks.testErrorDesc');
       toast({
         title: t('webhooks.testError'),
-        description: error.message || t('webhooks.testErrorDesc'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -195,7 +199,7 @@ export default function WebhooksPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {webhooks.map((webhook) => {
+                    {webhooks.map((webhook: WebhookResponseDto) => {
                       const successRate =
                         webhook.totalSent > 0
                           ? Math.round(
@@ -221,7 +225,7 @@ export default function WebhooksPage() {
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex flex-wrap gap-1 justify-center">
-                              {webhook.events.map((event) => (
+                              {webhook.events.map((event: string) => (
                                 <Badge key={event} variant="outline" className="text-xs">
                                   {event}
                                 </Badge>
@@ -356,7 +360,7 @@ function WebhookLogsDialog({
   onClose: () => void;
 }) {
   const [page, setPage] = useState(1);
-  const { data, isLoading } = useWebhookLogs(webhookId, page, 10);
+  const { data, isLoading } = useWebhookLogs(webhookId, { page, pageSize: 10 });
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -371,7 +375,7 @@ function WebhookLogsDialog({
           </div>
         ) : data && data.data.length > 0 ? (
           <div className="space-y-4 max-h-[60vh] overflow-y-auto">
-            {data.data.map((log) => (
+            {data.data.map((log: WebhookLogResponseDto) => (
               <Card key={log.id}>
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
@@ -430,21 +434,21 @@ function WebhookLogsDialog({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(Math.max(1, page - 1))}
+                  onClick={() => setPage(page - 1)}
                   disabled={page === 1}
                 >
-                  {t('webhooks.previousPage')}
+                  {t('common.previous')}
                 </Button>
                 <span className="text-sm text-muted-foreground">
-                  {t('webhooks.page', { page, totalPages: data.totalPages })}
+                  {t('common.page')} {page} {t('common.of')} {data.totalPages}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setPage(Math.min(data.totalPages, page + 1))}
+                  onClick={() => setPage(page + 1)}
                   disabled={page === data.totalPages}
                 >
-                  {t('webhooks.nextPage')}
+                  {t('common.next')}
                 </Button>
               </div>
             )}

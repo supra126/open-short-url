@@ -38,7 +38,7 @@ import {
 import { VariantList } from '@/components/variants/variant-list';
 import Link from 'next/link';
 import { useUrl, useDeleteUrl, useGenerateQRCode } from '@/hooks/use-url';
-import { useUrlAnalytics, useRecentClicks, useBotAnalytics } from '@/hooks/use-analytics';
+import { useUrlAnalytics, useRecentClicks, useBotAnalytics, type BotTypeStat, type RecentClickDto } from '@/hooks/use-analytics';
 import { useToast } from '@/hooks/use-toast';
 import { formatDateTime, formatDate } from '@/lib/utils';
 import { useState } from 'react';
@@ -93,7 +93,7 @@ export default function UrlDetailPage() {
 
     toast({
       title: t('common.copied'),
-      description: 'Short URL copied',
+      description: t('urls.shortUrlCopiedDesc'),
     });
   };
 
@@ -107,7 +107,7 @@ export default function UrlDetailPage() {
         title: t('urls.qrCodeGenerateSuccess'),
         description: t('urls.qrCodeGenerateSuccessDesc'),
       });
-    } catch (error) {
+    } catch {
       toast({
         title: t('urls.qrCodeGenerateError'),
         description: t('urls.qrCodeGenerateErrorDesc'),
@@ -144,7 +144,7 @@ export default function UrlDetailPage() {
         description: t('urls.deleteSuccess'),
       });
       router.push('/urls');
-    } catch (error) {
+    } catch {
       toast({
         title: t('urls.deleteError'),
         description: t('urls.deleteError'),
@@ -408,7 +408,7 @@ export default function UrlDetailPage() {
                 <div className="rounded-md border-2 border-muted p-4">
                   <img
                     src={qrCode}
-                    alt="QR Code"
+                    alt={t('urls.qrCode')}
                     className="h-[256px] w-[256px]"
                   />
                 </div>
@@ -455,17 +455,17 @@ export default function UrlDetailPage() {
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 12 }}
-                  tickFormatter={(value) => {
+                  tickFormatter={(value: string | number) => {
                     const date = new Date(value);
                     return `${date.getMonth() + 1}/${date.getDate()}`;
                   }}
                 />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
-                  labelFormatter={(value) => {
-                    return formatDate(value as string);
+                  labelFormatter={(value: string | number) => {
+                    return formatDate(String(value));
                   }}
-                  formatter={(value: number) => [value, t('urls.clicksLabel')]}
+                  formatter={(value: number | undefined) => [value ?? 0, t('urls.clicksLabel')]}
                 />
                 <Line
                   type="monotone"
@@ -501,7 +501,7 @@ export default function UrlDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {botAnalyticsData.botTypes.map((bot) => (
+                {botAnalyticsData.botTypes.map((bot: BotTypeStat) => (
                   <div
                     key={bot.botName}
                     className="flex items-center justify-between rounded-md border px-4 py-2"
@@ -511,7 +511,7 @@ export default function UrlDetailPage() {
                       <span className="font-medium">{bot.botName}</span>
                     </div>
                     <div className="text-right">
-                      <div className="font-semibold">{bot.clicks} 次</div>
+                      <div className="font-semibold">{bot.clicks} {t('bots.clicksUnit')}</div>
                       <div className="text-xs text-muted-foreground">
                         {bot.percentage}%
                       </div>
@@ -567,7 +567,7 @@ export default function UrlDetailPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {recentClicksData.clicks.map((click) => (
+                  {recentClicksData.clicks.map((click: RecentClickDto) => (
                     <tr
                       key={click.id}
                       className={`border-b last:border-0 ${
@@ -587,7 +587,7 @@ export default function UrlDetailPage() {
                       <td className="py-3">
                         {click.isBot ? (
                           <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
-                            {click.botName || 'Bot'}
+                            {click.botName || t('bots.defaultBotName')}
                           </span>
                         ) : (
                           <>
@@ -653,7 +653,7 @@ export default function UrlDetailPage() {
         <AlertDialogHeader>
           <AlertDialogTitle>{t('urls.deleteConfirm')}</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the short URL and all its analytics data.
+            {t('urls.deleteConfirmDesc')}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

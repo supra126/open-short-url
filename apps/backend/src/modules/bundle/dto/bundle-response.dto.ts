@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { BundleStatus } from '@prisma/client';
+import { PaginationMetaDto } from '@/common/dto/paginated-response.dto';
 
 export class BundleUrlDto {
   @ApiProperty()
@@ -71,21 +72,25 @@ export class BundleResponseDto {
   updatedAt!: Date;
 }
 
-export class BundleListResponseDto {
+export class BundleListResponseDto extends PaginationMetaDto {
   @ApiProperty({ type: [BundleResponseDto] })
   data!: BundleResponseDto[];
+}
 
-  @ApiProperty()
-  total!: number;
+export class TopUrlDto {
+  @ApiProperty({ description: 'URL slug' })
+  slug!: string;
 
-  @ApiProperty()
-  page!: number;
+  @ApiProperty({ description: 'Number of clicks' })
+  clicks!: number;
+}
 
-  @ApiProperty()
-  pageSize!: number;
+export class ClickTrendDataPoint {
+  @ApiProperty({ description: 'Date string (YYYY-MM-DD)' })
+  date!: string;
 
-  @ApiProperty()
-  totalPages!: number;
+  @ApiProperty({ description: 'Number of clicks on this date' })
+  clicks!: number;
 }
 
 export class BundleStatsDto {
@@ -98,15 +103,9 @@ export class BundleStatsDto {
   @ApiProperty()
   urlCount!: number;
 
-  @ApiProperty({ description: 'Top performing URL' })
-  topUrl?: {
-    slug: string;
-    clicks: number;
-  };
+  @ApiPropertyOptional({ type: TopUrlDto, description: 'Top performing URL' })
+  topUrl?: TopUrlDto;
 
-  @ApiProperty({ description: 'Click trend data (last 7 days)' })
-  clickTrend!: Array<{
-    date: string;
-    clicks: number;
-  }>;
+  @ApiProperty({ type: [ClickTrendDataPoint], description: 'Click trend data (last 7 days)' })
+  clickTrend!: ClickTrendDataPoint[];
 }

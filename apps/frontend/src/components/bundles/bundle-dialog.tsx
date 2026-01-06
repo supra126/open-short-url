@@ -16,16 +16,16 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useCreateBundle, useUpdateBundle } from '@/hooks/use-bundles';
-import { useUrls } from '@/hooks/use-url';
+import { useUrls, type UrlResponseDto } from '@/hooks/use-url';
 import { Loader2, Check } from 'lucide-react';
-import type { BundleResponse } from '@/types/api';
+import type { BundleResponseDto } from '@/hooks/use-bundles';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface BundleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  bundle?: BundleResponse;
+  bundle?: BundleResponseDto;
 }
 
 // Preset color options
@@ -106,29 +106,28 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
     }
 
     try {
-      const data: any = {
+      const baseData = {
         name,
         description: description || undefined,
         color,
         icon,
       };
 
-      // Include urlIds only when creating
-      if (!isEdit && selectedUrlIds.length > 0) {
-        data.urlIds = selectedUrlIds;
-      }
-
       if (isEdit) {
         await updateMutation.mutateAsync({
           id: bundle!.id,
-          data,
+          data: baseData,
         });
         toast({
           title: t('common.success'),
           description: t('bundles.updateSuccess'),
         });
       } else {
-        await createMutation.mutateAsync(data);
+        // Include urlIds only when creating
+        const createData = selectedUrlIds.length > 0
+          ? { ...baseData, urlIds: selectedUrlIds }
+          : baseData;
+        await createMutation.mutateAsync(createData);
         toast({
           title: t('common.success'),
           description: t('bundles.createSuccess'),
@@ -136,10 +135,11 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
       }
 
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
-        description: error.message || t('common.tryAgainLater'),
+        description: message,
         variant: 'destructive',
       });
     }
@@ -269,7 +269,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
                 ) : urlsData && urlsData.data.length > 0 ? (
                   <ScrollArea className="h-[200px] rounded-md border p-4">
                     <div className="space-y-3">
-                      {urlsData.data.map((url) => (
+                      {urlsData.data.map((url: UrlResponseDto) => (
                         <div
                           key={url.id}
                           className="flex items-start space-x-3 rounded-lg p-2 hover:bg-muted"

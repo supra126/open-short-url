@@ -4,23 +4,38 @@ import {
   ExecutionContext,
   UnauthorizedException,
 } from '@nestjs/common';
+import { FastifyRequest } from 'fastify';
 import { ApiKeysService } from '../api-keys.service';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
+
+/**
+ * User info from API key validation (subset of full User)
+ */
+type ApiKeyUser = { id: string; role: string; email: string; isActive: boolean };
+
+/**
+ * Extended Fastify request with user property
+ */
+interface RequestWithUser extends FastifyRequest {
+  user?: ApiKeyUser;
+}
 
 @Injectable()
 export class ApiKeyAuthGuard implements CanActivate {
   constructor(private apiKeysService: ApiKeysService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const request = context.switchToHttp().getRequest();
+    const request = context.switchToHttp().getRequest<RequestWithUser>();
 
     // Extract API Key from header
     // Supports two formats:
     // 1. X-API-Key: ak_xxxxx
     // 2. Authorization: Bearer ak_xxxxx
+    const xApiKey = request.headers['x-api-key'];
+    const authorization = request.headers['authorization'];
     const apiKey =
-      request.headers['x-api-key'] ||
-      this.extractBearerToken(request.headers['authorization']);
+      (typeof xApiKey === 'string' ? xApiKey : undefined) ||
+      this.extractBearerToken(typeof authorization === 'string' ? authorization : undefined);
 
     if (!apiKey) {
       throw new UnauthorizedException(ERROR_MESSAGES.API_KEY_REQUIRED);

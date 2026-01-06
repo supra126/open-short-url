@@ -111,9 +111,9 @@ export interface ToolInvocation {
   /** Name of the tool that was invoked */
   toolName: string;
   /** Arguments passed to the tool */
-  args: Record<string, any>;
+  args: Record<string, unknown>;
   /** Result returned by the tool */
-  result?: any;
+  result?: unknown;
   /** Error if tool execution failed */
   error?: string;
   /** Current state of the invocation */

@@ -6,7 +6,8 @@
 'use client';
 
 import { useState, useMemo, useCallback, memo } from 'react';
-import { useUserAnalytics, useUserBotAnalytics, useUserAbTestAnalytics } from '@/hooks/use-analytics';
+import { useUserAnalytics, useUserBotAnalytics, useUserAbTestAnalytics, type TimeRange, type BotTypeStat, type TopPerformingVariant } from '@/hooks/use-analytics';
+import type { DeviceStat, GeoLocationStat, UtmStat } from '@/lib/api/schemas';
 import {
   Card,
   CardContent,
@@ -17,13 +18,6 @@ import {
 import { Loading } from '@/components/ui/loading';
 import { formatNumber } from '@/lib/utils';
 import { t } from '@/lib/i18n';
-import type { TimeRange } from '@/types/api';
-
-const timeRangeOptions: { value: TimeRange; label: string }[] = [
-  { value: 'last_7_days', label: t('analytics.timeRange.last7Days') },
-  { value: 'last_30_days', label: t('analytics.timeRange.last30Days') },
-  { value: 'last_90_days', label: t('analytics.timeRange.last90Days') },
-];
 
 // Memoized StatCard component to prevent unnecessary re-renders
 const StatCard = memo<{
@@ -50,47 +44,52 @@ StatCard.displayName = 'StatCard';
 const ProgressBar = memo<{
   name: string;
   percentage: number;
-  count?: number;
-}>(({ name, percentage, count: _count }) => (
-  <div className="flex items-center justify-between">
-    <span className="text-sm">{name}</span>
-    <div className="flex items-center gap-2">
-      <div className="h-2 w-24 rounded-full bg-muted">
-        <div
-          className="h-2 rounded-full bg-primary"
-          style={{ width: `${percentage}%` }}
-        />
+}>(({ name, percentage }) => {
+  const clampedPercentage = Math.min(100, Math.max(0, percentage));
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm">{name}</span>
+      <div className="flex items-center gap-2">
+        <div className="h-2 w-24 rounded-full bg-muted">
+          <div
+            className="h-2 rounded-full bg-primary"
+            style={{ width: `${clampedPercentage}%` }}
+          />
+        </div>
+        <span className="text-sm text-muted-foreground">
+          {percentage.toFixed(1)}%
+        </span>
       </div>
-      <span className="text-sm text-muted-foreground">
-        {percentage.toFixed(1)}%
-      </span>
     </div>
-  </div>
-));
+  );
+});
 ProgressBar.displayName = 'ProgressBar';
 
 // Memoized UTMProgressBar component with truncated text
 const UTMProgressBar = memo<{
   value: string;
   percentage: number;
-}>(({ value, percentage }) => (
-  <div className="flex items-center justify-between">
-    <span className="text-sm font-medium truncate max-w-[120px]">
-      {value}
-    </span>
-    <div className="flex items-center gap-2">
-      <div className="h-2 w-24 rounded-full bg-muted">
-        <div
-          className="h-2 rounded-full bg-primary"
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-      <span className="text-sm text-muted-foreground">
-        {percentage.toFixed(1)}%
+}>(({ value, percentage }) => {
+  const clampedPercentage = Math.min(100, Math.max(0, percentage));
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm font-medium truncate max-w-[120px]">
+        {value}
       </span>
+      <div className="flex items-center gap-2">
+        <div className="h-2 w-24 rounded-full bg-muted">
+          <div
+            className="h-2 rounded-full bg-primary"
+            style={{ width: `${clampedPercentage}%` }}
+          />
+        </div>
+        <span className="text-sm text-muted-foreground">
+          {percentage.toFixed(1)}%
+        </span>
+      </div>
     </div>
-  </div>
-));
+  );
+});
 UTMProgressBar.displayName = 'UTMProgressBar';
 
 export function AnalyticsDashboard() {
@@ -98,6 +97,13 @@ export function AnalyticsDashboard() {
   const { data, isLoading, error } = useUserAnalytics({ timeRange });
   const { data: botData, isLoading: botLoading } = useUserBotAnalytics({ timeRange });
   const { data: abTestData, isLoading: abTestLoading } = useUserAbTestAnalytics({ timeRange });
+
+  // Time range options - defined inside component to ensure i18n is initialized
+  const timeRangeOptions = useMemo<{ value: TimeRange; label: string }[]>(() => [
+    { value: 'last_7_days', label: t('analytics.timeRange.last7Days') },
+    { value: 'last_30_days', label: t('analytics.timeRange.last30Days') },
+    { value: 'last_90_days', label: t('analytics.timeRange.last90Days') },
+  ], []);
 
   // Memoize the time range change handler
   const handleTimeRangeChange = useCallback((range: TimeRange) => {
@@ -179,6 +185,7 @@ export function AnalyticsDashboard() {
         {timeRangeOptions.map((option) => (
           <button
             key={option.value}
+            type="button"
             onClick={() => handleTimeRangeChange(option.value)}
             className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
               timeRange === option.value
@@ -213,7 +220,7 @@ export function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {topBrowsers.map((browser) => (
+              {topBrowsers.map((browser: DeviceStat) => (
                 <ProgressBar
                   key={browser.name}
                   name={browser.name}
@@ -231,7 +238,7 @@ export function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {topOS.map((os) => (
+              {topOS.map((os: DeviceStat) => (
                 <ProgressBar
                   key={os.name}
                   name={os.name}
@@ -249,7 +256,7 @@ export function AnalyticsDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {topDevices.map((device) => (
+              {topDevices.map((device: DeviceStat) => (
                 <ProgressBar
                   key={device.name}
                   name={device.name}
@@ -269,7 +276,7 @@ export function AnalyticsDashboard() {
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
-            {topCountries.map((country) => (
+            {topCountries.map((country: GeoLocationStat) => (
               <ProgressBar
                 key={country.name}
                 name={country.name}
@@ -311,12 +318,11 @@ export function AnalyticsDashboard() {
             <CardContent>
               {botData.botTypes.length > 0 ? (
                 <div className="space-y-2">
-                  {botData.botTypes.slice(0, 5).map((bot) => (
+                  {botData.botTypes.slice(0, 5).map((bot: BotTypeStat) => (
                     <ProgressBar
                       key={bot.botName}
                       name={bot.botName}
                       percentage={bot.percentage}
-                      count={bot.clicks}
                     />
                   ))}
                 </div>
@@ -344,7 +350,7 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {topUTMSources.map((source) => (
+                  {topUTMSources.map((source: UtmStat) => (
                     <UTMProgressBar
                       key={source.value}
                       value={source.value}
@@ -367,7 +373,7 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {topUTMMediums.map((medium) => (
+                  {topUTMMediums.map((medium: UtmStat) => (
                     <UTMProgressBar
                       key={medium.value}
                       value={medium.value}
@@ -390,7 +396,7 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {topUTMCampaigns.map((campaign) => (
+                  {topUTMCampaigns.map((campaign: UtmStat) => (
                     <UTMProgressBar
                       key={campaign.value}
                       value={campaign.value}
@@ -466,7 +472,7 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {abTestData.topPerformingVariants.slice(0, 10).map((variant) => (
+                  {abTestData.topPerformingVariants.slice(0, 10).map((variant: TopPerformingVariant) => (
                     <div key={`${variant.urlSlug}-${variant.variantName}`} className="flex items-center justify-between">
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{variant.variantName}</p>

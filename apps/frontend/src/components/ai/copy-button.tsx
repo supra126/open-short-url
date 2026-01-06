@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Check, Copy } from 'lucide-react';
 import copy from 'copy-to-clipboard';
+import { t } from '@/lib/i18n';
 
 /**
  * Copy Button Component
@@ -43,7 +44,7 @@ export function CopyButton({
       size={size}
       className={className}
       onClick={handleCopy}
-      title={copied ? '已複製' : '複製'}
+      title={copied ? t('common.copied') : t('common.copy')}
     >
       {copied ? (
         <Check className="h-4 w-4" />

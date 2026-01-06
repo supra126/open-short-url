@@ -19,6 +19,7 @@ import {
   ApiSecurity,
   ApiParam,
 } from '@nestjs/swagger';
+import { User } from '@prisma/client';
 import { WebhookService } from './webhook.service';
 import {
   CreateWebhookDto,
@@ -65,7 +66,7 @@ export class WebhookController {
     type: ErrorResponseDto,
   })
   async create(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Body() createWebhookDto: CreateWebhookDto,
   ): Promise<WebhookResponseDto> {
     return this.webhookService.create(user.id, createWebhookDto);
@@ -90,7 +91,7 @@ export class WebhookController {
     type: ErrorResponseDto,
   })
   async findAll(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Query() query: WebhookQueryDto,
   ): Promise<WebhookListResponseDto> {
     return this.webhookService.findAll(user.id, query, user.role);
@@ -125,7 +126,7 @@ export class WebhookController {
     type: ErrorResponseDto,
   })
   async findOne(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<WebhookResponseDto> {
     return this.webhookService.findOne(id, user.id, user.role);
@@ -160,7 +161,7 @@ export class WebhookController {
     type: ErrorResponseDto,
   })
   async update(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() updateWebhookDto: UpdateWebhookDto,
   ): Promise<WebhookResponseDto> {
@@ -196,7 +197,7 @@ export class WebhookController {
     type: ErrorResponseDto,
   })
   async delete(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<void> {
     return this.webhookService.delete(id, user.id, user.role);
@@ -231,7 +232,7 @@ export class WebhookController {
     type: ErrorResponseDto,
   })
   async getLogs(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
     @Query() query: WebhookLogsQueryDto,
   ): Promise<WebhookLogsListResponseDto> {
@@ -267,7 +268,7 @@ export class WebhookController {
     type: ErrorResponseDto,
   })
   async test(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<WebhookTestResponseDto> {
     return this.webhookService.test(id, user.id, user.role);

@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useUserAnalytics } from '@/hooks/use-analytics';
-import { useUrls } from '@/hooks/use-url';
+import { useUrls, type UrlResponseDto } from '@/hooks/use-url';
 import { Loader2, TrendingUp, TrendingDown } from 'lucide-react';
 import { t } from '@/lib/i18n';
 
@@ -28,7 +28,7 @@ export default function DashboardPage() {
   // Calculate statistics
   const totalUrls = urlsData?.total || 0;
   const activeUrls =
-    urlsData?.data.filter((url) => url.status === 'ACTIVE').length || 0;
+    urlsData?.data.filter((url: UrlResponseDto) => url.status === 'ACTIVE').length || 0;
   const totalClicks = analytics?.overview.totalClicks || 0;
   const averageClicksPerDay = analytics?.overview.averageClicksPerDay || 0;
   const growthRate = analytics?.overview.growthRate || 0;

@@ -17,6 +17,8 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { FastifyRequest, FastifyReply } from 'fastify';
+import { User } from '@prisma/client';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -32,6 +34,25 @@ import { SuccessResponseDto } from '@/common/dto/success-response.dto';
 import { TurnstileService } from '../turnstile/turnstile.service';
 import { LoggerService } from '@/common/logger/logger.service';
 
+/**
+ * Fastify request with cookies - using intersection type for compatibility
+ */
+type RequestWithCookies = FastifyRequest & {
+  cookies?: { [cookieName: string]: string | undefined };
+};
+
+/**
+ * Cookie options interface
+ */
+interface CookieOptions {
+  httpOnly: boolean;
+  secure: boolean;
+  sameSite: 'lax' | 'strict' | 'none';
+  maxAge?: number;
+  path: string;
+  domain?: string;
+}
+
 @ApiTags('Authentication')
 @Controller('api/auth')
 export class AuthController {
@@ -46,14 +67,14 @@ export class AuthController {
    * @param req - The incoming request object
    * @returns Cookie domain string (e.g., '.example.com') or undefined
    */
-  private getCookieDomain(req: any): string | undefined {
+  private getCookieDomain(req: FastifyRequest): string | undefined {
     // If manually configured, use it (allows override)
     if (process.env.COOKIE_DOMAIN) {
       return process.env.COOKIE_DOMAIN;
     }
 
     const frontendUrl = process.env.FRONTEND_URL;
-    const currentHost = req.headers?.host || req.get?.('host');
+    const currentHost = req.headers?.host;
 
     // Development environment or localhost: no domain needed
     if (!frontendUrl || !currentHost) {
@@ -124,8 +145,8 @@ export class AuthController {
   async login(
     @Body() loginDto: LoginDto,
     @Ip() clientIp: string,
-    @Req() req: any,
-    @Res({ passthrough: true }) res: any
+    @Req() req: FastifyRequest,
+    @Res({ passthrough: true }) res: FastifyReply
   ): Promise<AuthResponseDto> {
     // Verify Turnstile token
     await this.turnstileService.verifyOrThrow(
@@ -138,7 +159,7 @@ export class AuthController {
 
     // Set JWT as httpOnly cookie if login successful
     if (result.access_token) {
-      const cookieOptions: any = {
+      const cookieOptions: CookieOptions = {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
@@ -152,7 +173,7 @@ export class AuthController {
         cookieOptions.domain = cookieDomain;
       }
 
-      res.cookie('access_token', result.access_token, cookieOptions);
+      void res.setCookie('access_token', result.access_token, cookieOptions);
     }
 
     // Return response without access_token (it's in cookie now)
@@ -189,17 +210,18 @@ export class AuthController {
     },
   })
   async logout(
-    @Req() req: any,
-    @Res({ passthrough: true }) res: any
+    @Req() req: RequestWithCookies,
+    @Res({ passthrough: true }) res: FastifyReply
   ): Promise<SuccessResponseDto> {
     // Extract token from cookie first, then fallback to Authorization header
+    const authHeader = req.headers.authorization;
     const token =
       req.cookies?.access_token ||
-      req.headers.authorization?.replace('Bearer ', '') ||
+      (typeof authHeader === 'string' ? authHeader.replace('Bearer ', '') : '') ||
       '';
 
     // Clear cookie with same options as set cookie
-    const cookieOptions: any = {
+    const cookieOptions: CookieOptions = {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
@@ -212,7 +234,7 @@ export class AuthController {
       cookieOptions.domain = cookieDomain;
     }
 
-    res.clearCookie('access_token', cookieOptions);
+    void res.clearCookie('access_token', cookieOptions);
 
     return this.authService.logout(token);
   }
@@ -242,11 +264,11 @@ export class AuthController {
       },
     },
   })
-  async getCurrentUser(@CurrentUser() user: any): Promise<UserResponseDto> {
+  async getCurrentUser(@CurrentUser() user: User): Promise<UserResponseDto> {
     return {
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: user.name ?? undefined,
       role: user.role,
       isActive: user.isActive,
       twoFactorEnabled: user.twoFactorEnabled,
@@ -281,7 +303,7 @@ export class AuthController {
     },
   })
   async updateProfile(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Body() updateUserDto: UpdateUserDto
   ): Promise<UserResponseDto> {
     return this.authService.updateProfile(user.id, updateUserDto);
@@ -319,7 +341,7 @@ export class AuthController {
     description: 'Invalid request parameters (e.g., new password too short)',
   })
   async changePassword(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Body() changePasswordDto: ChangePasswordDto
   ): Promise<SuccessResponseDto> {
     return this.authService.changePassword(user.id, changePasswordDto);
@@ -346,7 +368,7 @@ export class AuthController {
     status: 401,
     description: 'Unauthorized',
   })
-  async setup2FA(@CurrentUser() user: any): Promise<Setup2FAResponseDto> {
+  async setup2FA(@CurrentUser() user: User): Promise<Setup2FAResponseDto> {
     return this.authService.setup2FA(user.id);
   }
 
@@ -373,7 +395,7 @@ export class AuthController {
     description: 'Invalid verification code',
   })
   async enable2FA(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Body() verify2FADto: Verify2FADto
   ): Promise<SuccessResponseDto> {
     return this.authService.enable2FA(user.id, verify2FADto);
@@ -402,7 +424,7 @@ export class AuthController {
     description: 'Invalid password or verification code',
   })
   async disable2FA(
-    @CurrentUser() user: any,
+    @CurrentUser() user: User,
     @Body() disable2FADto: Disable2FADto
   ): Promise<SuccessResponseDto> {
     return this.authService.disable2FA(user.id, disable2FADto);
