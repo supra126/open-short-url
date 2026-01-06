@@ -279,7 +279,19 @@
     "timeRange": {
       "last7Days": "最近 7 天",
       "last30Days": "最近 30 天",
-      "last90Days": "最近 90 天"
+      "last90Days": "最近 90 天",
+      "last365Days": "最近 365 天",
+      "custom": "自訂"
+    },
+    "dateRange": {
+      "title": "自訂日期範圍",
+      "description": "選擇日期範圍（最多 {days} 天）",
+      "startDate": "開始日期",
+      "endDate": "結束日期",
+      "apply": "套用",
+      "errorStartAfterEnd": "開始日期不能晚於結束日期",
+      "errorMaxDays": "日期範圍不能超過 {days} 天",
+      "errorFutureDate": "結束日期不能是未來日期"
     },
     "last7Days": "最近 7 天",
     "last30Days": "最近 30 天",

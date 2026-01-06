@@ -7,7 +7,8 @@
 
 import { useState, useMemo, useCallback, memo } from 'react';
 import { useUserAnalytics, useUserBotAnalytics, useUserAbTestAnalytics, type TimeRange, type BotTypeStat, type TopPerformingVariant } from '@/hooks/use-analytics';
-import type { DeviceStat, GeoLocationStat, UtmStat } from '@/lib/api/schemas';
+import type { DeviceStat, GeoLocationStat, UtmStat, AnalyticsQueryParams } from '@/lib/api/schemas';
+import { DateRangePicker } from './date-range-picker';
 import {
   Card,
   CardContent,
@@ -93,21 +94,35 @@ const UTMProgressBar = memo<{
 UTMProgressBar.displayName = 'UTMProgressBar';
 
 export function AnalyticsDashboard() {
-  const [timeRange, setTimeRange] = useState<TimeRange>('last_7_days');
-  const { data, isLoading, error } = useUserAnalytics({ timeRange });
-  const { data: botData, isLoading: botLoading } = useUserBotAnalytics({ timeRange });
-  const { data: abTestData, isLoading: abTestLoading } = useUserAbTestAnalytics({ timeRange });
+  const [dateRange, setDateRange] = useState<{
+    timeRange: TimeRange;
+    startDate?: string;
+    endDate?: string;
+  }>({ timeRange: 'last_7_days' });
 
-  // Time range options - defined inside component to ensure i18n is initialized
-  const timeRangeOptions = useMemo<{ value: TimeRange; label: string }[]>(() => [
-    { value: 'last_7_days', label: t('analytics.timeRange.last7Days') },
-    { value: 'last_30_days', label: t('analytics.timeRange.last30Days') },
-    { value: 'last_90_days', label: t('analytics.timeRange.last90Days') },
-  ], []);
+  // Build query params based on date range selection
+  const queryParams = useMemo<AnalyticsQueryParams>(() => {
+    if (dateRange.timeRange === 'custom') {
+      return {
+        timeRange: 'custom',
+        startDate: dateRange.startDate,
+        endDate: dateRange.endDate,
+      };
+    }
+    return { timeRange: dateRange.timeRange };
+  }, [dateRange]);
 
-  // Memoize the time range change handler
-  const handleTimeRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
+  const { data, isLoading, error } = useUserAnalytics(queryParams);
+  const { data: botData, isLoading: botLoading } = useUserBotAnalytics(queryParams);
+  const { data: abTestData, isLoading: abTestLoading } = useUserAbTestAnalytics(queryParams);
+
+  // Memoize the date range change handler
+  const handleDateRangeChange = useCallback((value: {
+    timeRange: TimeRange;
+    startDate?: string;
+    endDate?: string;
+  }) => {
+    setDateRange(value);
   }, []);
 
   // Memoize computed values (must be called unconditionally)
@@ -177,26 +192,11 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Time Range Selector */}
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-medium">
-          {t('analytics.timeRangeLabel')}:
-        </span>
-        {timeRangeOptions.map((option) => (
-          <button
-            key={option.value}
-            type="button"
-            onClick={() => handleTimeRangeChange(option.value)}
-            className={`rounded-md px-3 py-1.5 text-sm transition-colors ${
-              timeRange === option.value
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted hover:bg-muted/80'
-            }`}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
+      {/* Date Range Picker */}
+      <DateRangePicker
+        value={dateRange}
+        onChange={handleDateRangeChange}
+      />
 
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

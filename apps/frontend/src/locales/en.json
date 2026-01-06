@@ -279,7 +279,19 @@
     "timeRange": {
       "last7Days": "Last 7 Days",
       "last30Days": "Last 30 Days",
-      "last90Days": "Last 90 Days"
+      "last90Days": "Last 90 Days",
+      "last365Days": "Last 365 Days",
+      "custom": "Custom"
+    },
+    "dateRange": {
+      "title": "Custom Date Range",
+      "description": "Select a date range (max {days} days)",
+      "startDate": "Start Date",
+      "endDate": "End Date",
+      "apply": "Apply",
+      "errorStartAfterEnd": "Start date cannot be after end date",
+      "errorMaxDays": "Date range cannot exceed {days} days",
+      "errorFutureDate": "End date cannot be in the future"
     },
     "last7Days": "Last 7 Days",
     "last30Days": "Last 30 Days",

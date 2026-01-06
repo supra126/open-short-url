@@ -293,7 +293,19 @@
     "timeRange": {
       "last7Days": "Últimos 7 Dias",
       "last30Days": "Últimos 30 Dias",
-      "last90Days": "Últimos 90 Dias"
+      "last90Days": "Últimos 90 Dias",
+      "last365Days": "Últimos 365 Dias",
+      "custom": "Personalizado"
+    },
+    "dateRange": {
+      "title": "Período Personalizado",
+      "description": "Selecione um período (máximo {days} dias)",
+      "startDate": "Data de Início",
+      "endDate": "Data de Término",
+      "apply": "Aplicar",
+      "errorStartAfterEnd": "A data de início não pode ser posterior à data de término",
+      "errorMaxDays": "O período não pode exceder {days} dias",
+      "errorFutureDate": "A data de término não pode ser no futuro"
     },
     "last7Days": "Últimos 7 Dias",
     "last30Days": "Últimos 30 Dias",

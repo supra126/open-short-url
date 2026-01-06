@@ -283,6 +283,9 @@ export class AnalyticsService {
         case TimeRange.LAST_90_DAYS:
           startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
           break;
+        case TimeRange.LAST_365_DAYS:
+          startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+          break;
         default:
           startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       }

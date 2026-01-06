@@ -119,7 +119,7 @@ export interface ApiError extends Error {
 // These types are derived from OpenAPI operation parameters
 // They are not part of components.schemas but are needed for type-safe API calls
 
-export type TimeRange = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'custom';
+export type TimeRange = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'last_365_days' | 'custom';
 
 export interface UrlQueryParams {
   page?: number;
