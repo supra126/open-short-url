@@ -98,6 +98,75 @@ export type SuccessResponseDto = components['schemas']['SuccessResponseDto'];
 export type ErrorResponseDto = components['schemas']['ErrorResponseDto'];
 export type SystemSettingsResponseDto = components['schemas']['SystemSettingsResponseDto'];
 
+// ==================== Audit Log Types ====================
+// These types are defined manually as they may not be in OpenAPI spec yet
+
+export type AuditAction =
+  | 'URL_CREATED'
+  | 'URL_UPDATED'
+  | 'URL_DELETED'
+  | 'USER_LOGIN'
+  | 'USER_LOGOUT'
+  | 'USER_CREATED'
+  | 'USER_UPDATED'
+  | 'USER_DELETED'
+  | 'API_KEY_CREATED'
+  | 'API_KEY_DELETED'
+  | 'SETTINGS_UPDATED'
+  | 'PASSWORD_CHANGED'
+  | 'PASSWORD_RESET'
+  | 'TWO_FACTOR_ENABLED'
+  | 'TWO_FACTOR_DISABLED'
+  | 'VARIANT_CREATED'
+  | 'VARIANT_UPDATED'
+  | 'VARIANT_DELETED'
+  | 'BUNDLE_CREATED'
+  | 'BUNDLE_UPDATED'
+  | 'BUNDLE_DELETED'
+  | 'WEBHOOK_CREATED'
+  | 'WEBHOOK_UPDATED'
+  | 'WEBHOOK_DELETED';
+
+export interface AuditLogUserDto {
+  id: string;
+  email: string;
+  name?: string | null;
+}
+
+export interface AuditLogDto {
+  id: string;
+  user?: AuditLogUserDto | null;
+  action: AuditAction;
+  entityType: string;
+  entityId?: string | null;
+  oldValue?: Record<string, unknown> | null;
+  newValue?: Record<string, unknown> | null;
+  ipAddress?: string | null;
+  userAgent?: string | null;
+  metadata?: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface AuditLogListResponseDto {
+  data: AuditLogDto[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export interface AuditLogQueryParams {
+  action?: AuditAction;
+  entityType?: string;
+  entityId?: string;
+  userId?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  pageSize?: number;
+  sortOrder?: 'asc' | 'desc';
+}
+
 // ==================== API Error Type ====================
 /**
  * Type-safe API error structure for catch blocks

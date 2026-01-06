@@ -33,6 +33,7 @@ import {
 } from './dto/variant.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 
 @ApiTags('URLs')
@@ -91,8 +92,9 @@ export class UrlController {
   async create(
     @CurrentUser() user: User,
     @Body() createUrlDto: CreateUrlDto,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<UrlResponseDto> {
-    return this.urlService.create(user.id, createUrlDto);
+    return this.urlService.create(user.id, createUrlDto, meta);
   }
 
   /**
@@ -264,8 +266,9 @@ export class UrlController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() updateUrlDto: UpdateUrlDto,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<UrlResponseDto> {
-    return this.urlService.update(id, user.id, updateUrlDto, user.role);
+    return this.urlService.update(id, user.id, updateUrlDto, user.role, meta);
   }
 
   /**
@@ -299,8 +302,9 @@ export class UrlController {
   async delete(
     @CurrentUser() user: User,
     @Param('id') id: string,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<void> {
-    return this.urlService.delete(id, user.id, user.role);
+    return this.urlService.delete(id, user.id, user.role, meta);
   }
 
   // ==================== A/B Testing Variant Management ====================
@@ -337,8 +341,9 @@ export class UrlController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() createVariantDto: CreateVariantDto,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<VariantResponseDto> {
-    return this.urlService.createVariant(id, user.id, createVariantDto, user.role);
+    return this.urlService.createVariant(id, user.id, createVariantDto, user.role, meta);
   }
 
   /**
@@ -455,8 +460,9 @@ export class UrlController {
     @Param('id') id: string,
     @Param('variantId') variantId: string,
     @Body() updateVariantDto: UpdateVariantDto,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<VariantResponseDto> {
-    return this.urlService.updateVariant(id, variantId, user.id, updateVariantDto, user.role);
+    return this.urlService.updateVariant(id, variantId, user.id, updateVariantDto, user.role, meta);
   }
 
   /**
@@ -496,7 +502,8 @@ export class UrlController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('variantId') variantId: string,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<void> {
-    return this.urlService.deleteVariant(id, variantId, user.id, user.role);
+    return this.urlService.deleteVariant(id, variantId, user.id, user.role, meta);
   }
 }

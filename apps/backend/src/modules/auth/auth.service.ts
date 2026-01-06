@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@/common/database/prisma.service';
+import { AuditLogService } from '@/modules/audit-log/audit-log.service';
+import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import { hashPassword, comparePassword } from '@/common/utils';
 import { LoginDto } from './dto/login.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -35,13 +37,14 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private tokenBlacklistService: TokenBlacklistService
+    private tokenBlacklistService: TokenBlacklistService,
+    private auditLogService: AuditLogService,
   ) {}
 
   /**
    * User login
    */
-  async login(loginDto: LoginDto): Promise<AuthResponseDto> {
+  async login(loginDto: LoginDto, meta?: RequestMeta): Promise<AuthResponseDto> {
     const { email, password, twoFactorCode } = loginDto;
 
     // Find user
@@ -88,6 +91,17 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
     const access_token = this.jwtService.sign(payload);
 
+    // Audit log
+    await this.auditLogService.create({
+      userId: user.id,
+      action: 'USER_LOGIN',
+      entityType: 'user',
+      entityId: user.id,
+      newValue: { email: user.email },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
     return {
       requires2FA: false,
       access_token,
@@ -98,7 +112,7 @@ export class AuthService {
   /**
    * User logout
    */
-  async logout(token: string): Promise<SuccessResponseDto> {
+  async logout(token: string, userId?: string, meta?: RequestMeta): Promise<SuccessResponseDto> {
     // Decode token to get expiration time
     try {
       const decoded = this.jwtService.decode(token) as DecodedToken | null;
@@ -106,6 +120,18 @@ export class AuthService {
 
       // Add token to blacklist
       await this.tokenBlacklistService.addToBlacklist(token, expiresAt);
+
+      // Audit log
+      if (userId) {
+        await this.auditLogService.create({
+          userId,
+          action: 'USER_LOGOUT',
+          entityType: 'user',
+          entityId: userId,
+          ipAddress: meta?.ipAddress,
+          userAgent: meta?.userAgent,
+        });
+      }
 
       return {
         message: 'Logout successful',
@@ -162,6 +188,7 @@ export class AuthService {
   async changePassword(
     userId: string,
     changePasswordDto: ChangePasswordDto,
+    meta?: RequestMeta,
   ): Promise<SuccessResponseDto> {
     const { oldPassword, newPassword } = changePasswordDto;
 
@@ -187,6 +214,17 @@ export class AuthService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },
+    });
+
+    // Audit log (password is redacted)
+    await this.auditLogService.create({
+      userId,
+      action: 'PASSWORD_CHANGED',
+      entityType: 'user',
+      entityId: userId,
+      newValue: { password: '[REDACTED]' },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
 
     return {
@@ -239,6 +277,7 @@ export class AuthService {
   async enable2FA(
     userId: string,
     verify2FADto: Verify2FADto,
+    meta?: RequestMeta,
   ): Promise<SuccessResponseDto> {
     const { code } = verify2FADto;
 
@@ -276,6 +315,17 @@ export class AuthService {
       data: { twoFactorEnabled: true },
     });
 
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'TWO_FACTOR_ENABLED',
+      entityType: 'user',
+      entityId: userId,
+      newValue: { twoFactorEnabled: true },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
     return {
       message: 'Two-factor authentication enabled successfully',
       statusCode: 200,
@@ -288,6 +338,7 @@ export class AuthService {
   async disable2FA(
     userId: string,
     disable2FADto: Disable2FADto,
+    meta?: RequestMeta,
   ): Promise<SuccessResponseDto> {
     const { password, code } = disable2FADto;
 
@@ -328,6 +379,18 @@ export class AuthService {
         twoFactorEnabled: false,
         twoFactorSecret: null,
       },
+    });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'TWO_FACTOR_DISABLED',
+      entityType: 'user',
+      entityId: userId,
+      oldValue: { twoFactorEnabled: true },
+      newValue: { twoFactorEnabled: false },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
 
     return {

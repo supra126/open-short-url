@@ -16,6 +16,7 @@ import { ApiKeysModule } from './modules/api-keys/api-keys.module';
 import { UsersModule } from './modules/users/users.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { BundleModule } from './modules/bundle/bundle.module';
+import { AuditLogModule } from './modules/audit-log/audit-log.module';
 
 @Module({
   imports: [
@@ -73,6 +74,7 @@ import { BundleModule } from './modules/bundle/bundle.module';
     SettingsModule,
     ApiKeysModule,
     WebhookModule,
+    AuditLogModule,
     // RedirectModule must be last to match /:slug after specific routes
     RedirectModule,
   ],

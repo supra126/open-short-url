@@ -41,6 +41,8 @@
     "next": "Próximo",
     "page": "Página",
     "of": "de",
+    "to": "a",
+    "showing": "Exibindo",
     "total": "total",
     "items": "itens",
     "noValue": "-",
@@ -240,6 +242,7 @@
     "statisticsAnalytics": "Estatísticas e Analytics",
     "system": "Sistema",
     "apiKeys": "Chaves de API",
+    "auditLogs": "Logs de Auditoria",
     "users": "Gerenciamento de Usuários",
     "aiAssistant": "Assistente de IA",
     "aiSettings": "Configurações de IA",
@@ -740,6 +743,62 @@
     "variantName": "Nome da Variante",
     "urlSlug": "URL Curta",
     "clickRate": "Taxa de Clique"
+  },
+  "auditLogs": {
+    "title": "Logs de Auditoria",
+    "description": "Visualize a atividade do sistema e o histórico de alterações",
+    "noLogs": "Nenhum log de auditoria encontrado",
+    "noLogsDesc": "Nenhuma atividade foi registrada ainda",
+    "filters": {
+      "action": "Ação",
+      "entityType": "Tipo de Entidade",
+      "allActions": "Todas as Ações",
+      "allEntityTypes": "Todos os Tipos",
+      "dateRange": "Período",
+      "search": "Pesquisar..."
+    },
+    "table": {
+      "time": "Hora",
+      "user": "Usuário",
+      "action": "Ação",
+      "entity": "Entidade",
+      "details": "Detalhes",
+      "ipAddress": "Endereço IP"
+    },
+    "actions": {
+      "URL_CREATED": "URL Criada",
+      "URL_UPDATED": "URL Atualizada",
+      "URL_DELETED": "URL Excluída",
+      "USER_LOGIN": "Login de Usuário",
+      "USER_LOGOUT": "Logout de Usuário",
+      "USER_CREATED": "Usuário Criado",
+      "USER_UPDATED": "Usuário Atualizado",
+      "USER_DELETED": "Usuário Excluído",
+      "API_KEY_CREATED": "Chave API Criada",
+      "API_KEY_DELETED": "Chave API Excluída",
+      "SETTINGS_UPDATED": "Configurações Atualizadas",
+      "PASSWORD_CHANGED": "Senha Alterada",
+      "TWO_FACTOR_ENABLED": "2FA Ativado",
+      "TWO_FACTOR_DISABLED": "2FA Desativado",
+      "VARIANT_CREATED": "Variante Criada",
+      "VARIANT_UPDATED": "Variante Atualizada",
+      "VARIANT_DELETED": "Variante Excluída",
+      "BUNDLE_CREATED": "Pacote Criado",
+      "BUNDLE_UPDATED": "Pacote Atualizado",
+      "BUNDLE_DELETED": "Pacote Excluído",
+      "WEBHOOK_CREATED": "Webhook Criado",
+      "WEBHOOK_UPDATED": "Webhook Atualizado",
+      "WEBHOOK_DELETED": "Webhook Excluído"
+    },
+    "entityTypes": {
+      "url": "URL",
+      "user": "Usuário",
+      "api_key": "Chave API",
+      "bundle": "Pacote",
+      "webhook": "Webhook",
+      "variant": "Variante",
+      "settings": "Configurações"
+    }
   },
   "ai": {
     "chat": {

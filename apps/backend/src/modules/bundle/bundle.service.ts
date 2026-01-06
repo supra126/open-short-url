@@ -8,6 +8,8 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Prisma, BundleStatus, UserRole, UrlStatus } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
+import { AuditLogService } from '@/modules/audit-log/audit-log.service';
+import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import { CreateBundleDto } from './dto/create-bundle.dto';
 import { UpdateBundleDto } from './dto/update-bundle.dto';
 import { BundleQueryDto } from './dto/bundle-query.dto';
@@ -53,6 +55,7 @@ export class BundleService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    private auditLogService: AuditLogService,
   ) {}
 
   /**
@@ -61,6 +64,7 @@ export class BundleService {
   async create(
     userId: string,
     createBundleDto: CreateBundleDto,
+    meta?: RequestMeta,
   ): Promise<BundleResponseDto> {
     const { urlIds, ...bundleData } = createBundleDto;
 
@@ -109,6 +113,17 @@ export class BundleService {
           },
         },
       },
+    });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'BUNDLE_CREATED',
+      entityType: 'bundle',
+      entityId: bundle.id,
+      newValue: { name: bundle.name, urlCount: urlIds?.length || 0 },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
 
     return this.mapToResponseDto(bundle);
@@ -225,6 +240,7 @@ export class BundleService {
     id: string,
     updateBundleDto: UpdateBundleDto,
     userRole?: UserRole,
+    meta?: RequestMeta,
   ): Promise<BundleResponseDto> {
     // Check if bundle exists and user has access
     const existingBundle = await this.prisma.bundle.findFirst({
@@ -263,13 +279,25 @@ export class BundleService {
       },
     });
 
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'BUNDLE_UPDATED',
+      entityType: 'bundle',
+      entityId: id,
+      oldValue: { name: existingBundle.name, status: existingBundle.status },
+      newValue: { ...updateBundleDto },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
     return this.mapToResponseDto(bundle);
   }
 
   /**
    * Delete a bundle (admins can delete all, users can delete only their own)
    */
-  async remove(userId: string, id: string, userRole?: UserRole): Promise<void> {
+  async remove(userId: string, id: string, userRole?: UserRole, meta?: RequestMeta): Promise<void> {
     const bundle = await this.prisma.bundle.findFirst({
       where: {
         id,
@@ -282,6 +310,17 @@ export class BundleService {
     }
 
     await this.prisma.bundle.delete({ where: { id } });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'BUNDLE_DELETED',
+      entityType: 'bundle',
+      entityId: id,
+      oldValue: { name: bundle.name },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
   }
 
   /**
@@ -549,15 +588,15 @@ export class BundleService {
   /**
    * Archive a bundle
    */
-  async archive(userId: string, id: string): Promise<BundleResponseDto> {
-    return this.update(userId, id, { status: BundleStatus.ARCHIVED });
+  async archive(userId: string, id: string, meta?: RequestMeta): Promise<BundleResponseDto> {
+    return this.update(userId, id, { status: BundleStatus.ARCHIVED }, undefined, meta);
   }
 
   /**
    * Restore an archived bundle
    */
-  async restore(userId: string, id: string): Promise<BundleResponseDto> {
-    return this.update(userId, id, { status: BundleStatus.ACTIVE });
+  async restore(userId: string, id: string, meta?: RequestMeta): Promise<BundleResponseDto> {
+    return this.update(userId, id, { status: BundleStatus.ACTIVE }, undefined, meta);
   }
 
   /**

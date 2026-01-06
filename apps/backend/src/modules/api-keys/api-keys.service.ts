@@ -5,6 +5,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/common/database/prisma.service';
+import { AuditLogService } from '@/modules/audit-log/audit-log.service';
+import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
 import {
   ApiKeyResponseDto,
@@ -19,7 +21,10 @@ import * as bcrypt from 'bcryptjs';
 export class ApiKeysService {
   private readonly logger = new Logger(ApiKeysService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditLogService: AuditLogService,
+  ) {}
 
   /**
    * Generate API Key
@@ -126,6 +131,7 @@ export class ApiKeysService {
   async create(
     userId: string,
     createApiKeyDto: CreateApiKeyDto,
+    meta?: RequestMeta,
   ): Promise<ApiKeyResponseDto> {
     // Check API Key quantity limit
     const MAX_API_KEYS_PER_USER = parseInt(
@@ -159,6 +165,17 @@ export class ApiKeysService {
           ? new Date(createApiKeyDto.expiresAt)
           : null,
       },
+    });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'API_KEY_CREATED',
+      entityType: 'api_key',
+      entityId: apiKey.id,
+      newValue: { name: apiKey.name, prefix: apiKey.prefix },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
 
     // Return response with full API Key (only this once)
@@ -234,7 +251,7 @@ export class ApiKeysService {
   /**
    * Delete API Key
    */
-  async delete(id: string, userId: string): Promise<void> {
+  async delete(id: string, userId: string, meta?: RequestMeta): Promise<void> {
     const apiKey = await this.prisma.apiKey.findFirst({
       where: { id, userId },
     });
@@ -245,6 +262,17 @@ export class ApiKeysService {
 
     await this.prisma.apiKey.delete({
       where: { id },
+    });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'API_KEY_DELETED',
+      entityType: 'api_key',
+      entityId: id,
+      oldValue: { name: apiKey.name, prefix: apiKey.prefix },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
   }
 }

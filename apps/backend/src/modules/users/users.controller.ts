@@ -23,6 +23,7 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { CurrentUser } from '@/common/decorators';
+import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { User, UserRole } from '@prisma/client';
 import { SuccessResponseDto } from '@/common/dto/success-response.dto';
 import {
@@ -69,8 +70,12 @@ export class UsersController {
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden - Requires admin privileges',
   })
-  async createUser(@Body() createUserDto: CreateUserDto): Promise<UserResponseDto> {
-    return this.usersService.createUser(createUserDto);
+  async createUser(
+    @CurrentUser() currentUser: User,
+    @Body() createUserDto: CreateUserDto,
+    @RequestMeta() meta: RequestMetaType,
+  ): Promise<UserResponseDto> {
+    return this.usersService.createUser(createUserDto, currentUser.id, meta);
   }
 
   @Get()
@@ -164,8 +169,9 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateRoleDto: UpdateUserRoleDto,
     @CurrentUser() currentUser: User,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<UserResponseDto> {
-    return this.usersService.updateUserRole(id, updateRoleDto, currentUser.id);
+    return this.usersService.updateUserRole(id, updateRoleDto, currentUser.id, meta);
   }
 
   @Patch(':id/status')
@@ -204,8 +210,9 @@ export class UsersController {
     @Param('id') id: string,
     @Body() updateStatusDto: UpdateUserStatusDto,
     @CurrentUser() currentUser: User,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<UserResponseDto> {
-    return this.usersService.updateUserStatus(id, updateStatusDto, currentUser.id);
+    return this.usersService.updateUserStatus(id, updateStatusDto, currentUser.id, meta);
   }
 
   @Delete(':id')
@@ -244,8 +251,9 @@ export class UsersController {
   async deleteUser(
     @Param('id') id: string,
     @CurrentUser() currentUser: User,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<SuccessResponseDto> {
-    await this.usersService.deleteUser(id, currentUser.id);
+    await this.usersService.deleteUser(id, currentUser.id, meta);
     return {
       message: 'User deleted successfully',
       statusCode: 200,
@@ -284,8 +292,10 @@ export class UsersController {
   async resetUserPassword(
     @Param('id') id: string,
     @Body() resetPasswordDto: ResetPasswordDto,
+    @CurrentUser() currentUser: User,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<SuccessResponseDto> {
-    await this.usersService.resetUserPassword(id, resetPasswordDto);
+    await this.usersService.resetUserPassword(id, resetPasswordDto, currentUser.id, meta);
     return {
       message: 'Password reset successfully',
       statusCode: 200,

@@ -27,6 +27,7 @@ import {
 } from './dto/api-key-response.dto';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 import { IUserFromToken } from '@/common/interfaces/user.interface';
 
@@ -69,8 +70,9 @@ export class ApiKeysController {
   async create(
     @CurrentUser() user: IUserFromToken,
     @Body() createApiKeyDto: CreateApiKeyDto,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<ApiKeyResponseDto> {
-    return this.apiKeysService.create(user.id, createApiKeyDto);
+    return this.apiKeysService.create(user.id, createApiKeyDto, meta);
   }
 
   /**
@@ -164,7 +166,8 @@ export class ApiKeysController {
   async delete(
     @CurrentUser() user: IUserFromToken,
     @Param('id') id: string,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<void> {
-    return this.apiKeysService.delete(id, user.id);
+    return this.apiKeysService.delete(id, user.id, meta);
   }
 }

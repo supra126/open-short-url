@@ -30,6 +30,7 @@ import { UserResponseDto } from '@/modules/users/dto/user-response.dto';
 import { Setup2FAResponseDto } from './dto/setup-2fa-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators';
+import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { SuccessResponseDto } from '@/common/dto/success-response.dto';
 import { TurnstileService } from '../turnstile/turnstile.service';
 import { LoggerService } from '@/common/logger/logger.service';
@@ -146,7 +147,8 @@ export class AuthController {
     @Body() loginDto: LoginDto,
     @Ip() clientIp: string,
     @Req() req: FastifyRequest,
-    @Res({ passthrough: true }) res: FastifyReply
+    @Res({ passthrough: true }) res: FastifyReply,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<AuthResponseDto> {
     // Verify Turnstile token
     await this.turnstileService.verifyOrThrow(
@@ -155,7 +157,7 @@ export class AuthController {
     );
 
     // Continue with login flow
-    const result = await this.authService.login(loginDto);
+    const result = await this.authService.login(loginDto, meta);
 
     // Set JWT as httpOnly cookie if login successful
     if (result.access_token) {
@@ -211,7 +213,9 @@ export class AuthController {
   })
   async logout(
     @Req() req: RequestWithCookies,
-    @Res({ passthrough: true }) res: FastifyReply
+    @Res({ passthrough: true }) res: FastifyReply,
+    @CurrentUser() user: User,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<SuccessResponseDto> {
     // Extract token from cookie first, then fallback to Authorization header
     const authHeader = req.headers.authorization;
@@ -236,7 +240,7 @@ export class AuthController {
 
     void res.clearCookie('access_token', cookieOptions);
 
-    return this.authService.logout(token);
+    return this.authService.logout(token, user.id, meta);
   }
 
   @Get('me')
@@ -342,9 +346,10 @@ export class AuthController {
   })
   async changePassword(
     @CurrentUser() user: User,
-    @Body() changePasswordDto: ChangePasswordDto
+    @Body() changePasswordDto: ChangePasswordDto,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<SuccessResponseDto> {
-    return this.authService.changePassword(user.id, changePasswordDto);
+    return this.authService.changePassword(user.id, changePasswordDto, meta);
   }
 
   @Post('2fa/setup')
@@ -396,9 +401,10 @@ export class AuthController {
   })
   async enable2FA(
     @CurrentUser() user: User,
-    @Body() verify2FADto: Verify2FADto
+    @Body() verify2FADto: Verify2FADto,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<SuccessResponseDto> {
-    return this.authService.enable2FA(user.id, verify2FADto);
+    return this.authService.enable2FA(user.id, verify2FADto, meta);
   }
 
   @Post('2fa/disable')
@@ -425,8 +431,9 @@ export class AuthController {
   })
   async disable2FA(
     @CurrentUser() user: User,
-    @Body() disable2FADto: Disable2FADto
+    @Body() disable2FADto: Disable2FADto,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<SuccessResponseDto> {
-    return this.authService.disable2FA(user.id, disable2FADto);
+    return this.authService.disable2FA(user.id, disable2FADto, meta);
   }
 }

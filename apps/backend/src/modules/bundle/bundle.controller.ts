@@ -33,6 +33,7 @@ import {
 import { AddUrlToBundleDto, AddMultipleUrlsDto } from './dto/add-url-to-bundle.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 
 @ApiTags('Bundles')
@@ -77,8 +78,9 @@ export class BundleController {
   async create(
     @CurrentUser() user: User,
     @Body() createBundleDto: CreateBundleDto,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.create(user.id, createBundleDto);
+    return this.bundleService.create(user.id, createBundleDto, meta);
   }
 
   /**
@@ -202,8 +204,9 @@ export class BundleController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() updateBundleDto: UpdateBundleDto,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.update(user.id, id, updateBundleDto, user.role);
+    return this.bundleService.update(user.id, id, updateBundleDto, user.role, meta);
   }
 
   /**
@@ -233,8 +236,9 @@ export class BundleController {
   async remove(
     @CurrentUser() user: User,
     @Param('id') id: string,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<void> {
-    return this.bundleService.remove(user.id, id, user.role);
+    return this.bundleService.remove(user.id, id, user.role, meta);
   }
 
   /**
@@ -380,8 +384,9 @@ export class BundleController {
   async archive(
     @CurrentUser() user: User,
     @Param('id') id: string,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.archive(user.id, id);
+    return this.bundleService.archive(user.id, id, meta);
   }
 
   /**
@@ -406,7 +411,8 @@ export class BundleController {
   async restore(
     @CurrentUser() user: User,
     @Param('id') id: string,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.restore(user.id, id);
+    return this.bundleService.restore(user.id, id, meta);
   }
 }

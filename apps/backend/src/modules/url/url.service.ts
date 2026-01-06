@@ -11,6 +11,8 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma, UrlStatus, Url, UrlVariant } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { CacheService } from '@/common/cache/cache.service';
+import { AuditLogService } from '@/modules/audit-log/audit-log.service';
+import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import { CreateUrlDto } from './dto/create-url.dto';
 import { UpdateUrlDto } from './dto/update-url.dto';
 import { UrlQueryDto } from './dto/url-query.dto';
@@ -62,6 +64,7 @@ export class UrlService implements OnModuleInit {
     private cacheService: CacheService,
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
+    private auditLogService: AuditLogService,
   ) {
     // Parse environment variables with defaults
     const thresholdsStr = this.configService.get<string>(
@@ -126,6 +129,7 @@ export class UrlService implements OnModuleInit {
   async create(
     userId: string,
     createUrlDto: CreateUrlDto,
+    meta?: RequestMeta,
   ): Promise<UrlResponseDto> {
     const {
       originalUrl,
@@ -194,6 +198,21 @@ export class UrlService implements OnModuleInit {
 
     // Emit url.created event for webhooks
     this.eventEmitter.emit('url.created', url);
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'URL_CREATED',
+      entityType: 'url',
+      entityId: url.id,
+      newValue: {
+        slug: url.slug,
+        originalUrl: url.originalUrl,
+        title: url.title,
+      },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
 
     return this.mapToResponse(url);
   }
@@ -341,6 +360,7 @@ export class UrlService implements OnModuleInit {
     userId: string,
     updateUrlDto: UpdateUrlDto,
     userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta,
   ): Promise<UrlResponseDto> {
     // Check if URL exists and belongs to the user (or user is ADMIN)
     const existing = await this.prisma.url.findFirst({
@@ -385,6 +405,28 @@ export class UrlService implements OnModuleInit {
     // Emit url.updated event for webhooks
     this.eventEmitter.emit('url.updated', url);
 
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'URL_UPDATED',
+      entityType: 'url',
+      entityId: url.id,
+      oldValue: {
+        slug: existing.slug,
+        originalUrl: existing.originalUrl,
+        title: existing.title,
+        status: existing.status,
+      },
+      newValue: {
+        slug: url.slug,
+        originalUrl: url.originalUrl,
+        title: url.title,
+        status: url.status,
+      },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
     return this.mapToResponse(url);
   }
 
@@ -395,6 +437,7 @@ export class UrlService implements OnModuleInit {
     id: string,
     userId: string,
     userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta,
   ): Promise<void> {
     // Check if URL exists and belongs to the user (or user is ADMIN)
     const existing = await this.prisma.url.findFirst({
@@ -426,6 +469,21 @@ export class UrlService implements OnModuleInit {
       slug: existing.slug,
       originalUrl: existing.originalUrl,
       userId: existing.userId,
+    });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'URL_DELETED',
+      entityType: 'url',
+      entityId: existing.id,
+      oldValue: {
+        slug: existing.slug,
+        originalUrl: existing.originalUrl,
+        title: existing.title,
+      },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
   }
 
@@ -637,6 +695,7 @@ export class UrlService implements OnModuleInit {
     userId: string,
     createVariantDto: CreateVariantDto,
     userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta,
   ): Promise<VariantResponseDto> {
     // Check if URL exists and belongs to the user
     const url = await this.prisma.url.findFirst({
@@ -671,6 +730,22 @@ export class UrlService implements OnModuleInit {
 
     // Clear URL cache to reload with new variants
     await this.clearUrlCache(urlId, url.slug);
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'VARIANT_CREATED',
+      entityType: 'variant',
+      entityId: variant.id,
+      newValue: {
+        urlId,
+        name: variant.name,
+        targetUrl: variant.targetUrl,
+        weight: variant.weight,
+      },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
 
     return this.mapVariantToResponse(variant);
   }
@@ -804,6 +879,7 @@ export class UrlService implements OnModuleInit {
     userId: string,
     updateVariantDto: UpdateVariantDto,
     userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta,
   ): Promise<VariantResponseDto> {
     // Check if URL exists and belongs to the user
     const url = await this.prisma.url.findFirst({
@@ -838,6 +914,23 @@ export class UrlService implements OnModuleInit {
     // Clear URL cache to reload with updated variants
     await this.clearUrlCache(urlId, url.slug);
 
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'VARIANT_UPDATED',
+      entityType: 'variant',
+      entityId: variantId,
+      oldValue: {
+        name: existing.name,
+        targetUrl: existing.targetUrl,
+        weight: existing.weight,
+        isActive: existing.isActive,
+      },
+      newValue: { ...updateVariantDto },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
     return this.mapVariantToResponse(variant);
   }
 
@@ -849,6 +942,7 @@ export class UrlService implements OnModuleInit {
     variantId: string,
     userId: string,
     userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta,
   ): Promise<void> {
     // Check if URL exists and belongs to the user
     const url = await this.prisma.url.findFirst({
@@ -886,6 +980,22 @@ export class UrlService implements OnModuleInit {
 
     // Clear URL cache
     await this.clearUrlCache(urlId, url.slug);
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'VARIANT_DELETED',
+      entityType: 'variant',
+      entityId: variantId,
+      oldValue: {
+        urlId,
+        name: variant.name,
+        targetUrl: variant.targetUrl,
+        weight: variant.weight,
+      },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
   }
 
   /**

@@ -40,6 +40,8 @@
     "next": "Next",
     "page": "Page",
     "of": "of",
+    "to": "to",
+    "showing": "Showing",
     "total": "total",
     "items": "items",
     "noValue": "-",
@@ -226,6 +228,7 @@
     "statisticsAnalytics": "Statistics & Analytics",
     "system": "System",
     "apiKeys": "API Keys",
+    "auditLogs": "Audit Logs",
     "users": "User Management",
     "aiAssistant": "AI Assistant",
     "aiSettings": "AI Settings",
@@ -725,6 +728,62 @@
     "variantName": "Variant Name",
     "urlSlug": "Short URL",
     "clickRate": "Click Rate"
+  },
+  "auditLogs": {
+    "title": "Audit Logs",
+    "description": "View system activity and change history",
+    "noLogs": "No audit logs found",
+    "noLogsDesc": "No activity has been recorded yet",
+    "filters": {
+      "action": "Action",
+      "entityType": "Entity Type",
+      "allActions": "All Actions",
+      "allEntityTypes": "All Entity Types",
+      "dateRange": "Date Range",
+      "search": "Search..."
+    },
+    "table": {
+      "time": "Time",
+      "user": "User",
+      "action": "Action",
+      "entity": "Entity",
+      "details": "Details",
+      "ipAddress": "IP Address"
+    },
+    "actions": {
+      "URL_CREATED": "URL Created",
+      "URL_UPDATED": "URL Updated",
+      "URL_DELETED": "URL Deleted",
+      "USER_LOGIN": "User Login",
+      "USER_LOGOUT": "User Logout",
+      "USER_CREATED": "User Created",
+      "USER_UPDATED": "User Updated",
+      "USER_DELETED": "User Deleted",
+      "API_KEY_CREATED": "API Key Created",
+      "API_KEY_DELETED": "API Key Deleted",
+      "SETTINGS_UPDATED": "Settings Updated",
+      "PASSWORD_CHANGED": "Password Changed",
+      "TWO_FACTOR_ENABLED": "2FA Enabled",
+      "TWO_FACTOR_DISABLED": "2FA Disabled",
+      "VARIANT_CREATED": "Variant Created",
+      "VARIANT_UPDATED": "Variant Updated",
+      "VARIANT_DELETED": "Variant Deleted",
+      "BUNDLE_CREATED": "Bundle Created",
+      "BUNDLE_UPDATED": "Bundle Updated",
+      "BUNDLE_DELETED": "Bundle Deleted",
+      "WEBHOOK_CREATED": "Webhook Created",
+      "WEBHOOK_UPDATED": "Webhook Updated",
+      "WEBHOOK_DELETED": "Webhook Deleted"
+    },
+    "entityTypes": {
+      "url": "URL",
+      "user": "User",
+      "api_key": "API Key",
+      "bundle": "Bundle",
+      "webhook": "Webhook",
+      "variant": "Variant",
+      "settings": "Settings"
+    }
   },
   "ai": {
     "chat": {

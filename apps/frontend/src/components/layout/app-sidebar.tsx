@@ -25,6 +25,7 @@ import {
   Webhook,
   Bot,
   Settings,
+  ClipboardList,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -101,6 +102,12 @@ const data = {
           title: t('webhooks.title'),
           url: '/webhooks',
           icon: Webhook,
+        },
+        {
+          title: t('sidebar.auditLogs'),
+          url: '/audit-logs',
+          icon: ClipboardList,
+          adminOnly: true,
         },
         {
           title: t('sidebar.users'),

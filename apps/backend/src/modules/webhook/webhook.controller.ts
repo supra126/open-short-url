@@ -32,6 +32,7 @@ import {
 import { WebhookQueryDto, WebhookLogsQueryDto } from './dto/webhook-query.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 
 @ApiTags('Webhooks')
@@ -68,8 +69,9 @@ export class WebhookController {
   async create(
     @CurrentUser() user: User,
     @Body() createWebhookDto: CreateWebhookDto,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<WebhookResponseDto> {
-    return this.webhookService.create(user.id, createWebhookDto);
+    return this.webhookService.create(user.id, createWebhookDto, meta);
   }
 
   /**
@@ -164,8 +166,9 @@ export class WebhookController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() updateWebhookDto: UpdateWebhookDto,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<WebhookResponseDto> {
-    return this.webhookService.update(id, user.id, updateWebhookDto, user.role);
+    return this.webhookService.update(id, user.id, updateWebhookDto, user.role, meta);
   }
 
   /**
@@ -199,8 +202,9 @@ export class WebhookController {
   async delete(
     @CurrentUser() user: User,
     @Param('id') id: string,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<void> {
-    return this.webhookService.delete(id, user.id, user.role);
+    return this.webhookService.delete(id, user.id, user.role, meta);
   }
 
   /**

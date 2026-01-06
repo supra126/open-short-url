@@ -40,6 +40,8 @@
     "next": "下一頁",
     "page": "第",
     "of": "頁，共",
+    "to": "至",
+    "showing": "顯示",
     "total": "頁（總共",
     "items": "筆）",
     "noValue": "-",
@@ -226,6 +228,7 @@
     "statisticsAnalytics": "統計分析",
     "system": "系統",
     "apiKeys": "API 金鑰",
+    "auditLogs": "操作日誌",
     "users": "使用者管理",
     "aiAssistant": "AI 助手",
     "aiSettings": "AI 設定",
@@ -725,6 +728,62 @@
     "variantName": "變體名稱",
     "urlSlug": "短網址",
     "clickRate": "點擊率"
+  },
+  "auditLogs": {
+    "title": "操作日誌",
+    "description": "查看系統活動和變更歷史",
+    "noLogs": "暫無操作日誌",
+    "noLogsDesc": "目前尚未記錄任何活動",
+    "filters": {
+      "action": "操作類型",
+      "entityType": "實體類型",
+      "allActions": "所有操作",
+      "allEntityTypes": "所有類型",
+      "dateRange": "日期範圍",
+      "search": "搜尋..."
+    },
+    "table": {
+      "time": "時間",
+      "user": "使用者",
+      "action": "操作",
+      "entity": "實體",
+      "details": "詳細資訊",
+      "ipAddress": "IP 位址"
+    },
+    "actions": {
+      "URL_CREATED": "建立短網址",
+      "URL_UPDATED": "更新短網址",
+      "URL_DELETED": "刪除短網址",
+      "USER_LOGIN": "使用者登入",
+      "USER_LOGOUT": "使用者登出",
+      "USER_CREATED": "建立使用者",
+      "USER_UPDATED": "更新使用者",
+      "USER_DELETED": "刪除使用者",
+      "API_KEY_CREATED": "建立 API 金鑰",
+      "API_KEY_DELETED": "刪除 API 金鑰",
+      "SETTINGS_UPDATED": "更新設定",
+      "PASSWORD_CHANGED": "變更密碼",
+      "TWO_FACTOR_ENABLED": "啟用兩步驟驗證",
+      "TWO_FACTOR_DISABLED": "停用兩步驟驗證",
+      "VARIANT_CREATED": "建立變體",
+      "VARIANT_UPDATED": "更新變體",
+      "VARIANT_DELETED": "刪除變體",
+      "BUNDLE_CREATED": "建立組合",
+      "BUNDLE_UPDATED": "更新組合",
+      "BUNDLE_DELETED": "刪除組合",
+      "WEBHOOK_CREATED": "建立 Webhook",
+      "WEBHOOK_UPDATED": "更新 Webhook",
+      "WEBHOOK_DELETED": "刪除 Webhook"
+    },
+    "entityTypes": {
+      "url": "短網址",
+      "user": "使用者",
+      "api_key": "API 金鑰",
+      "bundle": "組合",
+      "webhook": "Webhook",
+      "variant": "變體",
+      "settings": "設定"
+    }
   },
   "ai": {
     "chat": {

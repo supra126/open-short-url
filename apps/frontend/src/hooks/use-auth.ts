@@ -7,6 +7,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
   LoginDto,
   AuthResponseDto,
@@ -66,7 +67,7 @@ export function useCurrentUser() {
   return useQuery({
     queryKey: authKeys.me(),
     queryFn: getCurrentUser,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    ...QUERY_CONFIG.STATIC,
     retry: 3,
   });
 }

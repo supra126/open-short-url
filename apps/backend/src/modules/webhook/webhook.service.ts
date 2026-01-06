@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { Prisma, Webhook, WebhookLog } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
+import { AuditLogService } from '@/modules/audit-log/audit-log.service';
+import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import {
   CreateWebhookDto,
   UpdateWebhookDto,
@@ -21,7 +23,10 @@ import * as crypto from 'crypto';
 export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
 
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditLogService: AuditLogService,
+  ) {}
 
   /**
    * Create a new webhook
@@ -29,6 +34,7 @@ export class WebhookService {
   async create(
     userId: string,
     createWebhookDto: CreateWebhookDto,
+    meta?: RequestMeta,
   ): Promise<WebhookResponseDto> {
     // Encrypt secret before storing
     const encryptedSecret = this.encryptSecret(createWebhookDto.secret);
@@ -43,6 +49,17 @@ export class WebhookService {
         headers: createWebhookDto.headers || Prisma.JsonNull,
         isActive: createWebhookDto.isActive ?? true,
       },
+    });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'WEBHOOK_CREATED',
+      entityType: 'webhook',
+      entityId: webhook.id,
+      newValue: { name: webhook.name, url: webhook.url, events: webhook.events },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
 
     return this.mapToResponse(webhook);
@@ -113,6 +130,7 @@ export class WebhookService {
     userId: string,
     updateWebhookDto: UpdateWebhookDto,
     userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta,
   ): Promise<WebhookResponseDto> {
     // Check if webhook exists
     const existing = await this.prisma.webhook.findFirst({
@@ -137,6 +155,22 @@ export class WebhookService {
       data,
     });
 
+    // Audit log (redact secret)
+    const auditNewValue = { ...updateWebhookDto };
+    if (auditNewValue.secret) {
+      auditNewValue.secret = '[REDACTED]';
+    }
+    await this.auditLogService.create({
+      userId,
+      action: 'WEBHOOK_UPDATED',
+      entityType: 'webhook',
+      entityId: id,
+      oldValue: { name: existing.name, url: existing.url, isActive: existing.isActive },
+      newValue: auditNewValue,
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
     return this.mapToResponse(webhook);
   }
 
@@ -147,6 +181,7 @@ export class WebhookService {
     id: string,
     userId: string,
     userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta,
   ): Promise<void> {
     const existing = await this.prisma.webhook.findFirst({
       where: {
@@ -161,6 +196,17 @@ export class WebhookService {
 
     await this.prisma.webhook.delete({
       where: { id },
+    });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'WEBHOOK_DELETED',
+      entityType: 'webhook',
+      entityId: id,
+      oldValue: { name: existing.name, url: existing.url },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
   }
 

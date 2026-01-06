@@ -5,6 +5,8 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '@/common/database/prisma.service';
+import { AuditLogService } from '@/modules/audit-log/audit-log.service';
+import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import { Prisma, UserRole, User } from '@prisma/client';
 import { hashPassword } from '@/common/utils';
 import {
@@ -19,12 +21,19 @@ import {
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditLogService: AuditLogService,
+  ) {}
 
   /**
    * Create a new user (Admin only)
    */
-  async createUser(createUserDto: CreateUserDto): Promise<UserResponseDto> {
+  async createUser(
+    createUserDto: CreateUserDto,
+    adminUserId: string,
+    meta?: RequestMeta,
+  ): Promise<UserResponseDto> {
     const { email, password, name, role } = createUserDto;
 
     // Check if user already exists
@@ -58,6 +67,17 @@ export class UsersService {
         createdAt: true,
         updatedAt: true,
       },
+    });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId: adminUserId,
+      action: 'USER_CREATED',
+      entityType: 'user',
+      entityId: user.id,
+      newValue: { email, name, role: user.role },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
 
     return this.mapUserResponse(user);
@@ -153,6 +173,7 @@ export class UsersService {
     userId: string,
     updateRoleDto: UpdateUserRoleDto,
     currentUserId: string,
+    meta?: RequestMeta,
   ): Promise<UserResponseDto> {
     // Check if user exists
     const user = await this.prisma.user.findUnique({
@@ -167,6 +188,8 @@ export class UsersService {
     if (userId === currentUserId) {
       throw new BadRequestException('Cannot modify your own role');
     }
+
+    const oldRole = user.role;
 
     // Update role
     const updatedUser = await this.prisma.user.update({
@@ -184,6 +207,18 @@ export class UsersService {
       },
     });
 
+    // Audit log
+    await this.auditLogService.create({
+      userId: currentUserId,
+      action: 'USER_UPDATED',
+      entityType: 'user',
+      entityId: userId,
+      oldValue: { role: oldRole },
+      newValue: { role: updateRoleDto.role },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
     return this.mapUserResponse(updatedUser);
   }
 
@@ -194,6 +229,7 @@ export class UsersService {
     userId: string,
     updateStatusDto: UpdateUserStatusDto,
     currentUserId: string,
+    meta?: RequestMeta,
   ): Promise<UserResponseDto> {
     // Check if user exists
     const user = await this.prisma.user.findUnique({
@@ -208,6 +244,8 @@ export class UsersService {
     if (userId === currentUserId && !updateStatusDto.isActive) {
       throw new BadRequestException('Cannot deactivate your own account');
     }
+
+    const oldStatus = user.isActive;
 
     // Update status
     const updatedUser = await this.prisma.user.update({
@@ -225,13 +263,29 @@ export class UsersService {
       },
     });
 
+    // Audit log
+    await this.auditLogService.create({
+      userId: currentUserId,
+      action: 'USER_UPDATED',
+      entityType: 'user',
+      entityId: userId,
+      oldValue: { isActive: oldStatus },
+      newValue: { isActive: updateStatusDto.isActive },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
     return this.mapUserResponse(updatedUser);
   }
 
   /**
    * Delete user
    */
-  async deleteUser(userId: string, currentUserId: string): Promise<void> {
+  async deleteUser(
+    userId: string,
+    currentUserId: string,
+    meta?: RequestMeta,
+  ): Promise<void> {
     // Check if user exists
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -250,6 +304,17 @@ export class UsersService {
     await this.prisma.user.delete({
       where: { id: userId },
     });
+
+    // Audit log
+    await this.auditLogService.create({
+      userId: currentUserId,
+      action: 'USER_DELETED',
+      entityType: 'user',
+      entityId: userId,
+      oldValue: { email: user.email, name: user.name, role: user.role },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
   }
 
   /**
@@ -258,6 +323,8 @@ export class UsersService {
   async resetUserPassword(
     userId: string,
     resetPasswordDto: ResetPasswordDto,
+    adminUserId: string,
+    meta?: RequestMeta,
   ): Promise<void> {
     // Check if user exists
     const user = await this.prisma.user.findUnique({
@@ -275,6 +342,17 @@ export class UsersService {
     await this.prisma.user.update({
       where: { id: userId },
       data: { password: hashedPassword },
+    });
+
+    // Audit log (password is redacted for security)
+    await this.auditLogService.create({
+      userId: adminUserId,
+      action: 'PASSWORD_CHANGED',
+      entityType: 'user',
+      entityId: userId,
+      newValue: { password: '[REDACTED]' },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
     });
   }
 
