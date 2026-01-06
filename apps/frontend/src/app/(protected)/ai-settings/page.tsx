@@ -246,7 +246,7 @@ export default function AISettingsPage() {
               rel="noopener noreferrer"
               className="flex items-center"
             >
-              Anthropic Console
+              {t('ai.settings.anthropicConsole')}
               <ExternalLink className="ml-2 h-4 w-4" />
             </a>
           </Button>
@@ -257,7 +257,7 @@ export default function AISettingsPage() {
               rel="noopener noreferrer"
               className="flex items-center"
             >
-              OpenAI Platform
+              {t('ai.settings.openaiPlatform')}
               <ExternalLink className="ml-2 h-4 w-4" />
             </a>
           </Button>
@@ -268,7 +268,7 @@ export default function AISettingsPage() {
               rel="noopener noreferrer"
               className="flex items-center"
             >
-              Google AI Studio
+              {t('ai.settings.googleAIStudio')}
               <ExternalLink className="ml-2 h-4 w-4" />
             </a>
           </Button>

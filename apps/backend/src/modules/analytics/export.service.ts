@@ -134,17 +134,17 @@ export class ExportService {
       lines.push('Time,IP,Country,City,Browser,OS,Device,Referrer,UTM Source,UTM Medium,UTM Campaign,Is Bot');
       for (const click of clicks) {
         lines.push([
-          click.createdAt,
-          click.ip || '',
-          click.country || '',
-          click.city || '',
-          click.browser || '',
-          click.os || '',
-          click.device || '',
+          this.escapeCSV(String(click.createdAt)),
+          this.escapeCSV(click.ip || ''),
+          this.escapeCSV(click.country || ''),
+          this.escapeCSV(click.city || ''),
+          this.escapeCSV(click.browser || ''),
+          this.escapeCSV(click.os || ''),
+          this.escapeCSV(click.device || ''),
           this.escapeCSV(click.referer || ''),
-          click.utmSource || '',
-          click.utmMedium || '',
-          click.utmCampaign || '',
+          this.escapeCSV(click.utmSource || ''),
+          this.escapeCSV(click.utmMedium || ''),
+          this.escapeCSV(click.utmCampaign || ''),
           click.isBot ? 'Yes' : 'No',
         ].join(','));
       }

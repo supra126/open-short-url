@@ -10,6 +10,7 @@ import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
 import {
   ApiKeyResponseDto,
+  CreateApiKeyResponseDto,
   ApiKeyListResponseDto,
 } from './dto/api-key-response.dto';
 import { ApiKeyQueryDto } from './dto/api-key-query.dto';
@@ -132,7 +133,7 @@ export class ApiKeysService {
     userId: string,
     createApiKeyDto: CreateApiKeyDto,
     meta?: RequestMeta,
-  ): Promise<ApiKeyResponseDto> {
+  ): Promise<CreateApiKeyResponseDto> {
     // Check API Key quantity limit
     const MAX_API_KEYS_PER_USER = parseInt(
       process.env.MAX_API_KEYS_PER_USER || '10',

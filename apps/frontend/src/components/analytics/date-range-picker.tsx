@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { t } from '@/lib/i18n';
-import type { TimeRange } from '@/lib/api/schemas';
+import type { TimeRange } from '@/hooks/use-analytics';
 
 interface DateRangeValue {
   timeRange: TimeRange;

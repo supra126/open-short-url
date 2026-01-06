@@ -23,6 +23,7 @@ import { CreateApiKeyDto } from './dto/create-api-key.dto';
 import { ApiKeyQueryDto } from './dto/api-key-query.dto';
 import {
   ApiKeyResponseDto,
+  CreateApiKeyResponseDto,
   ApiKeyListResponseDto,
 } from './dto/api-key-response.dto';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
@@ -50,7 +51,7 @@ export class ApiKeysController {
   @ApiResponse({
     status: HttpStatus.CREATED,
     description: 'API Key created successfully',
-    type: ApiKeyResponseDto,
+    type: CreateApiKeyResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
@@ -71,7 +72,7 @@ export class ApiKeysController {
     @CurrentUser() user: IUserFromToken,
     @Body() createApiKeyDto: CreateApiKeyDto,
     @RequestMeta() meta: RequestMetaType,
-  ): Promise<ApiKeyResponseDto> {
+  ): Promise<CreateApiKeyResponseDto> {
     return this.apiKeysService.create(user.id, createApiKeyDto, meta);
   }
 

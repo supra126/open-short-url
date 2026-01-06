@@ -14,8 +14,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useToast } from '@/hooks/use-toast';
 import { t } from '@/lib/i18n';
-import type { AnalyticsQueryParams } from '@/lib/api/schemas';
+import type { AnalyticsQueryParams } from '@/hooks/use-analytics';
 
 type ExportFormat = 'csv' | 'json';
 
@@ -40,6 +41,7 @@ export function ExportButton({
   size = 'default',
 }: ExportButtonProps) {
   const [isExporting, setIsExporting] = useState(false);
+  const { toast } = useToast();
 
   const handleExport = useCallback(async (format: ExportFormat) => {
     setIsExporting(true);
@@ -75,6 +77,15 @@ export function ExportButton({
       });
 
       if (!response.ok) {
+        // Handle authentication error
+        if (response.status === 401) {
+          const redirectUrl = window.location.pathname + window.location.search;
+          const safeRedirect = redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')
+            ? redirectUrl
+            : '/';
+          window.location.href = `/login?redirect=${encodeURIComponent(safeRedirect)}`;
+          return;
+        }
         throw new Error(`Export failed: ${response.statusText}`);
       }
 
@@ -98,13 +109,24 @@ export function ExportButton({
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+
+      // Show success toast
+      toast({
+        title: t('export.exportSuccess'),
+        description: t('export.exportSuccessDesc'),
+      });
     } catch (error) {
       console.error('Export failed:', error);
-      // Could add toast notification here
+      // Show error toast
+      toast({
+        title: t('export.exportError'),
+        description: t('export.exportErrorDesc'),
+        variant: 'destructive',
+      });
     } finally {
       setIsExporting(false);
     }
-  }, [urlId, queryParams, includeClicks]);
+  }, [urlId, queryParams, includeClicks, toast]);
 
   return (
     <DropdownMenu>

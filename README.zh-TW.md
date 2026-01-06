@@ -65,7 +65,7 @@
 - 雙因素驗證（2FA）
 - 批次網址管理
 - QR Code 產生器
-- 多語言支援（英文、繁體中文）
+- 多語言支援（英文、繁體中文、葡萄牙語）
 - **AI 智能功能**：
   - 內建 AI 聊天助手（Anthropic Claude、OpenAI GPT、Google Gemini）
   - Model Context Protocol (MCP) server 支援外部 AI 助手
@@ -691,7 +691,9 @@ app.listen(3000);
 
 ## 開發路線圖
 
-- [ ] 審計日誌
+- [x] 審計日誌
+- [x] 自訂日期範圍分析
+- [x] 資料匯出 (CSV/JSON)
 - [ ] 進階連結排程
 - [ ] 自訂品牌 QR Code
 

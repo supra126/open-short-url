@@ -28,6 +28,7 @@
     "create": "Criar",
     "search": "Buscar",
     "loading": "Carregando...",
+    "loadingEllipsis": "Carregando...",
     "error": "Erro",
     "success": "Sucesso",
     "user": "Usuário",
@@ -56,6 +57,12 @@
     "add": "Adicionar",
     "remove": "Remover",
     "clicks": "Cliques"
+  },
+  "theme": {
+    "toggle": "Alternar tema",
+    "light": "Claro",
+    "dark": "Escuro",
+    "system": "Sistema"
   },
   "auth": {
     "loginTitle": "Login",
@@ -749,6 +756,12 @@
     "description": "Visualize a atividade do sistema e o histórico de alterações",
     "noLogs": "Nenhum log de auditoria encontrado",
     "noLogsDesc": "Nenhuma atividade foi registrada ainda",
+    "detailsDialog": {
+      "userAgent": "User Agent",
+      "oldValue": "Valor Antigo",
+      "newValue": "Novo Valor",
+      "metadata": "Metadados"
+    },
     "filters": {
       "action": "Ação",
       "entityType": "Tipo de Entidade",
@@ -763,7 +776,11 @@
       "action": "Ação",
       "entity": "Entidade",
       "details": "Detalhes",
-      "ipAddress": "Endereço IP"
+      "ipAddress": "Endereço IP",
+      "userAgent": "User Agent",
+      "oldValue": "Valor Antigo",
+      "newValue": "Novo Valor",
+      "metadata": "Metadados"
     },
     "actions": {
       "URL_CREATED": "URL Criada",
@@ -848,7 +865,7 @@
       "setupGuide": "Guia de Configuração",
       "quickStart": "🚀 Início Rápido (5 minutos)",
       "step1Title": "Escolha um Provedor de IA",
-      "step1Desc": "Recomendado: Anthropic Claude - Melhor raciocínio, suporta Chinês Tradicional",
+      "step1Desc": "Recomendado: Anthropic Claude - Melhores capacidades de raciocínio",
       "step2Title": "Obter Chave de API",
       "step2Desc": "Visite o site do provedor para se registrar e obter a Chave de API",
       "step3Title": "Definir Variáveis de Ambiente",
@@ -871,7 +888,10 @@
       "faq3Q": "P: Onde o histórico de chat é armazenado?",
       "faq3A": "R: Armazenado no localStorage do navegador, limpar os dados do navegador também o limpará.",
       "faq4Q": "P: Qual modelo é o mais recomendado?",
-      "faq4A": "R: Claude 3.5 Sonnet oferece o melhor raciocínio e suporte ao Chinês para tarefas complexas. Para economia de custos, use Claude 3 Haiku ou GPT-3.5 Turbo."
+      "faq4A": "R: Claude 3.5 Sonnet oferece as melhores capacidades de raciocínio para tarefas complexas. Para economia de custos, use Claude 3 Haiku ou GPT-3.5 Turbo.",
+      "anthropicConsole": "Anthropic Console",
+      "openaiPlatform": "OpenAI Platform",
+      "googleAIStudio": "Google AI Studio"
     },
     "disabled": {
       "title": "IA Não Ativada",
@@ -893,7 +913,10 @@
       "exampleConfig": "Configuração de Exemplo",
       "viewDetailedGuide": "Ver Guia de Configuração Detalhado",
       "anthropicDocs": "Documentação da Anthropic",
-      "openaiPlatform": "Plataforma OpenAI"
+      "openaiPlatform": "Plataforma OpenAI",
+      "anthropicClaude": "Anthropic Claude",
+      "openaiGPT": "OpenAI GPT",
+      "googleGemini": "Google Gemini"
     }
   }
 }

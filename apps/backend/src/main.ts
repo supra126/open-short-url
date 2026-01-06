@@ -17,6 +17,15 @@ import { HttpLoggerMiddleware } from './common/logger/http-logger.middleware';
 import { writeFileSync } from 'fs';
 import { join } from 'path';
 
+// Import Query DTOs for OpenAPI schema export
+import { AnalyticsQueryDto, TimeRange } from './modules/analytics/dto/analytics-query.dto';
+import { ExportQueryDto } from './modules/analytics/dto/export-query.dto';
+import { UrlQueryDto } from './modules/url/dto/url-query.dto';
+import { BundleQueryDto } from './modules/bundle/dto/bundle-query.dto';
+import { UserListQueryDto } from './modules/users/dto/user-list-query.dto';
+import { AuditLogQueryDto } from './modules/audit-log/dto/audit-log-query.dto';
+import { PaginationDto } from './common/dto';
+
 async function bootstrap() {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
@@ -197,7 +206,18 @@ Visit \`GET /:slug\` to redirect to the original URL
     .addTag('Webhooks', 'Webhook subscription and event notification management')
     .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  const document = SwaggerModule.createDocument(app, swaggerConfig, {
+    extraModels: [
+      // Query DTOs - exported to OpenAPI schemas for frontend type generation
+      PaginationDto,
+      AnalyticsQueryDto,
+      ExportQueryDto,
+      UrlQueryDto,
+      BundleQueryDto,
+      UserListQueryDto,
+      AuditLogQueryDto,
+    ],
+  });
   SwaggerModule.setup('api', app, document);
 
   // Generate OpenAPI JSON for frontend (development only)

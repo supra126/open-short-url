@@ -60,12 +60,8 @@ export type AbTestAnalyticsResponseDto = components['schemas']['AbTestAnalyticsR
 // ==================== API Key Types ====================
 export type CreateApiKeyDto = components['schemas']['CreateApiKeyDto'];
 export type ApiKeyResponseDto = components['schemas']['ApiKeyResponseDto'];
+export type CreateApiKeyResponseDto = components['schemas']['CreateApiKeyResponseDto'];
 export type ApiKeyListResponseDto = components['schemas']['ApiKeyListResponseDto'];
-
-// CreateApiKeyResponse - API key with required key field (only returned on creation)
-export interface CreateApiKeyResponseDto extends Omit<ApiKeyResponseDto, 'key'> {
-  key: string; // Always returned on creation
-}
 
 // ==================== Bundle Types ====================
 export type CreateBundleDto = components['schemas']['CreateBundleDto'];
@@ -99,73 +95,35 @@ export type ErrorResponseDto = components['schemas']['ErrorResponseDto'];
 export type SystemSettingsResponseDto = components['schemas']['SystemSettingsResponseDto'];
 
 // ==================== Audit Log Types ====================
-// These types are defined manually as they may not be in OpenAPI spec yet
+export type AuditLogUserDto = components['schemas']['AuditLogUserDto'];
+export type AuditLogDto = components['schemas']['AuditLogDto'];
+export type AuditLogListResponseDto = components['schemas']['AuditLogListResponseDto'];
 
-export type AuditAction =
-  | 'URL_CREATED'
-  | 'URL_UPDATED'
-  | 'URL_DELETED'
-  | 'USER_LOGIN'
-  | 'USER_LOGOUT'
-  | 'USER_CREATED'
-  | 'USER_UPDATED'
-  | 'USER_DELETED'
-  | 'API_KEY_CREATED'
-  | 'API_KEY_DELETED'
-  | 'SETTINGS_UPDATED'
-  | 'PASSWORD_CHANGED'
-  | 'PASSWORD_RESET'
-  | 'TWO_FACTOR_ENABLED'
-  | 'TWO_FACTOR_DISABLED'
-  | 'VARIANT_CREATED'
-  | 'VARIANT_UPDATED'
-  | 'VARIANT_DELETED'
-  | 'BUNDLE_CREATED'
-  | 'BUNDLE_UPDATED'
-  | 'BUNDLE_DELETED'
-  | 'WEBHOOK_CREATED'
-  | 'WEBHOOK_UPDATED'
-  | 'WEBHOOK_DELETED';
+// AuditAction type derived from AuditLogDto
+export type AuditAction = AuditLogDto['action'];
 
-export interface AuditLogUserDto {
-  id: string;
-  email: string;
-  name?: string | null;
-}
+// ==================== Query Parameter Types ====================
+// These types are exported from OpenAPI generated schemas
+// Using Partial<> since all query params are optional in API calls
 
-export interface AuditLogDto {
-  id: string;
-  user?: AuditLogUserDto | null;
-  action: AuditAction;
-  entityType: string;
-  entityId?: string | null;
-  oldValue?: Record<string, unknown> | null;
-  newValue?: Record<string, unknown> | null;
-  ipAddress?: string | null;
-  userAgent?: string | null;
-  metadata?: Record<string, unknown> | null;
-  createdAt: string;
-}
+export type PaginationDto = components['schemas']['PaginationDto'];
+export type AnalyticsQueryDto = components['schemas']['AnalyticsQueryDto'];
+export type ExportQueryDto = components['schemas']['ExportQueryDto'];
+export type UrlQueryDto = components['schemas']['UrlQueryDto'];
+export type BundleQueryDto = components['schemas']['BundleQueryDto'];
+export type UserListQueryDto = components['schemas']['UserListQueryDto'];
+export type AuditLogQueryDto = components['schemas']['AuditLogQueryDto'];
 
-export interface AuditLogListResponseDto {
-  data: AuditLogDto[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
+// TimeRange derived from AnalyticsQueryDto
+export type TimeRange = AnalyticsQueryDto['timeRange'];
 
-export interface AuditLogQueryParams {
-  action?: AuditAction;
-  entityType?: string;
-  entityId?: string;
-  userId?: string;
-  startDate?: string;
-  endDate?: string;
-  page?: number;
-  pageSize?: number;
-  sortOrder?: 'asc' | 'desc';
-}
+// Query params aliases (Partial since params are optional in API calls)
+export type PaginationParams = Partial<PaginationDto>;
+export type UrlQueryParams = Partial<UrlQueryDto>;
+export type AnalyticsQueryParams = Partial<AnalyticsQueryDto>;
+export type BundleQueryParams = Partial<BundleQueryDto>;
+export type UserQueryParams = Partial<UserListQueryDto>;
+export type AuditLogQueryParams = Partial<AuditLogQueryDto>;
 
 // ==================== API Error Type ====================
 /**
@@ -183,105 +141,3 @@ export interface ApiError extends Error {
     };
   };
 }
-
-// ==================== Query Parameter Types ====================
-// These types are derived from OpenAPI operation parameters
-// They are not part of components.schemas but are needed for type-safe API calls
-
-export type TimeRange = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'last_365_days' | 'custom';
-
-export interface UrlQueryParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  status?: 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
-  sortBy?: 'createdAt' | 'clickCount' | 'title';
-  sortOrder?: 'asc' | 'desc';
-}
-
-export interface AnalyticsQueryParams {
-  timeRange?: TimeRange;
-  startDate?: string;
-  endDate?: string;
-}
-
-export interface BundleQueryParams {
-  page?: number;
-  pageSize?: number;
-  status?: 'ACTIVE' | 'ARCHIVED';
-  search?: string;
-}
-
-export interface UserQueryParams {
-  page?: number;
-  pageSize?: number;
-  search?: string;
-  role?: 'ADMIN' | 'USER';
-  isActive?: boolean;
-}
-
-export interface PaginationParams {
-  page?: number;
-  pageSize?: number;
-}
-
-// ==================== Type Aliases for Backward Compatibility ====================
-// These aliases map the old naming convention to the new Dto suffix convention
-// Can be removed once all code is migrated
-
-/** @deprecated Use AuthResponseDto instead */
-export type AuthResponse = AuthResponseDto;
-/** @deprecated Use UserResponseDto instead */
-export type UserResponse = UserResponseDto;
-/** @deprecated Use UrlResponseDto instead */
-export type UrlResponse = UrlResponseDto;
-/** @deprecated Use UrlListResponseDto instead */
-export type UrlListResponse = UrlListResponseDto;
-/** @deprecated Use VariantResponseDto instead */
-export type VariantResponse = VariantResponseDto;
-/** @deprecated Use VariantListResponseDto instead */
-export type VariantListResponse = VariantListResponseDto;
-/** @deprecated Use AnalyticsResponseDto instead */
-export type AnalyticsResponse = AnalyticsResponseDto;
-/** @deprecated Use RecentClickDto instead */
-export type RecentClick = RecentClickDto;
-/** @deprecated Use RecentClicksResponseDto instead */
-export type RecentClicksResponse = RecentClicksResponseDto;
-/** @deprecated Use BotTypeStat instead */
-export type BotStat = BotTypeStat;
-/** @deprecated Use BotAnalyticsResponseDto instead */
-export type BotAnalyticsResponse = BotAnalyticsResponseDto;
-/** @deprecated Use UserBotAnalyticsResponseDto instead */
-export type UserBotAnalyticsResponse = UserBotAnalyticsResponseDto;
-/** @deprecated Use AbTestAnalyticsResponseDto instead */
-export type UserAbTestAnalyticsResponse = AbTestAnalyticsResponseDto;
-/** @deprecated Use VariantStatsDto instead */
-export type VariantStats = VariantStatsDto;
-/** @deprecated Use ApiKeyResponseDto instead */
-export type ApiKey = ApiKeyResponseDto;
-/** @deprecated Use ApiKeyListResponseDto instead */
-export type ApiKeyListResponse = ApiKeyListResponseDto;
-/** @deprecated Use BundleResponseDto instead */
-export type BundleResponse = BundleResponseDto;
-/** @deprecated Use BundleListResponseDto instead */
-export type BundleListResponse = BundleListResponseDto;
-/** @deprecated Use BundleStatsDto instead */
-export type BundleStatsResponse = BundleStatsDto;
-/** @deprecated Use WebhookResponseDto instead */
-export type WebhookResponse = WebhookResponseDto;
-/** @deprecated Use WebhookListResponseDto instead */
-export type WebhookListResponse = WebhookListResponseDto;
-/** @deprecated Use WebhookLogResponseDto instead */
-export type WebhookLogResponse = WebhookLogResponseDto;
-/** @deprecated Use WebhookLogsListResponseDto instead */
-export type WebhookLogsListResponse = WebhookLogsListResponseDto;
-/** @deprecated Use WebhookTestResponseDto instead */
-export type WebhookTestResponse = WebhookTestResponseDto;
-/** @deprecated Use Setup2FAResponseDto instead */
-export type Setup2FAResponse = Setup2FAResponseDto;
-/** @deprecated Use RedirectInfoResponseDto instead */
-export type RedirectInfoResponse = RedirectInfoResponseDto;
-/** @deprecated Use VerifyPasswordResponseDto instead */
-export type VerifyPasswordResponse = VerifyPasswordResponseDto;
-/** @deprecated Use BundleQueryParams instead */
-export type BundleQueryDto = BundleQueryParams;

@@ -27,6 +27,7 @@
     "create": "建立",
     "search": "搜尋",
     "loading": "載入中...",
+    "loadingEllipsis": "載入中...",
     "error": "錯誤",
     "success": "成功",
     "user": "使用者",
@@ -55,6 +56,12 @@
     "add": "新增",
     "remove": "移除",
     "clicks": "點擊"
+  },
+  "theme": {
+    "toggle": "切換主題",
+    "light": "淺色",
+    "dark": "深色",
+    "system": "系統"
   },
   "auth": {
     "loginTitle": "登入",
@@ -734,6 +741,12 @@
     "description": "查看系統活動和變更歷史",
     "noLogs": "暫無操作日誌",
     "noLogsDesc": "目前尚未記錄任何活動",
+    "detailsDialog": {
+      "userAgent": "使用者代理",
+      "oldValue": "舊值",
+      "newValue": "新值",
+      "metadata": "中繼資料"
+    },
     "filters": {
       "action": "操作類型",
       "entityType": "實體類型",
@@ -748,7 +761,11 @@
       "action": "操作",
       "entity": "實體",
       "details": "詳細資訊",
-      "ipAddress": "IP 位址"
+      "ipAddress": "IP 位址",
+      "userAgent": "使用者代理",
+      "oldValue": "舊值",
+      "newValue": "新值",
+      "metadata": "中繼資料"
     },
     "actions": {
       "URL_CREATED": "建立短網址",
@@ -833,7 +850,7 @@
       "setupGuide": "設定指南",
       "quickStart": "🚀 快速開始（5 分鐘）",
       "step1Title": "選擇 AI 服務商",
-      "step1Desc": "推薦使用 Anthropic Claude：最強推理能力，支援繁體中文",
+      "step1Desc": "推薦使用 Anthropic Claude：最強推理能力",
       "step2Title": "取得 API Key",
       "step2Desc": "前往服務商網站註冊並取得 API Key",
       "step3Title": "設定環境變數",
@@ -856,7 +873,10 @@
       "faq3Q": "Q: 對話歷史儲存在哪裡？",
       "faq3A": "A: 儲存在瀏覽器的 localStorage，清除瀏覽器資料會一併清除。",
       "faq4Q": "Q: 哪個模型最推薦？",
-      "faq4A": "A: Claude 3.5 Sonnet 提供最佳的推理能力和中文支援，適合複雜任務。如果需要節省成本，可使用 Claude 3 Haiku 或 GPT-3.5 Turbo。"
+      "faq4A": "A: Claude 3.5 Sonnet 提供最佳的推理能力，適合複雜任務。如果需要節省成本，可使用 Claude 3 Haiku 或 GPT-3.5 Turbo。",
+      "anthropicConsole": "Anthropic Console",
+      "openaiPlatform": "OpenAI Platform",
+      "googleAIStudio": "Google AI Studio"
     },
     "disabled": {
       "title": "AI 功能未啟用",
@@ -878,7 +898,10 @@
       "exampleConfig": "設定範例",
       "viewDetailedGuide": "查看詳細設定指引",
       "anthropicDocs": "Anthropic 文檔",
-      "openaiPlatform": "OpenAI 平台"
+      "openaiPlatform": "OpenAI 平台",
+      "anthropicClaude": "Anthropic Claude",
+      "openaiGPT": "OpenAI GPT",
+      "googleGemini": "Google Gemini"
     }
   }
 }

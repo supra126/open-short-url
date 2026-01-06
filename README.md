@@ -65,7 +65,7 @@ Fully customizable branding:
 - Two-factor authentication (2FA)
 - Bulk URL management
 - QR code generation
-- Multi-language support (English, Traditional Chinese)
+- Multi-language support (English, Traditional Chinese, Portuguese)
 - **AI-Powered Features**:
   - Built-in AI Chat Assistant (Anthropic Claude, OpenAI GPT, Google Gemini)
   - Model Context Protocol (MCP) server for external AI assistants
@@ -691,7 +691,9 @@ app.listen(3000);
 
 ## Roadmap
 
-- [ ] Audit logs
+- [x] Audit logs
+- [x] Custom date range analytics
+- [x] Data export (CSV/JSON)
 - [ ] Advanced link scheduling
 - [ ] Custom branded QR codes
 

@@ -17,17 +17,42 @@ export interface CreateAuditLogParams {
 }
 
 /**
+ * List of sensitive field names that should be redacted in audit logs
+ */
+const SENSITIVE_FIELDS = [
+  'password',
+  'secret',
+  'key',
+  'token',
+  'twoFactorSecret',
+  'apiKey',
+  'refreshToken',
+  'accessToken',
+  'credential',
+  'privateKey',
+  'secretKey',
+  'authToken',
+  'bearerToken',
+  'encryptionKey',
+];
+
+/**
  * Sanitize sensitive data before logging
  */
 function sanitizeValue(value: Record<string, unknown> | null | undefined): Record<string, unknown> | null {
   if (!value) return null;
 
-  const sensitiveFields = ['password', 'secret', 'key', 'token', 'twoFactorSecret'];
   const sanitized = { ...value };
 
-  for (const field of sensitiveFields) {
+  for (const field of SENSITIVE_FIELDS) {
     if (field in sanitized) {
       sanitized[field] = '[REDACTED]';
+    }
+    // Also check for case-insensitive matches (e.g., 'Password', 'PASSWORD')
+    for (const key of Object.keys(sanitized)) {
+      if (key.toLowerCase() === field.toLowerCase() && key !== field) {
+        sanitized[key] = '[REDACTED]';
+      }
     }
   }
 

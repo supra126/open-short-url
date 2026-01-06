@@ -9,13 +9,14 @@ import { apiClient } from '@/lib/api-client';
 import { buildQueryParams } from '@/lib/utils';
 import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
+  AuditAction,
   AuditLogDto,
   AuditLogListResponseDto,
   AuditLogQueryParams,
 } from '@/lib/api/schemas';
 
 // Re-export types for convenience
-export type { AuditLogDto, AuditLogListResponseDto, AuditLogQueryParams };
+export type { AuditAction, AuditLogDto, AuditLogListResponseDto, AuditLogQueryParams };
 
 // Query Keys
 export const auditLogKeys = {

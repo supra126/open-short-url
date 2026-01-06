@@ -45,7 +45,7 @@ export function AIDisabledNotice() {
           <h3 className="text-lg font-semibold mb-4">{t('ai.disabled.availableProviders')}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="p-4">
-              <h4 className="font-medium mb-2">Anthropic Claude</h4>
+              <h4 className="font-medium mb-2">{t('ai.disabled.anthropicClaude')}</h4>
               <p className="text-sm text-muted-foreground mb-2">
                 {t('ai.disabled.anthropicDesc')}
               </p>
@@ -55,7 +55,7 @@ export function AIDisabledNotice() {
             </Card>
 
             <Card className="p-4">
-              <h4 className="font-medium mb-2">OpenAI GPT</h4>
+              <h4 className="font-medium mb-2">{t('ai.disabled.openaiGPT')}</h4>
               <p className="text-sm text-muted-foreground mb-2">
                 {t('ai.disabled.openaiDesc')}
               </p>
@@ -65,7 +65,7 @@ export function AIDisabledNotice() {
             </Card>
 
             <Card className="p-4">
-              <h4 className="font-medium mb-2">Google Gemini</h4>
+              <h4 className="font-medium mb-2">{t('ai.disabled.googleGemini')}</h4>
               <p className="text-sm text-muted-foreground mb-2">
                 {t('ai.disabled.googleDesc')}
               </p>

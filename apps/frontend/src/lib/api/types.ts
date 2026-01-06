@@ -483,6 +483,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/bundles/{id}/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get bundle statistics
+         * @description Get detailed statistics for a bundle including:
+         *     - Total clicks across all URLs
+         *     - URL count
+         *     - Top performing URL
+         *     - Click trend (last 7 days)
+         */
+        get: operations["BundleController_getStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/bundles/{id}": {
         parameters: {
             query?: never;
@@ -589,30 +613,6 @@ export interface paths {
          * @description Update the display order of a URL within a bundle
          */
         patch: operations["BundleController_updateUrlOrder"];
-        trace?: never;
-    };
-    "/api/bundles/{id}/stats": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * Get bundle statistics
-         * @description Get detailed statistics for a bundle including:
-         *     - Total clicks across all URLs
-         *     - URL count
-         *     - Top performing URL
-         *     - Click trend (last 7 days)
-         */
-        get: operations["BundleController_getStats"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
         trace?: never;
     };
     "/api/bundles/{id}/archive": {
@@ -775,6 +775,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/urls/{id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export analytics for a single URL
+         * @description Export analytics data as CSV or JSON for the specified URL
+         */
+        get: operations["AnalyticsController_exportUrlAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export analytics for all user URLs
+         * @description Export comprehensive analytics data as CSV or JSON for all URLs of the current user
+         */
+        get: operations["AnalyticsController_exportUserAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/settings/system": {
         parameters: {
             query?: never;
@@ -909,6 +949,26 @@ export interface paths {
          * @description Send a test delivery to verify webhook configuration.
          */
         post: operations["WebhookController_test"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/audit-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get audit logs
+         * @description Retrieve audit logs with pagination and filtering. Admin only.
+         */
+        get: operations["AuditLogController_getAuditLogs"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1198,10 +1258,8 @@ export interface components {
             role: "ADMIN" | "USER";
         };
         UserListResponseDto: {
-            /** @description List of users */
-            data: components["schemas"]["UserResponseDto"][];
             /**
-             * @description Total number of users
+             * @description Total number of records
              * @example 100
              */
             total: number;
@@ -1211,7 +1269,7 @@ export interface components {
              */
             page: number;
             /**
-             * @description Number of items per page
+             * @description Number of records per page
              * @example 10
              */
             pageSize: number;
@@ -1220,6 +1278,8 @@ export interface components {
              * @example 10
              */
             totalPages: number;
+            /** @description List of users */
+            data: components["schemas"]["UserResponseDto"][];
         };
         UpdateUserRoleDto: {
             /**
@@ -1407,26 +1467,8 @@ export interface components {
         };
         UrlListResponseDto: {
             /**
-             * @description URL list
-             * @example [
-             *       {
-             *         "id": "clxxx123456789",
-             *         "slug": "abc123",
-             *         "originalUrl": "https://example.com/very-long-url",
-             *         "title": "My Link",
-             *         "userId": "clusr123456789",
-             *         "status": "ACTIVE",
-             *         "clickCount": 142,
-             *         "hasPassword": false,
-             *         "createdAt": "2025-10-01T10:30:00.000Z",
-             *         "updatedAt": "2025-10-17T09:08:52.000Z"
-             *       }
-             *     ]
-             */
-            data: components["schemas"]["UrlResponseDto"][];
-            /**
              * @description Total number of records
-             * @example 25
+             * @example 100
              */
             total: number;
             /**
@@ -1441,9 +1483,11 @@ export interface components {
             pageSize: number;
             /**
              * @description Total number of pages
-             * @example 3
+             * @example 10
              */
             totalPages: number;
+            /** @description URL list */
+            data: components["schemas"]["UrlResponseDto"][];
         };
         UpdateUrlDto: {
             /**
@@ -1615,6 +1659,50 @@ export interface components {
              */
             expiresAt?: string;
         };
+        CreateApiKeyResponseDto: {
+            /**
+             * @description API Key ID
+             * @example clkey123456789
+             */
+            id: string;
+            /**
+             * @description API Key name
+             * @example Production API Key
+             */
+            name: string;
+            /**
+             * @description API Key prefix (for display)
+             * @example osu_prod_1234...
+             */
+            prefix: string;
+            /**
+             * @description Complete API Key (store securely, only shown once)
+             * @example osu_prod_1234567890abcdefghijklmnopqrstuvwxyz
+             */
+            key: string;
+            /**
+             * @description Last used timestamp (always null on creation)
+             * @example null
+             */
+            lastUsedAt?: Record<string, never>;
+            /**
+             * @description Expiration time (ISO 8601 format)
+             * @example 2025-12-31T23:59:59.000Z
+             */
+            expiresAt?: Record<string, never>;
+            /**
+             * Format: date-time
+             * @description Creation timestamp (ISO 8601 format)
+             * @example 2025-10-01T10:00:00.000Z
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update timestamp (ISO 8601 format)
+             * @example 2025-10-17T09:08:52.000Z
+             */
+            updatedAt: string;
+        };
         ApiKeyResponseDto: {
             /**
              * @description API Key ID
@@ -1632,7 +1720,7 @@ export interface components {
              */
             prefix: string;
             /**
-             * @description Complete API Key (only returned once on creation, store securely)
+             * @description Complete API Key (only returned on creation, store securely)
              * @example osu_prod_1234567890abcdefghijklmnopqrstuvwxyz
              */
             key?: string;
@@ -1663,22 +1751,8 @@ export interface components {
         };
         ApiKeyListResponseDto: {
             /**
-             * @description API Key list
-             * @example [
-             *       {
-             *         "id": "clkey123456789",
-             *         "name": "Production API Key",
-             *         "prefix": "osu_prod_1234...",
-             *         "lastUsedAt": "2025-10-15T08:30:00.000Z",
-             *         "createdAt": "2025-10-01T10:00:00.000Z",
-             *         "updatedAt": "2025-10-17T09:08:52.000Z"
-             *       }
-             *     ]
-             */
-            data: components["schemas"]["ApiKeyResponseDto"][];
-            /**
              * @description Total number of records
-             * @example 3
+             * @example 100
              */
             total: number;
             /**
@@ -1687,15 +1761,17 @@ export interface components {
              */
             page: number;
             /**
-             * @description Number of items per page
+             * @description Number of records per page
              * @example 10
              */
             pageSize: number;
             /**
              * @description Total number of pages
-             * @example 1
+             * @example 10
              */
             totalPages: number;
+            /** @description API Key list */
+            data: components["schemas"]["ApiKeyResponseDto"][];
         };
         CreateBundleDto: {
             /**
@@ -1763,11 +1839,48 @@ export interface components {
             updatedAt: string;
         };
         BundleListResponseDto: {
-            data: components["schemas"]["BundleResponseDto"][];
+            /**
+             * @description Total number of records
+             * @example 100
+             */
             total: number;
+            /**
+             * @description Current page number
+             * @example 1
+             */
             page: number;
+            /**
+             * @description Number of records per page
+             * @example 10
+             */
             pageSize: number;
+            /**
+             * @description Total number of pages
+             * @example 10
+             */
             totalPages: number;
+            data: components["schemas"]["BundleResponseDto"][];
+        };
+        TopUrlDto: {
+            /** @description URL slug */
+            slug: string;
+            /** @description Number of clicks */
+            clicks: number;
+        };
+        ClickTrendDataPoint: {
+            /** @description Date string (YYYY-MM-DD) */
+            date: string;
+            /** @description Number of clicks on this date */
+            clicks: number;
+        };
+        BundleStatsDto: {
+            bundleId: string;
+            totalClicks: number;
+            urlCount: number;
+            /** @description Top performing URL */
+            topUrl?: components["schemas"]["TopUrlDto"];
+            /** @description Click trend data (last 7 days) */
+            clickTrend: components["schemas"]["ClickTrendDataPoint"][];
         };
         UpdateBundleDto: {
             /**
@@ -1818,27 +1931,6 @@ export interface components {
              *     ]
              */
             urlIds: string[];
-        };
-        TopUrlDto: {
-            /** @description URL slug */
-            slug: string;
-            /** @description Number of clicks */
-            clicks: number;
-        };
-        ClickTrendDataPoint: {
-            /** @description Date string (YYYY-MM-DD) */
-            date: string;
-            /** @description Number of clicks on this date */
-            clicks: number;
-        };
-        BundleStatsDto: {
-            bundleId: string;
-            totalClicks: number;
-            urlCount: number;
-            /** @description Top performing URL */
-            topUrl?: components["schemas"]["TopUrlDto"];
-            /** @description Click trend data (last 7 days) */
-            clickTrend: components["schemas"]["ClickTrendDataPoint"][];
         };
         OverviewStats: {
             /**
@@ -2278,16 +2370,28 @@ export interface components {
             updatedAt: string;
         };
         WebhookListResponseDto: {
+            /**
+             * @description Total number of records
+             * @example 100
+             */
+            total: number;
+            /**
+             * @description Current page number
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of records per page
+             * @example 10
+             */
+            pageSize: number;
+            /**
+             * @description Total number of pages
+             * @example 10
+             */
+            totalPages: number;
             /** @description List of webhooks */
             data: components["schemas"]["WebhookResponseDto"][];
-            /** @description Total number of webhooks */
-            total: number;
-            /** @description Current page number */
-            page: number;
-            /** @description Number of items per page */
-            pageSize: number;
-            /** @description Total number of pages */
-            totalPages: number;
         };
         UpdateWebhookDto: {
             /**
@@ -2376,16 +2480,28 @@ export interface components {
             createdAt: string;
         };
         WebhookLogsListResponseDto: {
+            /**
+             * @description Total number of records
+             * @example 100
+             */
+            total: number;
+            /**
+             * @description Current page number
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of records per page
+             * @example 10
+             */
+            pageSize: number;
+            /**
+             * @description Total number of pages
+             * @example 10
+             */
+            totalPages: number;
             /** @description List of webhook logs */
             data: components["schemas"]["WebhookLogResponseDto"][];
-            /** @description Total number of logs */
-            total: number;
-            /** @description Current page */
-            page: number;
-            /** @description Page size */
-            pageSize: number;
-            /** @description Total pages */
-            totalPages: number;
         };
         WebhookTestResponseDto: {
             /** @description Whether test delivery was successful */
@@ -2398,6 +2514,74 @@ export interface components {
             error?: string;
             /** @description Request duration in milliseconds */
             duration: number;
+        };
+        AuditLogUserDto: {
+            /** @description User ID */
+            id: string;
+            /** @description User email */
+            email: string;
+            /** @description User name */
+            name?: string | null;
+        };
+        AuditLogDto: {
+            /** @description Audit log ID */
+            id: string;
+            /** @description User who performed the action */
+            user?: components["schemas"]["AuditLogUserDto"] | null;
+            /**
+             * @description Action type
+             * @enum {string}
+             */
+            action: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED";
+            /** @description Entity type */
+            entityType: string;
+            /** @description Entity ID */
+            entityId?: string | null;
+            /** @description Previous state */
+            oldValue?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description New state */
+            newValue?: {
+                [key: string]: unknown;
+            } | null;
+            /** @description IP address */
+            ipAddress?: string | null;
+            /** @description User agent */
+            userAgent?: string | null;
+            /** @description Additional metadata */
+            metadata?: {
+                [key: string]: unknown;
+            } | null;
+            /**
+             * Format: date-time
+             * @description Timestamp
+             */
+            createdAt: string;
+        };
+        AuditLogListResponseDto: {
+            /**
+             * @description Total number of records
+             * @example 100
+             */
+            total: number;
+            /**
+             * @description Current page number
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of records per page
+             * @example 10
+             */
+            pageSize: number;
+            /**
+             * @description Total number of pages
+             * @example 10
+             */
+            totalPages: number;
+            /** @description Audit logs */
+            data: components["schemas"]["AuditLogDto"][];
         };
         RedirectInfoResponseDto: {
             /**
@@ -2424,6 +2608,216 @@ export interface components {
              * @example https://example.com/target-page
              */
             originalUrl: string;
+        };
+        PaginationDto: {
+            /**
+             * @description Page number (starts from 1)
+             * @default 1
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of records per page (maximum 100)
+             * @default 10
+             * @example 10
+             */
+            pageSize: number;
+        };
+        AnalyticsQueryDto: {
+            /**
+             * @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range)
+             * @default last_7_days
+             * @example last_7_days
+             * @enum {string}
+             */
+            timeRange: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
+            /**
+             * @description Custom start date (ISO 8601 format). Required when timeRange is custom.
+             * @example 2025-01-01T00:00:00Z
+             */
+            startDate?: string;
+            /**
+             * @description Custom end date (ISO 8601 format). Required when timeRange is custom.
+             * @example 2025-01-31T23:59:59Z
+             */
+            endDate?: string;
+        };
+        ExportQueryDto: {
+            /**
+             * @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range)
+             * @default last_7_days
+             * @example last_7_days
+             * @enum {string}
+             */
+            timeRange: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
+            /**
+             * @description Custom start date (ISO 8601 format). Required when timeRange is custom.
+             * @example 2025-01-01T00:00:00Z
+             */
+            startDate?: string;
+            /**
+             * @description Custom end date (ISO 8601 format). Required when timeRange is custom.
+             * @example 2025-01-31T23:59:59Z
+             */
+            endDate?: string;
+            /**
+             * @description Export format (csv or json)
+             * @default csv
+             * @example csv
+             * @enum {string}
+             */
+            format: "csv" | "json";
+            /**
+             * @description Include detailed click records (default: false)
+             * @default false
+             * @example false
+             */
+            includeClicks: boolean;
+        };
+        UrlQueryDto: {
+            /**
+             * @description Page number (starts from 1)
+             * @default 1
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of records per page (maximum 100)
+             * @default 10
+             * @example 10
+             */
+            pageSize: number;
+            /**
+             * @description Search keyword (searches title and original URL)
+             * @example example
+             */
+            search?: string;
+            /**
+             * @description Status filter (ACTIVE: Active, INACTIVE: Inactive, EXPIRED: Expired)
+             * @example ACTIVE
+             * @enum {string}
+             */
+            status?: "ACTIVE" | "INACTIVE" | "EXPIRED";
+            /**
+             * @description Sort field (createdAt: Creation time, clickCount: Click count, title: Title)
+             * @default createdAt
+             * @example createdAt
+             * @enum {string}
+             */
+            sortBy: "createdAt" | "clickCount" | "title";
+            /**
+             * @description Sort direction (asc: Ascending, desc: Descending)
+             * @default desc
+             * @example desc
+             * @enum {string}
+             */
+            sortOrder: "asc" | "desc";
+        };
+        BundleQueryDto: {
+            /**
+             * @description Page number (starts from 1)
+             * @default 1
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of records per page (maximum 100)
+             * @default 10
+             * @example 10
+             */
+            pageSize: number;
+            /**
+             * @description Filter by bundle status
+             * @example ACTIVE
+             * @enum {string}
+             */
+            status?: "ACTIVE" | "ARCHIVED";
+            /**
+             * @description Search by bundle name or description
+             * @example Black Friday
+             */
+            search?: string;
+        };
+        UserListQueryDto: {
+            /**
+             * @description Page number (starts from 1)
+             * @default 1
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of records per page (maximum 100)
+             * @default 10
+             * @example 10
+             */
+            pageSize: number;
+            /**
+             * @description Search keyword (searches name or email)
+             * @example john@example.com
+             */
+            search?: string;
+            /**
+             * @description Filter by user role
+             * @example USER
+             * @enum {string}
+             */
+            role?: "ADMIN" | "USER";
+            /**
+             * @description Filter by account status (true=active, false=inactive)
+             * @example true
+             */
+            isActive?: boolean;
+        };
+        AuditLogQueryDto: {
+            /**
+             * @description Page number (starts from 1)
+             * @default 1
+             * @example 1
+             */
+            page: number;
+            /**
+             * @description Number of records per page (maximum 100)
+             * @default 10
+             * @example 10
+             */
+            pageSize: number;
+            /**
+             * @description Filter by action type
+             * @example URL_CREATED
+             * @enum {string}
+             */
+            action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED";
+            /**
+             * @description Filter by entity type (url, user, api_key, bundle, webhook, variant)
+             * @example url
+             */
+            entityType?: string;
+            /**
+             * @description Filter by entity ID
+             * @example clxxx123456789
+             */
+            entityId?: string;
+            /**
+             * @description Filter by user ID
+             * @example clxxx123456789
+             */
+            userId?: string;
+            /**
+             * @description Start date for filtering (ISO 8601 format)
+             * @example 2025-01-01
+             */
+            startDate?: string;
+            /**
+             * @description End date for filtering (ISO 8601 format)
+             * @example 2025-01-31
+             */
+            endDate?: string;
+            /**
+             * @description Sort order (asc or desc)
+             * @default desc
+             * @enum {string}
+             */
+            sortOrder: "asc" | "desc";
         };
     };
     responses: never;
@@ -3621,7 +4015,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ApiKeyResponseDto"];
+                    "application/json": components["schemas"]["CreateApiKeyResponseDto"];
                 };
             };
             /** @description Invalid request parameters */
@@ -3804,6 +4198,38 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    BundleController_getStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Bundle ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Statistics retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BundleStatsDto"];
+                };
+            };
+            /** @description Bundle not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -4096,38 +4522,6 @@ export interface operations {
             };
         };
     };
-    BundleController_getStats: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description Bundle ID */
-                id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Statistics retrieved successfully */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["BundleStatsDto"];
-                };
-            };
-            /** @description Bundle not found */
-            404: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ErrorResponseDto"];
-                };
-            };
-        };
-    };
     BundleController_archive: {
         parameters: {
             query?: never;
@@ -4196,7 +4590,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
-                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "custom";
+                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
                 /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
                 startDate?: string;
                 /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
@@ -4244,7 +4638,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
-                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "custom";
+                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
                 /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
                 startDate?: string;
                 /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
@@ -4324,7 +4718,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
-                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "custom";
+                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
                 /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
                 startDate?: string;
                 /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
@@ -4372,7 +4766,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
-                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "custom";
+                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
                 /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
                 startDate?: string;
                 /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
@@ -4408,7 +4802,7 @@ export interface operations {
         parameters: {
             query?: {
                 /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
-                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "custom";
+                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
                 /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
                 startDate?: string;
                 /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
@@ -4435,6 +4829,97 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_exportUrlAnalytics: {
+        parameters: {
+            query?: {
+                /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
+                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
+                /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
+                startDate?: string;
+                /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
+                endDate?: string;
+                /** @description Export format (csv or json) */
+                format?: "csv" | "json";
+                /** @description Include detailed click records (default: false) */
+                includeClicks?: boolean;
+            };
+            header?: never;
+            path: {
+                /** @description URL ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Export successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["ErrorResponseDto"];
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description URL not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["ErrorResponseDto"];
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_exportUserAnalytics: {
+        parameters: {
+            query?: {
+                /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
+                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
+                /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
+                startDate?: string;
+                /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
+                endDate?: string;
+                /** @description Export format (csv or json) */
+                format?: "csv" | "json";
+                /** @description Include detailed click records (default: false) */
+                includeClicks?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Export successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "text/csv": components["schemas"]["ErrorResponseDto"];
                     "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
@@ -4878,6 +5363,63 @@ export interface operations {
             };
             /** @description Webhook not found */
             404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    AuditLogController_getAuditLogs: {
+        parameters: {
+            query?: {
+                /** @description Page number (starts from 1) */
+                page?: number;
+                /** @description Number of records per page (maximum 100) */
+                pageSize?: number;
+                /** @description Filter by action type */
+                action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED";
+                /** @description Filter by entity type (url, user, api_key, bundle, webhook, variant) */
+                entityType?: string;
+                /** @description Filter by entity ID */
+                entityId?: string;
+                /** @description Filter by user ID */
+                userId?: string;
+                /** @description Start date for filtering (ISO 8601 format) */
+                startDate?: string;
+                /** @description End date for filtering (ISO 8601 format) */
+                endDate?: string;
+                /** @description Sort order (asc or desc) */
+                sortOrder?: "asc" | "desc";
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Query successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AuditLogListResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden - Admin access required */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };

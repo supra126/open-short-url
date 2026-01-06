@@ -6,8 +6,18 @@
 'use client';
 
 import { useState, useMemo, useCallback, memo } from 'react';
-import { useUserAnalytics, useUserBotAnalytics, useUserAbTestAnalytics, type TimeRange, type BotTypeStat, type TopPerformingVariant } from '@/hooks/use-analytics';
-import type { DeviceStat, GeoLocationStat, UtmStat, AnalyticsQueryParams } from '@/lib/api/schemas';
+import {
+  useUserAnalytics,
+  useUserBotAnalytics,
+  useUserAbTestAnalytics,
+  type TimeRange,
+  type BotTypeStat,
+  type TopPerformingVariant,
+  type DeviceStat,
+  type GeoLocationStat,
+  type UtmStat,
+  type AnalyticsQueryParams,
+} from '@/hooks/use-analytics';
 import { DateRangePicker } from './date-range-picker';
 import { ExportButton } from './export-button';
 import {

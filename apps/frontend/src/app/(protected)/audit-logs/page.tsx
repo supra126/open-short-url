@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import {
   useAuditLogs,
-  AuditLogDto,
-  AuditLogQueryParams,
+  type AuditAction,
+  type AuditLogDto,
+  type AuditLogQueryParams,
 } from '@/hooks/use-audit-logs';
-import type { AuditAction } from '@/lib/api/schemas';
 import {
   Table,
   TableBody,
@@ -121,9 +121,10 @@ export default function AuditLogsPage() {
         <div className="flex gap-4">
           <Select
             value={actionFilter || 'all'}
-            onValueChange={(value) =>
-              setActionFilter(value === 'all' ? undefined : (value as AuditAction))
-            }
+            onValueChange={(value) => {
+              setActionFilter(value === 'all' ? undefined : (value as AuditAction));
+              setPage(1); // Reset page when filter changes
+            }}
           >
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder={t('auditLogs.filters.action')} />
@@ -140,9 +141,10 @@ export default function AuditLogsPage() {
 
           <Select
             value={entityTypeFilter || 'all'}
-            onValueChange={(value) =>
-              setEntityTypeFilter(value === 'all' ? undefined : value)
-            }
+            onValueChange={(value) => {
+              setEntityTypeFilter(value === 'all' ? undefined : value);
+              setPage(1); // Reset page when filter changes
+            }}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder={t('auditLogs.filters.entityType')} />
@@ -320,7 +322,7 @@ export default function AuditLogsPage() {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
-                    User Agent
+                    {t('auditLogs.detailsDialog.userAgent')}
                   </label>
                   <p className="text-xs text-muted-foreground break-all">
                     {selectedLog.userAgent || '-'}
@@ -331,7 +333,7 @@ export default function AuditLogsPage() {
               {selectedLog.oldValue && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
-                    Old Value
+                    {t('auditLogs.detailsDialog.oldValue')}
                   </label>
                   <pre className="mt-1 p-3 bg-muted rounded-md text-xs overflow-x-auto">
                     {formatJson(selectedLog.oldValue)}
@@ -342,7 +344,7 @@ export default function AuditLogsPage() {
               {selectedLog.newValue && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
-                    New Value
+                    {t('auditLogs.detailsDialog.newValue')}
                   </label>
                   <pre className="mt-1 p-3 bg-muted rounded-md text-xs overflow-x-auto">
                     {formatJson(selectedLog.newValue)}
@@ -353,7 +355,7 @@ export default function AuditLogsPage() {
               {selectedLog.metadata && (
                 <div>
                   <label className="text-sm font-medium text-muted-foreground">
-                    Metadata
+                    {t('auditLogs.detailsDialog.metadata')}
                   </label>
                   <pre className="mt-1 p-3 bg-muted rounded-md text-xs overflow-x-auto">
                     {formatJson(selectedLog.metadata)}

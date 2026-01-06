@@ -27,6 +27,7 @@
     "create": "Create",
     "search": "Search",
     "loading": "Loading...",
+    "loadingEllipsis": "Loading...",
     "error": "Error",
     "success": "Success",
     "user": "User",
@@ -55,6 +56,12 @@
     "add": "Add",
     "remove": "Remove",
     "clicks": "Clicks"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
   },
   "auth": {
     "loginTitle": "Login",
@@ -734,6 +741,12 @@
     "description": "View system activity and change history",
     "noLogs": "No audit logs found",
     "noLogsDesc": "No activity has been recorded yet",
+    "detailsDialog": {
+      "userAgent": "User Agent",
+      "oldValue": "Old Value",
+      "newValue": "New Value",
+      "metadata": "Metadata"
+    },
     "filters": {
       "action": "Action",
       "entityType": "Entity Type",
@@ -748,7 +761,11 @@
       "action": "Action",
       "entity": "Entity",
       "details": "Details",
-      "ipAddress": "IP Address"
+      "ipAddress": "IP Address",
+      "userAgent": "User Agent",
+      "oldValue": "Old Value",
+      "newValue": "New Value",
+      "metadata": "Metadata"
     },
     "actions": {
       "URL_CREATED": "URL Created",
@@ -833,7 +850,7 @@
       "setupGuide": "Setup Guide",
       "quickStart": "🚀 Quick Start (5 minutes)",
       "step1Title": "Choose an AI Provider",
-      "step1Desc": "Recommended: Anthropic Claude - Best reasoning, supports Traditional Chinese",
+      "step1Desc": "Recommended: Anthropic Claude - Best reasoning capabilities",
       "step2Title": "Get API Key",
       "step2Desc": "Visit provider website to register and get API Key",
       "step3Title": "Set Environment Variables",
@@ -856,7 +873,10 @@
       "faq3Q": "Q: Where is chat history stored?",
       "faq3A": "A: Stored in browser's localStorage, clearing browser data will also clear it.",
       "faq4Q": "Q: Which model is most recommended?",
-      "faq4A": "A: Claude 3.5 Sonnet offers the best reasoning and Chinese support for complex tasks. For cost savings, use Claude 3 Haiku or GPT-3.5 Turbo."
+      "faq4A": "A: Claude 3.5 Sonnet offers the best reasoning capabilities for complex tasks. For cost savings, use Claude 3 Haiku or GPT-3.5 Turbo.",
+      "anthropicConsole": "Anthropic Console",
+      "openaiPlatform": "OpenAI Platform",
+      "googleAIStudio": "Google AI Studio"
     },
     "disabled": {
       "title": "AI Not Enabled",
@@ -878,7 +898,10 @@
       "exampleConfig": "Example Configuration",
       "viewDetailedGuide": "View Detailed Setup Guide",
       "anthropicDocs": "Anthropic Documentation",
-      "openaiPlatform": "OpenAI Platform"
+      "openaiPlatform": "OpenAI Platform",
+      "anthropicClaude": "Anthropic Claude",
+      "openaiGPT": "OpenAI GPT",
+      "googleGemini": "Google Gemini"
     }
   }
 }

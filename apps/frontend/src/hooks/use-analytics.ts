@@ -19,6 +19,9 @@ import type {
   AbTestAnalyticsResponseDto,
   TopPerformingVariant,
   TimeRange,
+  DeviceStat,
+  GeoLocationStat,
+  UtmStat,
 } from '@/lib/api/schemas';
 
 // Re-export types for consumers of this hook
@@ -33,6 +36,9 @@ export type {
   AbTestAnalyticsResponseDto,
   TopPerformingVariant,
   TimeRange,
+  DeviceStat,
+  GeoLocationStat,
+  UtmStat,
 };
 
 // Query Keys (exported for external cache management)

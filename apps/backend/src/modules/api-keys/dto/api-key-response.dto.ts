@@ -20,10 +20,9 @@ export class ApiKeyResponseDto {
   })
   prefix!: string;
 
-  @ApiProperty({
-    description: 'Complete API Key (only returned once on creation, store securely)',
+  @ApiPropertyOptional({
+    description: 'Complete API Key (only returned on creation, store securely)',
     example: 'osu_prod_1234567890abcdefghijklmnopqrstuvwxyz',
-    required: false,
   })
   key?: string;
 
@@ -38,6 +37,60 @@ export class ApiKeyResponseDto {
     example: '2025-12-31T23:59:59.000Z',
   })
   expiresAt?: Date;
+
+  @ApiProperty({
+    description: 'Creation timestamp (ISO 8601 format)',
+    example: '2025-10-01T10:00:00.000Z',
+  })
+  createdAt!: Date;
+
+  @ApiProperty({
+    description: 'Last update timestamp (ISO 8601 format)',
+    example: '2025-10-17T09:08:52.000Z',
+  })
+  updatedAt!: Date;
+}
+
+/**
+ * Response DTO for API Key creation
+ * Contains the full API key (only returned once on creation)
+ */
+export class CreateApiKeyResponseDto {
+  @ApiProperty({
+    description: 'API Key ID',
+    example: 'clkey123456789',
+  })
+  id!: string;
+
+  @ApiProperty({
+    description: 'API Key name',
+    example: 'Production API Key',
+  })
+  name!: string;
+
+  @ApiProperty({
+    description: 'API Key prefix (for display)',
+    example: 'osu_prod_1234...',
+  })
+  prefix!: string;
+
+  @ApiProperty({
+    description: 'Complete API Key (store securely, only shown once)',
+    example: 'osu_prod_1234567890abcdefghijklmnopqrstuvwxyz',
+  })
+  key!: string;
+
+  @ApiPropertyOptional({
+    description: 'Last used timestamp (always null on creation)',
+    example: null,
+  })
+  lastUsedAt?: Date | null;
+
+  @ApiPropertyOptional({
+    description: 'Expiration time (ISO 8601 format)',
+    example: '2025-12-31T23:59:59.000Z',
+  })
+  expiresAt?: Date | null;
 
   @ApiProperty({
     description: 'Creation timestamp (ISO 8601 format)',
