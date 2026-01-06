@@ -9,6 +9,7 @@ import { useState, useMemo, useCallback, memo } from 'react';
 import { useUserAnalytics, useUserBotAnalytics, useUserAbTestAnalytics, type TimeRange, type BotTypeStat, type TopPerformingVariant } from '@/hooks/use-analytics';
 import type { DeviceStat, GeoLocationStat, UtmStat, AnalyticsQueryParams } from '@/lib/api/schemas';
 import { DateRangePicker } from './date-range-picker';
+import { ExportButton } from './export-button';
 import {
   Card,
   CardContent,
@@ -192,11 +193,14 @@ export function AnalyticsDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Date Range Picker */}
-      <DateRangePicker
-        value={dateRange}
-        onChange={handleDateRangeChange}
-      />
+      {/* Date Range Picker and Export Button */}
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <DateRangePicker
+          value={dateRange}
+          onChange={handleDateRangeChange}
+        />
+        <ExportButton queryParams={queryParams} />
+      </div>
 
       {/* Overview Stats */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

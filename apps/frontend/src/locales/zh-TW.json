@@ -699,6 +699,16 @@
     "defaultBotName": "機器人",
     "clicksUnit": "次"
   },
+  "export": {
+    "export": "匯出",
+    "exporting": "匯出中...",
+    "exportAsCSV": "匯出為 CSV",
+    "exportAsJSON": "匯出為 JSON",
+    "exportSuccess": "匯出成功",
+    "exportSuccessDesc": "資料已成功匯出",
+    "exportError": "匯出失敗",
+    "exportErrorDesc": "無法匯出資料，請稍後再試"
+  },
   "abTests": {
     "title": "A/B Testing 統計",
     "totalUrls": "啟用測試的短網址",

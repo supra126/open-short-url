@@ -714,6 +714,16 @@
     "defaultBotName": "Robô",
     "clicksUnit": "cliques"
   },
+  "export": {
+    "export": "Exportar",
+    "exporting": "Exportando...",
+    "exportAsCSV": "Exportar como CSV",
+    "exportAsJSON": "Exportar como JSON",
+    "exportSuccess": "Exportação bem-sucedida",
+    "exportSuccessDesc": "Os dados foram exportados com sucesso",
+    "exportError": "Falha na exportação",
+    "exportErrorDesc": "Não foi possível exportar os dados, tente novamente mais tarde"
+  },
   "abTests": {
     "title": "Estatísticas de Teste A/B",
     "totalUrls": "URLs com Teste Ativado",

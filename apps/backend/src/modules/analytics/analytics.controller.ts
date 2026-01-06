@@ -3,6 +3,7 @@ import {
   Get,
   Param,
   Query,
+  Res,
   UseGuards,
   HttpStatus,
 } from '@nestjs/common';
@@ -13,10 +14,14 @@ import {
   ApiBearerAuth,
   ApiSecurity,
   ApiParam,
+  ApiProduces,
 } from '@nestjs/swagger';
 import { User } from '@prisma/client';
+import { FastifyReply } from 'fastify';
 import { AnalyticsService } from './analytics.service';
+import { ExportService } from './export.service';
 import { AnalyticsQueryDto } from './dto/analytics-query.dto';
+import { ExportQueryDto, ExportFormat } from './dto/export-query.dto';
 import {
   AnalyticsResponseDto,
   RecentClicksResponseDto,
@@ -34,7 +39,10 @@ import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 @ApiBearerAuth('JWT-auth')
 @ApiSecurity('API-Key')
 export class AnalyticsController {
-  constructor(private readonly analyticsService: AnalyticsService) {}
+  constructor(
+    private readonly analyticsService: AnalyticsService,
+    private readonly exportService: ExportService,
+  ) {}
 
   /**
    * Get analytics for a single URL
@@ -223,5 +231,130 @@ export class AnalyticsController {
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<AbTestAnalyticsResponseDto> {
     return this.analyticsService.getUserAbTestAnalytics(user, queryDto);
+  }
+
+  /**
+   * Export analytics for a single URL
+   */
+  @Get('urls/:id/export')
+  @ApiOperation({
+    summary: 'Export analytics for a single URL',
+    description: 'Export analytics data as CSV or JSON for the specified URL',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'URL ID',
+    example: 'clxxx123456789',
+  })
+  @ApiProduces('text/csv', 'application/json')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Export successful',
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'URL not found',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  async exportUrlAnalytics(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Query() queryDto: ExportQueryDto,
+    @Res() reply: FastifyReply,
+  ): Promise<void> {
+    const { analytics, clicks, urlSlug, dateRange } = await this.analyticsService.getExportData(
+      id,
+      user,
+      queryDto,
+    );
+
+    const exportData = {
+      analytics,
+      clicks: queryDto.includeClicks ? clicks : undefined,
+      urlSlug,
+      dateRange,
+      exportedAt: new Date().toISOString(),
+    };
+
+    const format = queryDto.format || ExportFormat.CSV;
+    const filename = this.exportService.generateFilename(
+      urlSlug,
+      format,
+      dateRange.startDate,
+      dateRange.endDate,
+    );
+
+    if (format === ExportFormat.CSV) {
+      const csv = this.exportService.formatToCSV(exportData);
+      reply
+        .header('Content-Type', 'text/csv; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="${filename}"`)
+        .send(csv);
+    } else {
+      const json = this.exportService.formatToJSON(exportData);
+      reply
+        .header('Content-Type', 'application/json; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="${filename}"`)
+        .send(json);
+    }
+  }
+
+  /**
+   * Export analytics for all user URLs
+   */
+  @Get('export')
+  @ApiOperation({
+    summary: 'Export analytics for all user URLs',
+    description: 'Export comprehensive analytics data as CSV or JSON for all URLs of the current user',
+  })
+  @ApiProduces('text/csv', 'application/json')
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Export successful',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  async exportUserAnalytics(
+    @CurrentUser() user: User,
+    @Query() queryDto: ExportQueryDto,
+    @Res() reply: FastifyReply,
+  ): Promise<void> {
+    const { analytics, dateRange } = await this.analyticsService.getUserExportData(user, queryDto);
+
+    const exportData = {
+      analytics,
+      dateRange,
+      exportedAt: new Date().toISOString(),
+    };
+
+    const format = queryDto.format || ExportFormat.CSV;
+    const filename = this.exportService.generateFilename(
+      undefined,
+      format,
+      dateRange.startDate,
+      dateRange.endDate,
+    );
+
+    if (format === ExportFormat.CSV) {
+      const csv = this.exportService.formatToCSV(exportData);
+      reply
+        .header('Content-Type', 'text/csv; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="${filename}"`)
+        .send(csv);
+    } else {
+      const json = this.exportService.formatToJSON(exportData);
+      reply
+        .header('Content-Type', 'application/json; charset=utf-8')
+        .header('Content-Disposition', `attachment; filename="${filename}"`)
+        .send(json);
+    }
   }
 }

@@ -699,6 +699,16 @@
     "defaultBotName": "Bot",
     "clicksUnit": "clicks"
   },
+  "export": {
+    "export": "Export",
+    "exporting": "Exporting...",
+    "exportAsCSV": "Export as CSV",
+    "exportAsJSON": "Export as JSON",
+    "exportSuccess": "Export successful",
+    "exportSuccessDesc": "Data has been exported successfully",
+    "exportError": "Export failed",
+    "exportErrorDesc": "Unable to export data, please try again later"
+  },
   "abTests": {
     "title": "A/B Testing Statistics",
     "totalUrls": "URLs with Testing Enabled",

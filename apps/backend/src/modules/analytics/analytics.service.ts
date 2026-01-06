@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '@/common/database/prisma.service';
 import { CacheService } from '@/common/cache/cache.service';
 import { AnalyticsQueryDto, TimeRange } from './dto/analytics-query.dto';
@@ -11,6 +11,7 @@ import {
   RefererStat,
   UtmStat,
   RecentClicksResponseDto,
+  RecentClickDto,
 } from './dto/analytics-response.dto';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
 import { User, UserRole, Prisma } from '@prisma/client';
@@ -929,5 +930,99 @@ export class AnalyticsService {
   private getCacheKey(urlId: string, queryDto: AnalyticsQueryDto): string {
     const { timeRange, startDate, endDate } = queryDto;
     return `${this.CACHE_PREFIX}${urlId}:${timeRange}:${startDate || ''}:${endDate || ''}`;
+  }
+
+  /**
+   * Get export data for a single URL
+   */
+  async getExportData(
+    urlId: string,
+    user: User,
+    queryDto: AnalyticsQueryDto,
+  ): Promise<{
+    analytics: AnalyticsResponseDto;
+    clicks: RecentClickDto[];
+    urlSlug: string;
+    dateRange: { startDate: string; endDate: string };
+  }> {
+    // Check ownership
+    const url = await this.prisma.url.findUnique({
+      where: { id: urlId },
+      select: { id: true, userId: true, slug: true },
+    });
+
+    if (!url) {
+      throw new NotFoundException('URL not found');
+    }
+
+    if (url.userId !== user.id && user.role !== 'ADMIN') {
+      throw new ForbiddenException('You do not have permission to export this URL');
+    }
+
+    // Get analytics data
+    const analytics = await this.getUrlAnalytics(urlId, user, queryDto);
+
+    // Get all clicks within date range for export
+    const { startDate, endDate } = this.calculateDateRange(queryDto);
+    const clicks = await this.prisma.click.findMany({
+      where: {
+        urlId,
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10000, // Limit to prevent memory issues
+    });
+
+    const recentClicks: RecentClickDto[] = clicks.map((click) => ({
+      id: click.id,
+      ip: click.ip ?? undefined,
+      browser: click.browser ?? undefined,
+      os: click.os ?? undefined,
+      device: click.device ?? undefined,
+      country: click.country ?? undefined,
+      city: click.city ?? undefined,
+      referer: click.referer ?? undefined,
+      utmSource: click.utmSource ?? undefined,
+      utmMedium: click.utmMedium ?? undefined,
+      utmCampaign: click.utmCampaign ?? undefined,
+      isBot: click.isBot,
+      botName: click.botName ?? undefined,
+      createdAt: click.createdAt,
+    }));
+
+    return {
+      analytics,
+      clicks: recentClicks,
+      urlSlug: url.slug,
+      dateRange: {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+      },
+    };
+  }
+
+  /**
+   * Get export data for all user URLs
+   */
+  async getUserExportData(
+    user: User,
+    queryDto: AnalyticsQueryDto,
+  ): Promise<{
+    analytics: AnalyticsResponseDto;
+    dateRange: { startDate: string; endDate: string };
+  }> {
+    const analytics = await this.getUserAnalytics(user, queryDto);
+    const { startDate, endDate } = this.calculateDateRange(queryDto);
+
+    return {
+      analytics,
+      dateRange: {
+        startDate: startDate.toISOString().split('T')[0],
+        endDate: endDate.toISOString().split('T')[0],
+      },
+    };
   }
 }
