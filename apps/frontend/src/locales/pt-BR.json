@@ -6,7 +6,12 @@
     "validation": "Os dados inseridos estão incorretos, verifique e tente novamente",
     "notFound": "O recurso solicitado não foi encontrado",
     "server": "Ocorreu um erro no servidor, tente novamente mais tarde",
-    "unknown": "Ocorreu um erro desconhecido, tente novamente mais tarde"
+    "unknown": "Ocorreu um erro desconhecido, tente novamente mais tarde",
+    "boundaryTitle": "Algo deu errado",
+    "boundaryDescription": "Ocorreu um erro inesperado. Por favor, tente novamente.",
+    "boundaryDetails": "Detalhes do Erro:",
+    "boundaryTryAgain": "Tentar Novamente",
+    "boundaryReload": "Recarregar Página"
   },
   "common": {
     "login": "Entrar",
@@ -38,6 +43,7 @@
     "of": "de",
     "total": "total",
     "items": "itens",
+    "noValue": "-",
     "tryAgainLater": "Por favor, tente novamente mais tarde",
     "enabled": "Ativado",
     "disabled": "Desativado",
@@ -133,8 +139,10 @@
     "expiresAtHint": "A URL curta expirará automaticamente após o tempo especificado",
     "createSuccess": "URL curta criada com sucesso! Slug: {slug}",
     "createError": "Falha na criação, tente novamente mais tarde",
-    "deleteConfirm": "Tem certeza que deseja excluir esta URL curta? Esta ação não pode ser desfeita.",
+    "deleteConfirm": "Tem certeza que deseja excluir esta URL curta?",
+    "deleteConfirmDesc": "Esta ação não pode ser desfeita. Isso excluirá permanentemente a URL curta e todos os seus dados de analytics.",
     "deleteSuccess": "URL curta excluída com sucesso",
+    "shortUrlCopiedDesc": "URL curta copiada para a área de transferência",
     "deleteError": "Falha na exclusão, tente novamente mais tarde",
     "loadError": "Falha ao carregar: {error}",
     "statusActive": "Ativa",
@@ -222,6 +230,7 @@
   "sidebar": {
     "appName": "Open Short URL",
     "appDescription": "Serviço de Encurtamento de URL",
+    "brandIconAlt": "Ícone da Marca",
     "overview": "Visão Geral",
     "dashboard": "Painel",
     "urlManagement": "Gerenciamento de URLs",
@@ -234,6 +243,7 @@
     "users": "Gerenciamento de Usuários",
     "aiAssistant": "Assistente de IA",
     "aiSettings": "Configurações de IA",
+    "ai": "IA",
     "title": "Barra Lateral",
     "toggle": "Alternar Barra Lateral"
   },
@@ -259,7 +269,8 @@
     "createSuccessDesc": "Chave de API criada, por favor copie e salve imediatamente",
     "createError": "Falha na criação",
     "createErrorDesc": "Por favor, tente novamente mais tarde",
-    "deleteConfirm": "Tem certeza que deseja excluir a Chave de API \"{name}\"? Esta ação não pode ser desfeita.",
+    "deleteConfirm": "Tem certeza que deseja excluir a Chave de API \"{name}\"?",
+    "deleteConfirmDesc": "Esta ação não pode ser desfeita. A chave de API será excluída permanentemente.",
     "deleteSuccess": "Chave de API excluída",
     "deleteError": "Falha na exclusão",
     "copySuccess": "Copiado",
@@ -470,7 +481,12 @@
     "createUserButton": "Criar Usuário",
     "createSuccess": "Criado com sucesso",
     "createSuccessDesc": "Novo usuário foi criado com sucesso",
-    "createError": "Falha na criação"
+    "createError": "Falha na criação",
+    "updateRoleErrorFallback": "Falha ao atualizar função",
+    "updateStatusErrorFallback": "Falha ao atualizar status",
+    "deleteErrorFallback": "Falha ao excluir usuário",
+    "resetPasswordErrorFallback": "Falha ao redefinir senha",
+    "createErrorFallback": "Falha ao criar usuário"
   },
   "bundles": {
     "title": "Bundles de Links",
@@ -493,6 +509,8 @@
     "archived": "Arquivado",
     "urlCount": "Contagem de URLs",
     "totalClicks": "Total de Cliques",
+    "urls": "URLs",
+    "clicks": "cliques",
     "topUrl": "Melhor Desempenho",
     "clickTrend": "Tendência de Cliques",
     "addUrls": "Adicionar Links",
@@ -680,7 +698,9 @@
     "botTypesTitle": "Distribuição por Tipo de Robô",
     "topBots": "Top {count} Tipos de Robôs",
     "noData": "Nenhum registro de visita de robô ainda",
-    "noDataDesc": "Sem dados de visita de robô disponíveis"
+    "noDataDesc": "Sem dados de visita de robô disponíveis",
+    "defaultBotName": "Robô",
+    "clicksUnit": "cliques"
   },
   "abTests": {
     "title": "Estatísticas de Teste A/B",
@@ -710,6 +730,9 @@
       "clearChat": "Limpar conversa",
       "inputPlaceholder": "Digite uma mensagem... (ex: Crie uma URL curta para mim)",
       "sendHint": "Pressione {enter} para enviar, {shiftEnter} para nova linha",
+      "sendHintPrefix": "Pressione",
+      "sendHintSend": "para enviar,",
+      "sendHintNewLine": "para nova linha",
       "enterKey": "Enter",
       "shiftEnterKey": "Shift + Enter"
     },

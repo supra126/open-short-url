@@ -25,11 +25,13 @@ export type TranslationKey = NestedKeyOf<Translations>;
 
 // Import all locale files statically
 import zhTWTranslations from '@/locales/zh-TW.json';
+import ptBRTranslations from '@/locales/pt-BR.json';
 
 // Map of available locales
 const localeMap: Record<string, Translations> = {
   'en': enTranslations,
   'zh-TW': zhTWTranslations as Translations,
+  'pt-BR': ptBRTranslations as Translations,
 };
 
 /**
