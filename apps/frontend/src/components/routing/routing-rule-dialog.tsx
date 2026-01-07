@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { t } from '@/lib/i18n';
+import { t, tDynamic } from '@/lib/i18n';
 import {
   Dialog,
   DialogContent,
@@ -244,9 +244,9 @@ export function RoutingRuleDialog({ urlId, rule, trigger }: RoutingRuleDialogPro
                       {templatesData?.templates.map((template) => (
                         <SelectItem key={template.key} value={template.key}>
                           <div className="flex flex-col">
-                            <span>{template.name}</span>
+                            <span>{tDynamic(`routing.templates.${template.key}.name`, template.name)}</span>
                             <span className="text-xs text-muted-foreground">
-                              {template.description}
+                              {tDynamic(`routing.templates.${template.key}.description`, template.description)}
                             </span>
                           </div>
                         </SelectItem>

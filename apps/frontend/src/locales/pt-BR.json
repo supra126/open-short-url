@@ -15,7 +15,6 @@
   },
   "common": {
     "login": "Entrar",
-    "register": "Cadastrar",
     "logout": "Sair",
     "email": "E-mail",
     "password": "Senha",
@@ -69,23 +68,10 @@
   "auth": {
     "loginTitle": "Login",
     "loginDescription": "Digite seu e-mail e senha para acessar sua conta",
-    "registerTitle": "Cadastro",
-    "registerDescription": "Crie uma nova conta para começar a encurtar URLs",
     "emailPlaceholder": "nome@exemplo.com",
     "passwordPlaceholder": "Digite sua senha",
-    "namePlaceholder": "Seu nome",
-    "confirmPasswordPlaceholder": "Digite a senha novamente",
     "loginButton": "Entrar",
-    "registerButton": "Cadastrar",
-    "noAccount": "Não tem uma conta?",
-    "registerNow": "Cadastre-se agora",
-    "hasAccount": "Já tem uma conta?",
-    "loginNow": "Faça login agora",
     "loginError": "Falha no login, verifique seu e-mail e senha",
-    "registerError": "Falha no cadastro, tente novamente mais tarde",
-    "passwordMismatch": "As senhas não coincidem",
-    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres",
-    "passwordMinLength": "Pelo menos 6 caracteres",
     "turnstileRequired": "Por favor, complete a verificação de segurança",
     "turnstileError": "Falha na verificação de segurança, tente novamente",
     "turnstileExpired": "Verificação de segurança expirada, verifique novamente",
@@ -508,7 +494,6 @@
     "title": "Open Short URL",
     "description": "Plataforma de gerenciamento de URLs curtas open source completa",
     "loginButton": "Entrar",
-    "registerButton": "Cadastrar",
     "feature1Title": "🔗 Gerenciamento de URLs Curtas",
     "feature1Desc": "Crie e gerencie rapidamente suas URLs curtas com suporte a slugs personalizados",
     "feature1Item1": "• Slug de URL curta automático ou personalizado",
@@ -932,6 +917,36 @@
       "edge": "Edge",
       "opera": "Opera",
       "samsung": "Navegador Samsung"
+    },
+    "templates": {
+      "APP_DOWNLOAD_IOS": {
+        "name": "Download iOS App",
+        "description": "Redirecionar usuários iOS para App Store"
+      },
+      "APP_DOWNLOAD_ANDROID": {
+        "name": "Download Android App",
+        "description": "Redirecionar usuários Android para Google Play"
+      },
+      "MULTILANG_TW": {
+        "name": "Usuários de Chinês Tradicional",
+        "description": "Redirecionar usuários que preferem Chinês Tradicional"
+      },
+      "MULTILANG_CN": {
+        "name": "Usuários de Chinês Simplificado",
+        "description": "Redirecionar usuários que preferem Chinês Simplificado"
+      },
+      "BUSINESS_HOURS": {
+        "name": "Horário Comercial",
+        "description": "Redirecionar durante horário comercial (9:00-18:00)"
+      },
+      "MOBILE_ONLY": {
+        "name": "Usuários Móveis",
+        "description": "Redirecionar usuários de dispositivos móveis"
+      },
+      "DESKTOP_ONLY": {
+        "name": "Usuários Desktop",
+        "description": "Redirecionar usuários de desktop"
+      }
     }
   },
   "bots": {

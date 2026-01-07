@@ -96,6 +96,40 @@ export function t(key: TranslationKey, vars?: Record<string, string | number>): 
 }
 
 /**
+ * Translation function for dynamic keys (without TypeScript autocomplete)
+ * Use this when the key is generated dynamically at runtime
+ *
+ * @param key - Translation key in dot notation
+ * @param fallback - Fallback string if translation not found
+ * @param vars - Optional variables to interpolate
+ * @returns Translated string or fallback
+ *
+ * @example
+ * tDynamic(`routing.templates.${template.key}.name`, template.name)
+ */
+export function tDynamic(
+  key: string,
+  fallback?: string,
+  vars?: Record<string, string | number>
+): string {
+  let translation = getNestedValue(translations, key);
+
+  // If translation equals the key (not found), use fallback
+  if (translation === key && fallback) {
+    return fallback;
+  }
+
+  // Replace variables in the format {variableName}
+  if (vars) {
+    Object.entries(vars).forEach(([varKey, varValue]) => {
+      translation = translation.replaceAll(`{${varKey}}`, String(varValue));
+    });
+  }
+
+  return translation;
+}
+
+/**
  * Get current locale
  */
 export function getLocale(): string {

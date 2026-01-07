@@ -917,6 +917,36 @@
       "edge": "Edge",
       "opera": "Opera",
       "samsung": "Samsung 瀏覽器"
+    },
+    "templates": {
+      "APP_DOWNLOAD_IOS": {
+        "name": "iOS App 下載",
+        "description": "將 iOS 使用者導向 App Store"
+      },
+      "APP_DOWNLOAD_ANDROID": {
+        "name": "Android App 下載",
+        "description": "將 Android 使用者導向 Google Play"
+      },
+      "MULTILANG_TW": {
+        "name": "繁體中文使用者",
+        "description": "將偏好繁體中文的使用者導向指定頁面"
+      },
+      "MULTILANG_CN": {
+        "name": "簡體中文使用者",
+        "description": "將偏好簡體中文的使用者導向指定頁面"
+      },
+      "BUSINESS_HOURS": {
+        "name": "營業時間",
+        "description": "在營業時間 (9:00-18:00) 導向指定頁面"
+      },
+      "MOBILE_ONLY": {
+        "name": "行動裝置使用者",
+        "description": "將行動裝置使用者導向指定頁面"
+      },
+      "DESKTOP_ONLY": {
+        "name": "桌面裝置使用者",
+        "description": "將桌面裝置使用者導向指定頁面"
+      }
     }
   },
   "bots": {

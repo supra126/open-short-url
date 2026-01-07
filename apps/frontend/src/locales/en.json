@@ -917,6 +917,36 @@
       "edge": "Edge",
       "opera": "Opera",
       "samsung": "Samsung Browser"
+    },
+    "templates": {
+      "APP_DOWNLOAD_IOS": {
+        "name": "iOS App Download",
+        "description": "Redirect iOS users to App Store"
+      },
+      "APP_DOWNLOAD_ANDROID": {
+        "name": "Android App Download",
+        "description": "Redirect Android users to Google Play"
+      },
+      "MULTILANG_TW": {
+        "name": "Traditional Chinese Users",
+        "description": "Redirect users preferring Traditional Chinese"
+      },
+      "MULTILANG_CN": {
+        "name": "Simplified Chinese Users",
+        "description": "Redirect users preferring Simplified Chinese"
+      },
+      "BUSINESS_HOURS": {
+        "name": "Business Hours",
+        "description": "Redirect during business hours (9:00-18:00)"
+      },
+      "MOBILE_ONLY": {
+        "name": "Mobile Users",
+        "description": "Redirect mobile device users"
+      },
+      "DESKTOP_ONLY": {
+        "name": "Desktop Users",
+        "description": "Redirect desktop users"
+      }
     }
   },
   "bots": {
