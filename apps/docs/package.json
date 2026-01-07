@@ -1,0 +1,22 @@
+{
+  "name": "@open-short-url/docs",
+  "version": "1.0.0",
+  "description": "Open Short URL Documentation",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vitepress dev",
+    "build": "vitepress build",
+    "preview": "vitepress preview"
+  },
+  "devDependencies": {
+    "@braintree/sanitize-url": "^7.1.1",
+    "cytoscape": "^3.33.1",
+    "cytoscape-cose-bilkent": "^4.1.0",
+    "dayjs": "^1.11.19",
+    "debug": "^4.4.3",
+    "mermaid": "10.9.3",
+    "vitepress": "^1.5.0",
+    "vitepress-plugin-mermaid": "^2.0.17"
+  }
+}
