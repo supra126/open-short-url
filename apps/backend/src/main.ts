@@ -18,7 +18,7 @@ import { writeFileSync } from 'fs';
 import { join } from 'path';
 
 // Import Query DTOs for OpenAPI schema export
-import { AnalyticsQueryDto, TimeRange } from './modules/analytics/dto/analytics-query.dto';
+import { AnalyticsQueryDto } from './modules/analytics/dto/analytics-query.dto';
 import { ExportQueryDto, ExportFormatDto } from './modules/analytics/dto/export-query.dto';
 import { UrlQueryDto } from './modules/url/dto/url-query.dto';
 import {

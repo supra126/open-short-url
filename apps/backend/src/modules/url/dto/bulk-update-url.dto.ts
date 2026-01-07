@@ -11,7 +11,7 @@ import {
   MaxLength,
   IsIn,
 } from 'class-validator';
-import { Type, Transform, plainToInstance } from 'class-transformer';
+import { Transform, plainToInstance } from 'class-transformer';
 import { UrlStatus } from '@prisma/client';
 import { BadRequestException } from '@nestjs/common';
 

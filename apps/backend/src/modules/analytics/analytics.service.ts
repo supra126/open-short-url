@@ -1341,7 +1341,6 @@ export class AnalyticsService {
     const urlClicksMap = new Map(clicksByUrl.map((c) => [c.urlId, c._count.id]));
 
     // Step 3: Build variant info lookup maps
-    const urlMap = new Map(abTestUrls.map((url) => [url.id, url]));
     const variantMap = new Map<string, { name: string; urlSlug: string }>();
 
     abTestUrls.forEach((url) => {

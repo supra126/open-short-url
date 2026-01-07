@@ -7,7 +7,7 @@ import {
 import { PrismaService } from '@/common/database/prisma.service';
 import { AuditLogService } from '@/modules/audit-log/audit-log.service';
 import { RequestMeta } from '@/common/decorators/request-meta.decorator';
-import { Prisma, UserRole, User } from '@prisma/client';
+import { Prisma, UserRole } from '@prisma/client';
 import { hashPassword } from '@/common/utils';
 import {
   UserListQueryDto,

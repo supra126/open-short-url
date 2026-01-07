@@ -28,11 +28,9 @@ import {
   UpdateRoutingRuleDto,
   RoutingRuleResponseDto,
   RoutingRulesListResponseDto,
-  RoutingRuleStatDto,
   UpdateSmartRoutingSettingsDto,
   SmartRoutingSettingsResponseDto,
   CreateFromTemplateDto,
-  RoutingTemplateDto,
   TemplateListResponseDto,
 } from './dto/routing-rule.dto';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';

@@ -24,6 +24,8 @@ import {
 } from '@nestjs/swagger';
 import { User } from '@prisma/client';
 import { UrlService } from './url.service';
+import { UrlVariantService } from './url-variant.service';
+import { UrlBulkService } from './url-bulk.service';
 import { CreateUrlDto } from './dto/create-url.dto';
 import { UpdateUrlDto } from './dto/update-url.dto';
 import { UrlQueryDto } from './dto/url-query.dto';
@@ -54,6 +56,8 @@ const MAX_BULK_ITEMS_USER = 50; // Lower limit for regular users
 export class UrlController {
   constructor(
     private readonly urlService: UrlService,
+    private readonly urlVariantService: UrlVariantService,
+    private readonly urlBulkService: UrlBulkService,
   ) {}
 
   /**
@@ -163,7 +167,7 @@ export class UrlController {
     @RequestMeta() meta: RequestMetaType,
   ): Promise<BulkCreateResultDto> {
     this.validateBulkItemCount(bulkCreateDto.urls.length, user.role === 'ADMIN');
-    return this.urlService.bulkCreate(user.id, bulkCreateDto.urls, meta);
+    return this.urlBulkService.bulkCreate(user.id, bulkCreateDto.urls, meta);
   }
 
   /**
@@ -211,7 +215,7 @@ export class UrlController {
     @RequestMeta() meta: RequestMetaType,
   ): Promise<BulkUpdateResultDto> {
     this.validateBulkItemCount(bulkUpdateDto.urlIds.length, user.role === 'ADMIN');
-    return this.urlService.bulkUpdate(
+    return this.urlBulkService.bulkUpdate(
       user.id,
       bulkUpdateDto.urlIds,
       bulkUpdateDto.operation,
@@ -255,7 +259,7 @@ export class UrlController {
     @RequestMeta() meta: RequestMetaType,
   ): Promise<BulkDeleteResultDto> {
     this.validateBulkItemCount(bulkDeleteDto.urlIds.length, user.role === 'ADMIN');
-    return this.urlService.bulkDelete(user.id, bulkDeleteDto.urlIds, user.role, meta);
+    return this.urlBulkService.bulkDelete(user.id, bulkDeleteDto.urlIds, user.role, meta);
   }
 
   /**
@@ -528,7 +532,7 @@ export class UrlController {
     @Body() createVariantDto: CreateVariantDto,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<VariantResponseDto> {
-    return this.urlService.createVariant(id, user.id, createVariantDto, user.role, meta);
+    return this.urlVariantService.createVariant(id, user.id, createVariantDto, user.role, meta);
   }
 
   /**
@@ -563,7 +567,7 @@ export class UrlController {
     @CurrentUser() user: User,
     @Param('id') id: string,
   ): Promise<VariantListResponseDto> {
-    return this.urlService.findAllVariants(id, user.id, user.role);
+    return this.urlVariantService.findAllVariants(id, user.id, user.role);
   }
 
   /**
@@ -604,7 +608,7 @@ export class UrlController {
     @Param('id') id: string,
     @Param('variantId') variantId: string,
   ): Promise<VariantResponseDto> {
-    return this.urlService.findOneVariant(id, variantId, user.id, user.role);
+    return this.urlVariantService.findOneVariant(id, variantId, user.id, user.role);
   }
 
   /**
@@ -647,7 +651,7 @@ export class UrlController {
     @Body() updateVariantDto: UpdateVariantDto,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<VariantResponseDto> {
-    return this.urlService.updateVariant(id, variantId, user.id, updateVariantDto, user.role, meta);
+    return this.urlVariantService.updateVariant(id, variantId, user.id, updateVariantDto, user.role, meta);
   }
 
   /**
@@ -689,6 +693,6 @@ export class UrlController {
     @Param('variantId') variantId: string,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<void> {
-    return this.urlService.deleteVariant(id, variantId, user.id, user.role, meta);
+    return this.urlVariantService.deleteVariant(id, variantId, user.id, user.role, meta);
   }
 }
