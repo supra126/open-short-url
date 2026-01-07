@@ -75,7 +75,7 @@ export const TurnstileWidget = forwardRef<
   return (
     <div className={className}>
       {/* Fixed height container to prevent CLS */}
-      <div className="min-h-[65px] flex items-center justify-center">
+      <div className="min-h-16.25 flex items-center justify-center">
         <Turnstile
           ref={turnstileRef}
           siteKey={siteKey}

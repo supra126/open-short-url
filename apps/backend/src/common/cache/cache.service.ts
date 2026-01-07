@@ -226,7 +226,8 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Delete keys by pattern
+   * Delete keys by pattern using SCAN (non-blocking)
+   * Uses SCAN instead of KEYS to avoid blocking Redis server
    * Skips operation if Redis is unavailable
    */
   async delPattern(pattern: string): Promise<void> {
@@ -239,9 +240,34 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     }
 
     try {
-      const keys = await this.redis.keys(pattern);
-      if (keys.length > 0) {
-        await this.redis.del(...keys);
+      // Use SCAN instead of KEYS to avoid blocking Redis
+      // SCAN is O(1) per call whereas KEYS is O(N) and blocks the server
+      let cursor = '0';
+      let totalDeleted = 0;
+      const SCAN_COUNT = 100; // Number of keys to scan per iteration
+
+      do {
+        // SCAN returns [cursor, keys]
+        const [newCursor, keys] = await this.redis.scan(
+          cursor,
+          'MATCH',
+          pattern,
+          'COUNT',
+          SCAN_COUNT,
+        );
+        cursor = newCursor;
+
+        if (keys.length > 0) {
+          await this.redis.del(...keys);
+          totalDeleted += keys.length;
+        }
+      } while (cursor !== '0');
+
+      if (totalDeleted > 0) {
+        this.loggerService.debug(
+          `Deleted ${totalDeleted} keys matching pattern: ${pattern}`,
+          'CacheService',
+        );
       }
     } catch (error) {
       this.loggerService.error(

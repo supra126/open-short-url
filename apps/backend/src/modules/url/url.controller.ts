@@ -27,7 +27,7 @@ import { UrlService } from './url.service';
 import { CreateUrlDto } from './dto/create-url.dto';
 import { UpdateUrlDto } from './dto/update-url.dto';
 import { UrlQueryDto } from './dto/url-query.dto';
-import { UrlResponseDto, UrlListResponseDto } from './dto/url-response.dto';
+import { UrlResponseDto, UrlListResponseDto, DashboardStatsResponseDto } from './dto/url-response.dto';
 import {
   CreateVariantDto,
   UpdateVariantDto,
@@ -43,8 +43,8 @@ import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 
 // Maximum items per bulk request to prevent resource exhaustion
-const MAX_BULK_ITEMS = 500;
-const MAX_BULK_ITEMS_USER = 100; // Lower limit for regular users
+const MAX_BULK_ITEMS = 100; // Reduced from 500 for security
+const MAX_BULK_ITEMS_USER = 50; // Lower limit for regular users
 
 @ApiTags('URLs')
 @Controller('api/urls')
@@ -128,10 +128,10 @@ export class UrlController {
    * Bulk create short URLs
    */
   @Post('bulk')
-  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute (reduced for DoS protection)
   @ApiOperation({
     summary: 'Bulk create short URLs',
-    description: `Bulk create short URLs (max 500 per request).
+    description: `Bulk create short URLs (max 100 per request).
 
 **Features:**
 - Partial success strategy: successful URLs are created, failed ones return error details
@@ -139,7 +139,7 @@ export class UrlController {
 - Perfect for CSV import scenarios
 
 **Limits:**
-- Maximum 500 URLs per request
+- Maximum 100 URLs per request (50 for regular users)
 - Duplicate customSlug will cause that specific URL to fail`,
   })
   @ApiResponse({
@@ -170,7 +170,7 @@ export class UrlController {
    * Bulk update short URLs
    */
   @Patch('bulk')
-  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute (reduced for DoS protection)
   @ApiOperation({
     summary: 'Bulk update short URLs',
     description: `Bulk update short URLs with various operations.
@@ -182,7 +182,7 @@ export class UrlController {
 - \`utm\`: Update UTM parameters
 
 **Limits:**
-- Maximum 500 URLs per request
+- Maximum 100 URLs per request (50 for regular users)
 - Only URLs owned by the user (or all if ADMIN) will be updated`,
   })
   @ApiResponse({
@@ -225,13 +225,13 @@ export class UrlController {
    */
   @Delete('bulk')
   @HttpCode(HttpStatus.OK)
-  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
+  @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute (reduced for DoS protection)
   @ApiOperation({
     summary: 'Bulk delete short URLs',
     description: `Bulk delete short URLs and their related click records.
 
 **Limits:**
-- Maximum 500 URLs per request
+- Maximum 100 URLs per request (50 for regular users)
 - Only URLs owned by the user (or all if ADMIN) will be deleted`,
   })
   @ApiResponse({
@@ -295,6 +295,30 @@ export class UrlController {
     @Query() queryDto: UrlQueryDto,
   ): Promise<UrlListResponseDto> {
     return this.urlService.findAll(user.id, queryDto, user.role);
+  }
+
+  /**
+   * Get dashboard statistics
+   */
+  @Get('stats')
+  @ApiOperation({
+    summary: 'Get URL statistics',
+    description: 'Get dashboard statistics including total, active, inactive, and expired URL counts.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Statistics retrieved successfully',
+    type: DashboardStatsResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  async getStats(
+    @CurrentUser() user: User,
+  ): Promise<DashboardStatsResponseDto> {
+    return this.urlService.getStats(user.id, user.role);
   }
 
   /**

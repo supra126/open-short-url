@@ -182,12 +182,23 @@ export class ExportService {
 
   /**
    * Escape CSV field value
+   * Protects against CSV Injection (Formula Injection) attacks
+   * by prefixing dangerous characters with a single quote
    */
   private escapeCSV(value: string): string {
-    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-      return `"${value.replace(/"/g, '""')}"`;
+    // First, sanitize against CSV injection (formula injection)
+    // Characters that can trigger formula execution in Excel/Google Sheets: = + - @ | %
+    let sanitized = value;
+    if (/^[=+\-@|%]/.test(value)) {
+      // Prefix with single quote to prevent formula execution
+      sanitized = `'${value}`;
     }
-    return value;
+
+    // Then apply standard CSV escaping
+    if (sanitized.includes(',') || sanitized.includes('"') || sanitized.includes('\n') || sanitized.includes('\r')) {
+      return `"${sanitized.replace(/"/g, '""')}"`;
+    }
+    return sanitized;
   }
 
   /**

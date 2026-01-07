@@ -57,8 +57,10 @@ import {
   CheckCircle,
   XCircle,
   UserPlus,
+  Loader2,
 } from 'lucide-react';
 import { t } from '@/lib/i18n';
+import { formatDate } from '@/lib/utils';
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -202,11 +204,12 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex items-start justify-between">
+    <div className="p-6 space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold">{t('users.title')}</h1>
-          <p className="text-muted-foreground">{t('users.description')}</p>
+          <p className="text-muted-foreground mt-1">{t('users.description')}</p>
         </div>
         <Button onClick={() => setShowCreateDialog(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
@@ -233,7 +236,7 @@ export default function UsersPage() {
             setRoleFilter(value === 'all' ? undefined : (value as UserRole))
           }
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-45">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -259,7 +262,7 @@ export default function UsersPage() {
             )
           }
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-45">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -283,14 +286,16 @@ export default function UsersPage() {
               <TableHead>{t('users.tableStatus')}</TableHead>
               <TableHead>{t('users.table2FA')}</TableHead>
               <TableHead>{t('users.tableCreatedAt')}</TableHead>
-              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="w-12.5"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center">
-                  {t('common.loading')}
+                <TableCell colSpan={7} className="text-center py-12">
+                  <div className="flex items-center justify-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
                 </TableCell>
               </TableRow>
             ) : data?.data.length === 0 ? (
@@ -317,12 +322,12 @@ export default function UsersPage() {
                   </TableCell>
                   <TableCell>
                     {user.isActive ? (
-                      <Badge variant="outline" className="text-green-600">
+                      <Badge variant="outline" className="text-success">
                         <CheckCircle className="mr-1 h-3 w-3" />
                         {t('users.statusActive')}
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="text-red-600">
+                      <Badge variant="outline" className="text-destructive">
                         <XCircle className="mr-1 h-3 w-3" />
                         {t('users.statusInactive')}
                       </Badge>
@@ -334,7 +339,7 @@ export default function UsersPage() {
                       : t('common.disabled')}
                   </TableCell>
                   <TableCell>
-                    {new Date(user.createdAt).toLocaleDateString()}
+                    {formatDate(user.createdAt)}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -374,7 +379,7 @@ export default function UsersPage() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => setDeleteUser(user)}
-                          className="text-red-600"
+                          className="text-destructive"
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           {t('users.delete')}
@@ -393,12 +398,11 @@ export default function UsersPage() {
         {data && data.totalPages > 1 && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-muted-foreground">
-            {t('users.showing')} {(page - 1) * 10 + 1} {t('users.to')}{' '}
-            {Math.min(page * 10, data.total)} {t('users.of')} {data.total}{' '}
-            {t('users.users')}
+            {t('common.page')} {page} {t('common.of')} {data.totalPages}（{t('common.total')} {data.total} {t('common.items')}）
           </p>
           <div className="flex gap-2">
             <Button
+              size="sm"
               variant="outline"
               onClick={() => setPage(page - 1)}
               disabled={page === 1}
@@ -406,6 +410,7 @@ export default function UsersPage() {
               {t('common.previous')}
             </Button>
             <Button
+              size="sm"
               variant="outline"
               onClick={() => setPage(page + 1)}
               disabled={page === data.totalPages}
@@ -469,7 +474,7 @@ export default function UsersPage() {
             <p className="text-sm">
               {t('users.deleteConfirm')} <strong>{deleteUser?.email}</strong>?
             </p>
-            <p className="text-sm text-red-600">{t('users.deleteWarning')}</p>
+            <p className="text-sm text-destructive">{t('users.deleteWarning')}</p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteUser(null)}>

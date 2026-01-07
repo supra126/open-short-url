@@ -34,6 +34,12 @@ export const ERROR_MESSAGES = {
   // Rate limit
   RATE_LIMIT_EXCEEDED: 'Too many requests, please try again later',
 
+  // Routing errors
+  ROUTING_RULE_NOT_FOUND: 'Routing rule not found',
+  ROUTING_TEMPLATE_NOT_FOUND: 'Routing template not found',
+  ROUTING_MAX_RULES_EXCEEDED: 'Maximum number of routing rules exceeded',
+  ROUTING_EVALUATION_FAILED: 'Failed to evaluate routing rules',
+
   // Server errors
   INTERNAL_SERVER_ERROR: 'Internal server error',
   DATABASE_ERROR: 'Database error',

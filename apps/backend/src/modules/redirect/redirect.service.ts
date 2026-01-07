@@ -2,9 +2,13 @@ import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { UrlService } from '@/modules/url/url.service';
+import { RoutingService } from '@/modules/routing/routing.service';
+import { RoutingEvaluatorService } from '@/modules/routing/routing-evaluator.service';
+import { ClickDataEnricherService } from '@/common/services/click-data-enricher.service';
 import { comparePassword } from '@/common/utils/password-hasher';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
 
@@ -17,6 +21,8 @@ interface ClickData {
   ip?: string;
   userAgent?: string;
   referer?: string;
+  language?: string;
+  timezone?: string;
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
@@ -40,6 +46,8 @@ interface UrlRecord {
   originalUrl: string;
   password: string | null;
   isAbTest: boolean;
+  isSmartRouting: boolean;
+  defaultUrl: string | null;
   utmSource: string | null;
   utmMedium: string | null;
   utmCampaign: string | null;
@@ -50,9 +58,14 @@ interface UrlRecord {
 
 @Injectable()
 export class RedirectService {
+  private readonly logger = new Logger(RedirectService.name);
+
   constructor(
     private eventEmitter: EventEmitter2,
     private urlService: UrlService,
+    private routingService: RoutingService,
+    private routingEvaluator: RoutingEvaluatorService,
+    private clickDataEnricher: ClickDataEnricherService,
   ) {}
 
   /**
@@ -124,38 +137,7 @@ export class RedirectService {
       throw new UnauthorizedException(ERROR_MESSAGES.URL_PASSWORD_REQUIRED);
     }
 
-    // A/B Testing: Select variant if enabled
-    let targetUrl = url.originalUrl;
-    let selectedVariant: UrlVariant | null = null;
-
-    if (url.isAbTest && url.variants && url.variants.length > 0) {
-      selectedVariant = this.selectVariant(url.variants);
-      if (selectedVariant) {
-        targetUrl = selectedVariant.targetUrl;
-      }
-    }
-
-    // Merge UTM parameters: dynamic (clickData) > preset (url)
-    const mergedClickData = {
-      ...clickData,
-      utmSource: clickData.utmSource || url.utmSource,
-      utmMedium: clickData.utmMedium || url.utmMedium,
-      utmCampaign: clickData.utmCampaign || url.utmCampaign,
-      utmTerm: clickData.utmTerm || url.utmTerm,
-      utmContent: clickData.utmContent || url.utmContent,
-    };
-
-    // Emit async event to record click (fire and forget)
-    this.eventEmitter.emit('url.clicked', {
-      urlId: url.id,
-      variantId: selectedVariant?.id || null,
-      clickData: mergedClickData,
-    });
-
-    // Build redirect URL with merged UTM parameters
-    const redirectUrl = this.buildRedirectUrl(targetUrl, url, clickData);
-
-    return redirectUrl;
+    return this.processRedirect(url, clickData);
   }
 
   /**
@@ -179,11 +161,37 @@ export class RedirectService {
       throw new UnauthorizedException(ERROR_MESSAGES.URL_PASSWORD_INCORRECT);
     }
 
-    // A/B Testing: Select variant if enabled
+    return this.processRedirect(url, clickData);
+  }
+
+  /**
+   * Process redirect with routing, A/B testing, and click tracking
+   * Shared logic between redirect() and redirectWithPassword()
+   */
+  private async processRedirect(url: UrlRecord, clickData: ClickData): Promise<string> {
+    // Determine target URL based on routing priority:
+    // 1. Smart Routing (if enabled and matches)
+    // 2. A/B Testing (if enabled)
+    // 3. Default URL or Original URL
     let targetUrl = url.originalUrl;
     let selectedVariant: UrlVariant | null = null;
+    let matchedRoutingRuleId: string | null = null;
 
-    if (url.isAbTest && url.variants && url.variants.length > 0) {
+    // Priority 1: Smart Routing
+    if (url.isSmartRouting) {
+      const routingResult = await this.evaluateSmartRouting(url.id, clickData);
+      if (routingResult.matched) {
+        targetUrl = routingResult.targetUrl!;
+        matchedRoutingRuleId = routingResult.ruleId!;
+        this.logger.debug(`Smart Routing matched rule: ${routingResult.ruleId} for URL ${url.id}`);
+      } else if (url.defaultUrl) {
+        // Use defaultUrl if no routing rules match
+        targetUrl = url.defaultUrl;
+      }
+    }
+
+    // Priority 2: A/B Testing (only if Smart Routing didn't match)
+    if (!matchedRoutingRuleId && url.isAbTest && url.variants && url.variants.length > 0) {
       selectedVariant = this.selectVariant(url.variants);
       if (selectedVariant) {
         targetUrl = selectedVariant.targetUrl;
@@ -204,13 +212,12 @@ export class RedirectService {
     this.eventEmitter.emit('url.clicked', {
       urlId: url.id,
       variantId: selectedVariant?.id || null,
+      routingRuleId: matchedRoutingRuleId,
       clickData: mergedClickData,
     });
 
     // Build redirect URL with merged UTM parameters
-    const redirectUrl = this.buildRedirectUrl(targetUrl, url, clickData);
-
-    return redirectUrl;
+    return this.buildRedirectUrl(targetUrl, url, clickData);
   }
 
   /**
@@ -247,4 +254,83 @@ export class RedirectService {
     }
   }
 
+  /**
+   * Evaluate smart routing rules and return the matched result
+   * @param urlId - The URL ID to evaluate routing rules for
+   * @param clickData - Click data containing visitor information
+   * @returns Routing result with match status and optional fallback reason
+   */
+  private async evaluateSmartRouting(
+    urlId: string,
+    clickData: ClickData,
+  ): Promise<{
+    matched: boolean;
+    targetUrl?: string;
+    ruleId?: string;
+    fallbackReason?: 'NO_RULES_MATCHED' | 'EVALUATION_ERROR';
+  }> {
+    try {
+      // Use enricher to parse user agent and geo-location data
+      const enriched = this.clickDataEnricher.enrich(clickData);
+
+      // Build visitor context for routing evaluation
+      const visitorContext = this.routingEvaluator.buildVisitorContext({
+        ip: clickData.ip,
+        userAgent: clickData.userAgent,
+        referer: clickData.referer,
+        language: clickData.language,
+        country: enriched.country,
+        region: enriched.region,
+        city: enriched.city,
+        device: enriched.device,
+        os: enriched.os,
+        browser: enriched.browser,
+        utmSource: clickData.utmSource,
+        utmMedium: clickData.utmMedium,
+        utmCampaign: clickData.utmCampaign,
+        utmTerm: clickData.utmTerm,
+        utmContent: clickData.utmContent,
+        timezone: clickData.timezone,
+      });
+
+      // Evaluate routing rules
+      const result = await this.routingService.evaluateRules(urlId, visitorContext);
+
+      if (result.rule && result.targetUrl) {
+        // Increment match count (buffered, will be flushed periodically)
+        this.routingService.incrementMatchCount(result.rule.id);
+
+        // Emit routing rule matched event for webhooks
+        this.eventEmitter.emit('routing.rule_matched', {
+          ruleId: result.rule.id,
+          urlId,
+          ruleName: result.rule.name,
+          targetUrl: result.targetUrl,
+          clickData: {
+            ip: clickData.ip,
+            userAgent: clickData.userAgent,
+            referer: clickData.referer,
+            country: enriched.country,
+            device: enriched.device,
+            browser: enriched.browser,
+            os: enriched.os,
+          },
+        });
+
+        return {
+          matched: true,
+          targetUrl: result.targetUrl,
+          ruleId: result.rule.id,
+        };
+      }
+
+      return { matched: false, fallbackReason: 'NO_RULES_MATCHED' };
+    } catch (error) {
+      this.logger.error(
+        `Error evaluating smart routing for URL ${urlId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+      return { matched: false, fallbackReason: 'EVALUATION_ERROR' };
+    }
+  }
 }

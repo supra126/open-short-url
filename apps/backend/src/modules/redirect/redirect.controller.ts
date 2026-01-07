@@ -11,7 +11,9 @@ import {
   Ip,
   NotFoundException,
   HttpException,
+  BadRequestException,
 } from '@nestjs/common';
+import * as crypto from 'crypto';
 
 /**
  * Type guard to check if an error is an HTTP exception with status
@@ -59,6 +61,7 @@ import {
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 import { generatePasswordPage } from './templates/password-page.template';
 import { TurnstileService } from '@/modules/turnstile/turnstile.service';
+import { PasswordRateLimiterService } from '@/common/services';
 
 @ApiTags('Redirect')
 @Controller()
@@ -66,13 +69,22 @@ export class RedirectController {
   constructor(
     private readonly redirectService: RedirectService,
     private readonly configService: ConfigService,
-    private readonly turnstileService: TurnstileService
+    private readonly turnstileService: TurnstileService,
+    private readonly passwordRateLimiter: PasswordRateLimiterService,
   ) {}
 
   /**
    * Handle favicon.ico requests
    */
   @Get('favicon.ico')
+  @ApiOperation({
+    summary: 'Get favicon',
+    description: 'Redirects to the SVG favicon. This is a public endpoint.',
+  })
+  @ApiResponse({
+    status: HttpStatus.MOVED_PERMANENTLY,
+    description: 'Redirects to /static/favicon.svg',
+  })
   async handleFavicon(@Res() reply: FastifyReply) {
     // Redirect to SVG favicon in static folder
     return reply.redirect('/static/favicon.svg', 301);
@@ -82,6 +94,14 @@ export class RedirectController {
    * Handle robots.txt requests
    */
   @Get('robots.txt')
+  @ApiOperation({
+    summary: 'Get robots.txt',
+    description: 'Returns the robots.txt file for search engine crawlers. This is a public endpoint.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Returns robots.txt content',
+  })
   async handleRobots(@Res() reply: FastifyReply) {
     return reply.type('text/plain').code(200).send('User-agent: *\nAllow: /');
   }
@@ -94,7 +114,15 @@ export class RedirectController {
   @Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 requests per minute
   @ApiOperation({
     summary: 'Get short URL information',
-    description: 'Check if the short URL requires password verification',
+    description: `Check if the short URL requires password verification before redirecting.
+
+**Public Endpoint** - No authentication required.
+
+**Use Case:**
+- Use this endpoint to check if a short URL is password-protected before attempting to redirect
+- Useful for client-side applications that need to show a password input form
+
+**Rate Limit:** 30 requests per minute per IP`,
   })
   @ApiParam({
     name: 'slug',
@@ -130,8 +158,21 @@ export class RedirectController {
   @Throttle({ default: { limit: 100, ttl: 60000 } }) // 100 requests per minute
   @ApiOperation({
     summary: 'Redirect to original URL',
-    description:
-      'Access short URL and redirect to the original URL (when no password is required)',
+    description: `Access a short URL and redirect to the original URL.
+
+**Public Endpoint** - No authentication required.
+
+**Behavior:**
+- If the URL has no password protection: Immediately redirects (302) to the original URL
+- If the URL requires password: Returns HTML password verification page (200)
+- If smart routing is enabled: Redirects to the matched routing rule target URL
+- If A/B testing is enabled: Randomly selects a variant based on weights
+
+**UTM Parameters:**
+- All UTM parameters (utm_source, utm_medium, etc.) are tracked and passed through to the original URL
+- Click analytics are recorded including IP, device, browser, country, etc.
+
+**Rate Limit:** 100 requests per minute per IP`,
   })
   @ApiParam({
     name: 'slug',
@@ -262,7 +303,21 @@ export class RedirectController {
   @Throttle({ default: { limit: 5, ttl: 60000 } }) // 5 requests per minute (prevent brute force)
   @ApiOperation({
     summary: 'Verify password and redirect',
-    description: 'Provide password to access protected short URL',
+    description: `Verify the password for a password-protected short URL and redirect to the original URL.
+
+**Public Endpoint** - No authentication required.
+
+**Request Body:**
+- \`password\`: The password to verify
+- \`turnstileToken\`: Cloudflare Turnstile verification token (required if Turnstile is enabled)
+
+**Behavior:**
+- On success: Returns HTML page with JavaScript redirect to the original URL
+- On failure: Redirects back to the short URL page with error parameter
+
+**Security:**
+- Rate limited to 5 requests per minute to prevent brute force attacks
+- Supports Cloudflare Turnstile for additional bot protection`,
   })
   @ApiParam({
     name: 'slug',
@@ -324,6 +379,13 @@ export class RedirectController {
     // Validate slug - reject reserved paths and API routes
     this.validateSlug(slug);
 
+    // Extract IP for rate limiting
+    const extractedIp = this.extractIp(request);
+
+    // Check rate limiter FIRST (before any other processing)
+    // This prevents brute force attacks even with distributed IPs
+    this.passwordRateLimiter.checkAttempt(slug, extractedIp);
+
     // Only verify Turnstile if BOTH keys are configured
     const turnstileSiteKey =
       this.configService.get<string>('TURNSTILE_SITE_KEY');
@@ -342,7 +404,7 @@ export class RedirectController {
 
     // Extract click data
     const clickData = {
-      ip: this.extractIp(request),
+      ip: extractedIp,
       userAgent: request?.headers['user-agent'],
       referer: request?.headers['referer'] as string,
       utmSource,
@@ -360,7 +422,19 @@ export class RedirectController {
         clickData
       );
 
-      // Return HTML page with JavaScript redirect to avoid CSP issues
+      // Password correct - reset rate limiter for this slug/IP
+      this.passwordRateLimiter.recordSuccess(slug, extractedIp);
+
+      // Validate URL before redirect to prevent XSS via malicious URLs
+      const validatedUrl = this.validateRedirectUrl(originalUrl);
+      if (!validatedUrl) {
+        throw new BadRequestException('Invalid redirect URL');
+      }
+
+      // Generate a random nonce for CSP
+      const nonce = crypto.randomBytes(16).toString('base64');
+
+      // Return HTML page with JavaScript redirect
       const redirectHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -413,20 +487,26 @@ export class RedirectController {
     <h1>✓ Verification Successful</h1>
     <p>Redirecting you now...</p>
   </div>
-  <script>
+  <script nonce="${nonce}">
     // Redirect to original URL
-    window.location.href = ${JSON.stringify(originalUrl)};
+    window.location.href = ${JSON.stringify(validatedUrl)};
   </script>
 </body>
 </html>`;
 
       return reply
-        ?.type('text/html; charset=utf-8')
+        ?.header('Content-Security-Policy', `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; frame-ancestors 'none'`)
+        .header('X-Content-Type-Options', 'nosniff')
+        .header('X-Frame-Options', 'DENY')
+        .type('text/html; charset=utf-8')
         .code(200)
         .send(redirectHtml);
     } catch (err: unknown) {
       // Password incorrect, redirect back to short URL page with error
       if (isUnauthorizedError(err)) {
+        // Record failed attempt for rate limiting
+        this.passwordRateLimiter.recordFailedAttempt(slug, extractedIp);
+
         // Build UTM parameters
         const utmParams = new URLSearchParams();
         if (utmSource) utmParams.append('utm_source', utmSource);
@@ -495,25 +575,145 @@ export class RedirectController {
     if (!request) return undefined;
 
     // Check if we're behind a trusted proxy
-    // TRUSTED_PROXY can be 'true', '1', or a comma-separated list of IPs
-    const trustedProxy = this.configService.get<string>('TRUSTED_PROXY', '');
-    const isTrustedProxy = trustedProxy === 'true' || trustedProxy === '1' || trustedProxy.length > 0;
+    // TRUSTED_PROXY can be 'true', '1', or a comma-separated list of trusted proxy IPs
+    const trustedProxy = this.configService.get<string>('TRUSTED_PROXY', '').trim();
+    const isTrustedProxy =
+      trustedProxy === 'true' ||
+      trustedProxy === '1' ||
+      this.isRequestFromTrustedProxy(request.ip, trustedProxy);
 
     if (isTrustedProxy) {
       // Only read proxy headers when behind a trusted proxy
       const forwarded = request.headers['x-forwarded-for'] as string;
       if (forwarded) {
         // Take the first IP (client IP) from the chain
-        return forwarded.split(',')[0].trim();
+        const clientIp = forwarded.split(',')[0].trim();
+        // Validate and sanitize the IP
+        const sanitizedIp = this.sanitizeIp(clientIp);
+        if (sanitizedIp) {
+          return sanitizedIp;
+        }
       }
 
       const realIp = request.headers['x-real-ip'] as string;
       if (realIp) {
-        return realIp;
+        const sanitizedIp = this.sanitizeIp(realIp.trim());
+        if (sanitizedIp) {
+          return sanitizedIp;
+        }
       }
     }
 
     // Direct connection or untrusted proxy: use socket IP
     return request.ip;
+  }
+
+  /**
+   * Check if request comes from a trusted proxy IP
+   */
+  private isRequestFromTrustedProxy(
+    requestIp: string | undefined,
+    trustedProxyConfig: string,
+  ): boolean {
+    if (!requestIp || !trustedProxyConfig) return false;
+
+    // Skip if config is just 'true' or '1' (handled separately)
+    if (trustedProxyConfig === 'true' || trustedProxyConfig === '1') {
+      return false;
+    }
+
+    // Parse comma-separated list of trusted proxy IPs/CIDRs
+    const trustedProxies = trustedProxyConfig
+      .split(',')
+      .map((ip) => ip.trim())
+      .filter((ip) => ip.length > 0);
+
+    // Simple IP matching (for production, consider using a CIDR library)
+    return trustedProxies.some((proxy) => {
+      // Exact match
+      if (proxy === requestIp) return true;
+      // Localhost variations
+      if (
+        proxy === 'localhost' &&
+        (requestIp === '127.0.0.1' || requestIp === '::1')
+      ) {
+        return true;
+      }
+      return false;
+    });
+  }
+
+  /**
+   * Sanitize and validate IP address
+   * Returns undefined if IP is invalid or potentially malicious
+   */
+  private sanitizeIp(ip: string): string | undefined {
+    if (!ip) return undefined;
+
+    // Remove any port suffix (e.g., "192.168.1.1:8080" -> "192.168.1.1")
+    let cleanIp = ip;
+
+    // Handle IPv6 with port: [::1]:8080 -> ::1
+    if (cleanIp.startsWith('[') && cleanIp.includes(']:')) {
+      cleanIp = cleanIp.substring(1, cleanIp.indexOf(']:'));
+    } else if (cleanIp.includes(':') && !cleanIp.includes('::')) {
+      // IPv4 with port: 192.168.1.1:8080 -> 192.168.1.1
+      // But not IPv6 without port (contains multiple colons)
+      const lastColon = cleanIp.lastIndexOf(':');
+      const potentialPort = cleanIp.substring(lastColon + 1);
+      if (/^\d+$/.test(potentialPort)) {
+        cleanIp = cleanIp.substring(0, lastColon);
+      }
+    }
+
+    // Validate IPv4
+    const ipv4Regex =
+      /^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    if (ipv4Regex.test(cleanIp)) {
+      return cleanIp;
+    }
+
+    // Validate IPv6 (simplified - accepts valid IPv6 formats)
+    const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^[0-9a-fA-F]{1,4}::(?:[0-9a-fA-F]{1,4}:){0,5}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,2}:(?:[0-9a-fA-F]{1,4}:){0,4}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,3}:(?:[0-9a-fA-F]{1,4}:){0,3}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,4}:(?:[0-9a-fA-F]{1,4}:){0,2}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,5}:(?:[0-9a-fA-F]{1,4}:)?[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^::$|^::1$/;
+    if (ipv6Regex.test(cleanIp)) {
+      return cleanIp;
+    }
+
+    // Invalid IP format - return undefined
+    return undefined;
+  }
+
+  /**
+   * Validate and sanitize redirect URL to prevent XSS attacks
+   * Returns the validated URL or undefined if invalid
+   */
+  private validateRedirectUrl(url: string): string | undefined {
+    if (!url || typeof url !== 'string') {
+      return undefined;
+    }
+
+    try {
+      const parsed = new URL(url);
+
+      // Only allow http and https protocols
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return undefined;
+      }
+
+      // Block javascript: and data: URLs (extra safety)
+      if (url.toLowerCase().startsWith('javascript:') || url.toLowerCase().startsWith('data:')) {
+        return undefined;
+      }
+
+      // Ensure no newlines or special characters that could break out of context
+      if (/[\r\n<>]/.test(url)) {
+        return undefined;
+      }
+
+      return url;
+    } catch {
+      // Invalid URL
+      return undefined;
+    }
   }
 }

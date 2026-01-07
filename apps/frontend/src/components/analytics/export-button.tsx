@@ -16,9 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { t } from '@/lib/i18n';
-import type { AnalyticsQueryParams } from '@/hooks/use-analytics';
-
-type ExportFormat = 'csv' | 'json';
+import type { AnalyticsQueryParams, ExportFormat } from '@/hooks/use-analytics';
 
 interface ExportButtonProps {
   /** URL ID for single URL export, undefined for overview export */

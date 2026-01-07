@@ -36,6 +36,8 @@ import {
   Bot,
 } from 'lucide-react';
 import { VariantList } from '@/components/variants/variant-list';
+import { RoutingList } from '@/components/routing/routing-list';
+import { ExportButton } from '@/components/analytics/export-button';
 import Link from 'next/link';
 import { useUrl, useDeleteUrl, useGenerateQRCode } from '@/hooks/use-url';
 import { useUrlAnalytics, useRecentClicks, useBotAnalytics, type BotTypeStat, type RecentClickDto } from '@/hooks/use-analytics';
@@ -155,35 +157,11 @@ export default function UrlDetailPage() {
     }
   };
 
-  // Only show loading on first load when there's no data
-  if (isPending) {
-    return (
-      <div className="flex h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // Error state
-  if (error || !urlData) {
-    return (
-      <div className="flex h-[400px] flex-col items-center justify-center gap-4">
-        <p className="text-lg text-muted-foreground">{t('urls.notFound')}</p>
-        <Button onClick={() => router.push('/urls')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('urls.backToList')}
-        </Button>
-      </div>
-    );
-  }
-
-  const shortUrl = urlData.shortUrl;
-
   return (
     <>
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <Link href="/urls">
             <Button variant="ghost" size="icon">
@@ -195,21 +173,36 @@ export default function UrlDetailPage() {
             <p className="text-muted-foreground mt-1">{t('urls.detailDesc')}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Link href={`/urls/${id}/edit`}>
-            <Button variant="outline">
-              <Edit className="mr-2 h-4 w-4" />
-              {t('common.edit')}
+        {urlData && (
+          <div className="flex gap-2">
+            <Link href={`/urls/${id}/edit`}>
+              <Button variant="outline">
+                <Edit className="mr-2 h-4 w-4" />
+                {t('common.edit')}
+              </Button>
+            </Link>
+            <Button variant="destructive" onClick={handleDeleteClick}>
+              <Trash2 className="mr-2 h-4 w-4" />
+              {t('common.delete')}
             </Button>
-          </Link>
-          <Button variant="destructive" onClick={handleDeleteClick}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            {t('common.delete')}
-          </Button>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* URL Information */}
+      {isPending ? (
+        <div className="flex h-75 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : error || !urlData ? (
+        <div className="flex h-75 flex-col items-center justify-center gap-4">
+          <p className="text-lg text-muted-foreground">{t('urls.notFound')}</p>
+          <Button onClick={() => router.push('/urls')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('urls.backToList')}
+          </Button>
+        </div>
+      ) : (
       <div className="space-y-6">
         <div className="grid gap-4 md:grid-cols-2">
         <Card>
@@ -220,12 +213,12 @@ export default function UrlDetailPage() {
           <CardContent>
             <div className="flex items-center gap-2">
               <code className="flex-1 rounded bg-muted px-3 py-2 text-sm">
-                {shortUrl}
+                {urlData.shortUrl}
               </code>
               <Button size="sm" variant="outline" onClick={handleCopyShortUrl}>
                 <Copy className="h-4 w-4" />
               </Button>
-              <Link href={shortUrl} target="_blank">
+              <Link href={urlData.shortUrl} target="_blank">
                 <Button size="sm" variant="outline">
                   <ExternalLink className="h-4 w-4" />
                 </Button>
@@ -378,7 +371,7 @@ export default function UrlDetailPage() {
           <div className="flex flex-col items-center gap-4">
             {!qrCode ? (
               <div className="flex flex-col items-center gap-4">
-                <div className="flex h-[256px] w-[256px] items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/25">
+                <div className="flex h-64 w-64 items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/25">
                   <div className="text-center">
                     <QrCode className="mx-auto h-12 w-12 text-muted-foreground/50" />
                     <p className="mt-2 text-sm text-muted-foreground">
@@ -409,7 +402,7 @@ export default function UrlDetailPage() {
                   <img
                     src={qrCode}
                     alt={t('urls.qrCode')}
-                    className="h-[256px] w-[256px]"
+                    className="h-64 w-64"
                   />
                 </div>
                 <div className="flex gap-2">
@@ -478,7 +471,7 @@ export default function UrlDetailPage() {
               </LineChart>
             </ResponsiveContainer>
           ) : (
-            <div className="flex h-[300px] items-center justify-center rounded-md border border-dashed">
+            <div className="flex h-75 items-center justify-center rounded-md border border-dashed">
               <p className="text-sm text-muted-foreground">
                 {t('urls.noData')}
               </p>
@@ -578,7 +571,7 @@ export default function UrlDetailPage() {
                         <div className="flex items-center gap-2">
                           {click.isBot && (
                             <span title={click.botName}>
-                              <Bot className="h-3 w-3 text-orange-500" />
+                              <Bot className="h-3 w-3 text-warning" />
                             </span>
                           )}
                           {formatDateTime(click.createdAt)}
@@ -586,7 +579,7 @@ export default function UrlDetailPage() {
                       </td>
                       <td className="py-3">
                         {click.isBot ? (
-                          <span className="flex items-center gap-1 text-orange-600 dark:text-orange-400">
+                          <span className="flex items-center gap-1 text-warning">
                             {click.botName || t('bots.defaultBotName')}
                           </span>
                         ) : (
@@ -603,7 +596,7 @@ export default function UrlDetailPage() {
                       <td className="py-3">
                         {click.browser || t('urls.unknown')}
                       </td>
-                      <td className="py-3 max-w-[200px] truncate">
+                      <td className="py-3 max-w-50 truncate">
                         {click.referer ? (
                           <a
                             href={click.referer}
@@ -624,16 +617,25 @@ export default function UrlDetailPage() {
                 </tbody>
               </table>
               {recentClicksData.total > 10 && (
-                <div className="mt-4 text-center text-sm text-muted-foreground">
-                  {t('urls.showingRecentRecords').replace(
-                    '{total}',
-                    String(recentClicksData.total)
-                  )}
+                <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+                  <span className="text-sm text-muted-foreground">
+                    {t('urls.showingRecentRecords').replace(
+                      '{total}',
+                      String(recentClicksData.total)
+                    )}
+                  </span>
+                  <ExportButton
+                    urlId={id}
+                    queryParams={{ timeRange: 'last_365_days' }}
+                    includeClicks={true}
+                    variant="outline"
+                    size="sm"
+                  />
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex h-[200px] items-center justify-center rounded-md border border-dashed">
+            <div className="flex h-50 items-center justify-center rounded-md border border-dashed">
               <p className="text-sm text-muted-foreground">
                 {t('urls.noVisits')}
               </p>
@@ -642,9 +644,13 @@ export default function UrlDetailPage() {
         </CardContent>
         </Card>
 
+        {/* Smart Routing */}
+        <RoutingList urlId={id} />
+
         {/* A/B Testing Variants */}
         <VariantList urlId={id} />
       </div>
+      )}
     </div>
 
     {/* Delete Confirmation Dialog */}

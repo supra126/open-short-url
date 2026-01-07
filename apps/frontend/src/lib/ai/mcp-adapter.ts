@@ -153,7 +153,6 @@ export function createAllMCPTools() {
     const mcpTool = allMCPTools[name];
     // Convert snake_case to camelCase for better JS naming
     const camelCaseName = name.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     convertedTools[camelCaseName] = convertMCPTool(mcpTool);
   }
 

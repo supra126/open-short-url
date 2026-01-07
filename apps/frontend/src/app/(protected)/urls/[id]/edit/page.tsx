@@ -130,30 +130,9 @@ export default function EditUrlPage() {
       setFormData({ ...formData, [field]: e.target.value });
     };
 
-  // Loading state
-  if (isLoading) {
-    return (
-      <div className="flex h-[400px] items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  // Error state
-  if (!urlData) {
-    return (
-      <div className="flex h-[400px] flex-col items-center justify-center gap-4">
-        <p className="text-lg text-muted-foreground">{t('urls.notFound')}</p>
-        <Button onClick={() => router.push('/urls')}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          {t('urls.backToList')}
-        </Button>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
+      {/* Page Header */}
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft className="h-4 w-4" />
@@ -164,7 +143,23 @@ export default function EditUrlPage() {
         </div>
       </div>
 
-      <Card className="w-full">
+      {/* Loading state */}
+      {isLoading ? (
+        <div className="flex h-75 items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : !urlData ? (
+        /* Error state */
+        <div className="flex h-75 flex-col items-center justify-center gap-4">
+          <p className="text-lg text-muted-foreground">{t('urls.notFound')}</p>
+          <Button onClick={() => router.push('/urls')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t('urls.backToList')}
+          </Button>
+        </div>
+      ) : (
+        /* Content */
+        <Card className="w-full">
         <CardHeader>
           <CardTitle>{t('urls.settings')}</CardTitle>
           <CardDescription>
@@ -419,6 +414,7 @@ export default function EditUrlPage() {
           </form>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

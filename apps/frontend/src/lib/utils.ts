@@ -46,7 +46,7 @@ export function formatDate(date: string | Date): string {
 }
 
 /**
- * Format date and time
+ * Format date and time (24-hour format)
  */
 export function formatDateTime(date: string | Date): string {
   const d = new Date(date);
@@ -56,6 +56,30 @@ export function formatDateTime(date: string | Date): string {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
+    hour12: false,
+  }).format(d);
+}
+
+/**
+ * Format short date (month and day only)
+ */
+export function formatShortDate(date: string | Date): string {
+  const d = new Date(date);
+  return new Intl.DateTimeFormat(getBrowserLocale(), {
+    month: 'short',
+    day: 'numeric',
+  }).format(d);
+}
+
+/**
+ * Format time only (24-hour format)
+ */
+export function formatTime(date: string | Date): string {
+  const d = new Date(date);
+  return new Intl.DateTimeFormat(getBrowserLocale(), {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
   }).format(d);
 }
 

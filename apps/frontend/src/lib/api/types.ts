@@ -297,6 +297,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/urls/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Bulk create short URLs
+         * @description Bulk create short URLs (max 500 per request).
+         *
+         *     **Features:**
+         *     - Partial success strategy: successful URLs are created, failed ones return error details
+         *     - Supports all single URL creation parameters (customSlug, title, password, etc.)
+         *     - Perfect for CSV import scenarios
+         *
+         *     **Limits:**
+         *     - Maximum 500 URLs per request
+         *     - Duplicate customSlug will cause that specific URL to fail
+         */
+        post: operations["UrlController_bulkCreate"];
+        /**
+         * Bulk delete short URLs
+         * @description Bulk delete short URLs and their related click records.
+         *
+         *     **Limits:**
+         *     - Maximum 500 URLs per request
+         *     - Only URLs owned by the user (or all if ADMIN) will be deleted
+         */
+        delete: operations["UrlController_bulkDelete"];
+        options?: never;
+        head?: never;
+        /**
+         * Bulk update short URLs
+         * @description Bulk update short URLs with various operations.
+         *
+         *     **Supported operations:**
+         *     - `status`: Change status to ACTIVE or INACTIVE
+         *     - `bundle`: Add URLs to a bundle
+         *     - `expiration`: Set or remove expiration date
+         *     - `utm`: Update UTM parameters
+         *
+         *     **Limits:**
+         *     - Maximum 500 URLs per request
+         *     - Only URLs owned by the user (or all if ADMIN) will be updated
+         */
+        patch: operations["UrlController_bulkUpdate"];
+        trace?: never;
+    };
+    "/api/urls/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get URL statistics
+         * @description Get dashboard statistics including total, active, inactive, and expired URL counts.
+         */
+        get: operations["UrlController_getStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/urls/{id}/qrcode": {
         parameters: {
             query?: never;
@@ -695,6 +766,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/analytics/top-urls": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get top performing URLs
+         * @description Retrieve top performing URLs by click count within the specified time range
+         */
+        get: operations["AnalyticsController_getTopPerformingUrls"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/analytics/urls/{id}/recent-clicks": {
         parameters: {
             query?: never;
@@ -727,6 +818,26 @@ export interface paths {
          * @description Retrieve bot traffic statistics for the specified URL
          */
         get: operations["AnalyticsController_getBotAnalytics"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/analytics/urls/{id}/routing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get routing analytics for a URL
+         * @description Retrieve smart routing statistics for the specified URL, including rule match counts, trends, and distributions
+         */
+        get: operations["AnalyticsController_getRoutingAnalytics"];
         put?: never;
         post?: never;
         delete?: never;
@@ -844,7 +955,7 @@ export interface paths {
         };
         /**
          * Get system setting
-         * @description Retrieve system setting by key
+         * @description Retrieve system setting by key (admin only)
          */
         get: operations["SettingsController_getSystemSetting"];
         /**
@@ -967,6 +1078,94 @@ export interface paths {
          * @description Retrieve audit logs with pagination and filtering. Admin only.
          */
         get: operations["AuditLogController_getAuditLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/urls/{urlId}/routing-rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get all routing rules for a URL */
+        get: operations["RoutingController_findAll"];
+        put?: never;
+        /** Create a new routing rule */
+        post: operations["RoutingController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/urls/{urlId}/routing-rules/from-template": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create a routing rule from template */
+        post: operations["RoutingController_createFromTemplate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/urls/{urlId}/routing-rules/{ruleId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a single routing rule */
+        get: operations["RoutingController_findOne"];
+        /** Update a routing rule */
+        put: operations["RoutingController_update"];
+        post?: never;
+        /** Delete a routing rule */
+        delete: operations["RoutingController_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/urls/{urlId}/routing-rules/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update smart routing settings */
+        patch: operations["RoutingController_updateSettings"];
+        trace?: never;
+    };
+    "/api/routing-templates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get available routing rule templates */
+        get: operations["RoutingTemplatesController_getTemplates"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1352,6 +1551,11 @@ export interface components {
              */
             utmContent?: string;
         };
+        /**
+         * @description Status
+         * @enum {string}
+         */
+        UrlStatus: "ACTIVE" | "INACTIVE" | "EXPIRED";
         UrlResponseDto: {
             /**
              * @description URL ID
@@ -1386,9 +1590,8 @@ export interface components {
             /**
              * @description Status
              * @example ACTIVE
-             * @enum {string}
              */
-            status: "ACTIVE" | "INACTIVE" | "EXPIRED";
+            status: components["schemas"]["UrlStatus"];
             /**
              * @description Click count
              * @example 142
@@ -1431,6 +1634,21 @@ export interface components {
              */
             utmContent?: string;
             /**
+             * @description Whether A/B testing is enabled
+             * @example false
+             */
+            isAbTest: boolean;
+            /**
+             * @description Whether smart routing is enabled
+             * @example false
+             */
+            isSmartRouting: boolean;
+            /**
+             * @description Default URL when no routing rules match
+             * @example https://example.com/default
+             */
+            defaultUrl?: string;
+            /**
              * Format: date-time
              * @description Creation timestamp (ISO 8601 format)
              * @example 2025-10-01T10:30:00.000Z
@@ -1465,6 +1683,73 @@ export interface components {
              */
             path?: string;
         };
+        BulkCreateUrlDto: {
+            /** @description URL list (max 500) */
+            urls: components["schemas"]["CreateUrlDto"][];
+        };
+        BulkCreateSuccessItem: {
+            /** @description Index in the original array */
+            index: number;
+            /** @description Created URL */
+            url: components["schemas"]["UrlResponseDto"];
+        };
+        BulkCreateFailureItem: {
+            /** @description Index in the original array */
+            index: number;
+            /** @description Original input data */
+            data: components["schemas"]["CreateUrlDto"];
+            /** @description Error message */
+            error: string;
+        };
+        BulkCreateResultDto: {
+            /** @description Total number of URLs in request */
+            total: number;
+            /** @description Number of successfully created URLs */
+            successCount: number;
+            /** @description Number of failed URLs */
+            failureCount: number;
+            /** @description Successfully created URLs */
+            succeeded: components["schemas"]["BulkCreateSuccessItem"][];
+            /** @description Failed URLs with error details */
+            failed: components["schemas"]["BulkCreateFailureItem"][];
+        };
+        BulkUpdateUrlDto: {
+            /**
+             * @description URL IDs to update (max 500)
+             * @example [
+             *       "clxxx1",
+             *       "clxxx2"
+             *     ]
+             */
+            urlIds: string[];
+            /** @description Update operation */
+            operation: components["schemas"]["BulkUpdateStatusDto"] | components["schemas"]["BulkAddToBundleDto"] | components["schemas"]["BulkUpdateExpirationDto"] | components["schemas"]["BulkUpdateUtmDto"];
+        };
+        BulkUpdateResultDto: {
+            /** @description Number of URLs updated */
+            updatedCount: number;
+            /** @description IDs of updated URLs */
+            updatedIds: string[];
+            /** @description Additional message */
+            message?: string;
+        };
+        BulkDeleteUrlDto: {
+            /**
+             * @description URL IDs to delete (max 500)
+             * @example [
+             *       "clxxx1",
+             *       "clxxx2",
+             *       "clxxx3"
+             *     ]
+             */
+            urlIds: string[];
+        };
+        BulkDeleteResultDto: {
+            /** @description Number of URLs deleted */
+            deletedCount: number;
+            /** @description IDs of deleted URLs */
+            deletedIds: string[];
+        };
         UrlListResponseDto: {
             /**
              * @description Total number of records
@@ -1489,6 +1774,28 @@ export interface components {
             /** @description URL list */
             data: components["schemas"]["UrlResponseDto"][];
         };
+        DashboardStatsResponseDto: {
+            /**
+             * @description Total number of URLs
+             * @example 150
+             */
+            totalUrls: number;
+            /**
+             * @description Number of active URLs
+             * @example 120
+             */
+            activeUrls: number;
+            /**
+             * @description Number of inactive URLs
+             * @example 20
+             */
+            inactiveUrls: number;
+            /**
+             * @description Number of expired URLs
+             * @example 10
+             */
+            expiredUrls: number;
+        };
         UpdateUrlDto: {
             /**
              * @description Original URL
@@ -1507,12 +1814,13 @@ export interface components {
              */
             status?: "ACTIVE" | "INACTIVE" | "EXPIRED";
             /** @description Password protection (set to null to remove password) */
-            password?: Record<string, never>;
+            password?: string | null;
             /**
+             * Format: date-time
              * @description Expiration time (ISO 8601 format, set to null to remove expiration)
              * @example 2025-12-31T23:59:59Z
              */
-            expiresAt?: Record<string, never>;
+            expiresAt?: string | null;
             /**
              * @description UTM Source
              * @example newsletter
@@ -2067,6 +2375,16 @@ export interface components {
              */
             id: string;
             /**
+             * @description A/B Testing variant ID
+             * @example clxxx111222333
+             */
+            variantId?: string;
+            /**
+             * @description Routing rule ID that matched
+             * @example clxxx444555666
+             */
+            routingRuleId?: string;
+            /**
              * @description IP address
              * @example 192.168.1.1
              */
@@ -2092,6 +2410,11 @@ export interface components {
              */
             country?: string;
             /**
+             * @description Region/State
+             * @example Taipei City
+             */
+            region?: string;
+            /**
              * @description City
              * @example Taipei
              */
@@ -2116,6 +2439,16 @@ export interface components {
              * @example summer_sale
              */
             utmCampaign?: string;
+            /**
+             * @description UTM Term
+             * @example discount
+             */
+            utmTerm?: string;
+            /**
+             * @description UTM Content
+             * @example banner_ad
+             */
+            utmContent?: string;
             /**
              * @description Is this click from a bot
              * @example false
@@ -2167,6 +2500,149 @@ export interface components {
             totalBotClicks: number;
             /** @description Bot type distribution (Top 10) */
             botTypes: components["schemas"]["BotTypeStat"][];
+        };
+        RoutingRuleStat: {
+            /**
+             * @description Rule ID
+             * @example clxxx123456789
+             */
+            ruleId: string;
+            /**
+             * @description Rule name
+             * @example iOS Users
+             */
+            ruleName: string;
+            /**
+             * @description Target URL
+             * @example https://apps.apple.com/app/myapp
+             */
+            targetUrl: string;
+            /**
+             * @description Number of matches
+             * @example 150
+             */
+            matchCount: number;
+            /**
+             * @description Match percentage
+             * @example 35.5
+             */
+            matchPercentage: number;
+            /**
+             * @description Is rule active
+             * @example true
+             */
+            isActive: boolean;
+        };
+        RoutingRuleTimeSeriesDataPoint: {
+            /**
+             * @description Date
+             * @example 2025-01-15
+             */
+            date: string;
+            /**
+             * @description Rule ID
+             * @example clxxx123456789
+             */
+            ruleId: string;
+            /**
+             * @description Rule name
+             * @example iOS Users
+             */
+            ruleName: string;
+            /**
+             * @description Number of matches
+             * @example 42
+             */
+            matches: number;
+        };
+        RoutingRuleGeoStat: {
+            /**
+             * @description Rule ID
+             * @example clxxx123456789
+             */
+            ruleId: string;
+            /**
+             * @description Rule name
+             * @example iOS Users
+             */
+            ruleName: string;
+            /**
+             * @description Country
+             * @example Taiwan
+             */
+            country: string;
+            /**
+             * @description Number of matches
+             * @example 85
+             */
+            matches: number;
+            /**
+             * @description Percentage of rule matches
+             * @example 56.7
+             */
+            percentage: number;
+        };
+        RoutingRuleDeviceStat: {
+            /**
+             * @description Rule ID
+             * @example clxxx123456789
+             */
+            ruleId: string;
+            /**
+             * @description Rule name
+             * @example iOS Users
+             */
+            ruleName: string;
+            /**
+             * @description Device type
+             * @example Mobile
+             */
+            device: string;
+            /**
+             * @description Number of matches
+             * @example 120
+             */
+            matches: number;
+            /**
+             * @description Percentage of rule matches
+             * @example 80
+             */
+            percentage: number;
+        };
+        RoutingAnalyticsResponseDto: {
+            /**
+             * @description URL ID
+             * @example clxxx987654321
+             */
+            urlId: string;
+            /**
+             * @description Is smart routing enabled
+             * @example true
+             */
+            isSmartRouting: boolean;
+            /**
+             * @description Total routing matches
+             * @example 423
+             */
+            totalMatches: number;
+            /**
+             * @description Total clicks (including non-matches)
+             * @example 1250
+             */
+            totalClicks: number;
+            /**
+             * @description Routing match rate (%)
+             * @example 33.8
+             */
+            matchRate: number;
+            /** @description Rule statistics */
+            rules: components["schemas"]["RoutingRuleStat"][];
+            /** @description Time series data by rule */
+            timeSeries: components["schemas"]["RoutingRuleTimeSeriesDataPoint"][];
+            /** @description Geographic distribution by rule */
+            geoDistribution: components["schemas"]["RoutingRuleGeoStat"][];
+            /** @description Device distribution by rule */
+            deviceDistribution: components["schemas"]["RoutingRuleDeviceStat"][];
         };
         UserBotAnalyticsResponseDto: {
             /**
@@ -2532,7 +3008,7 @@ export interface components {
              * @description Action type
              * @enum {string}
              */
-            action: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED";
+            action: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "URL_BULK_CREATED" | "URL_BULK_UPDATED" | "URL_BULK_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED" | "ROUTING_RULE_CREATED" | "ROUTING_RULE_UPDATED" | "ROUTING_RULE_DELETED";
             /** @description Entity type */
             entityType: string;
             /** @description Entity ID */
@@ -2582,6 +3058,218 @@ export interface components {
             totalPages: number;
             /** @description Audit logs */
             data: components["schemas"]["AuditLogDto"][];
+        };
+        ConditionItemDto: {
+            /**
+             * @description Type of condition
+             * @example country
+             * @enum {string}
+             */
+            type: "country" | "region" | "city" | "device" | "os" | "browser" | "language" | "referer" | "time" | "day_of_week" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content";
+            /**
+             * @description Operator for matching
+             * @example equals
+             * @enum {string}
+             */
+            operator: "equals" | "not_equals" | "contains" | "not_contains" | "in" | "not_in" | "starts_with" | "ends_with" | "between" | "before" | "after";
+            /** @description Value(s) to match against. Can be string, array, or time range object. */
+            value: string | string[] | {
+                /** @example 09:00 */
+                start?: string;
+                /** @example 18:00 */
+                end?: string;
+                /** @example Asia/Taipei */
+                timezone?: string;
+            };
+        };
+        RoutingConditionsDto: {
+            /**
+             * @description Logical operator for combining conditions
+             * @example AND
+             * @enum {string}
+             */
+            operator: "AND" | "OR";
+            /** @description Array of condition items (max 20) */
+            conditions: components["schemas"]["ConditionItemDto"][];
+        };
+        CreateRoutingRuleDto: {
+            /**
+             * @description Name of the routing rule
+             * @example iOS App Store Redirect
+             */
+            name: string;
+            /**
+             * @description Target URL when conditions match
+             * @example https://apps.apple.com/app/myapp
+             */
+            targetUrl: string;
+            /**
+             * @description Priority of this rule (higher = evaluated first)
+             * @default 0
+             * @example 100
+             */
+            priority: number;
+            /**
+             * @description Whether this rule is active
+             * @default true
+             * @example true
+             */
+            isActive: boolean;
+            /** @description Conditions for this routing rule */
+            conditions: components["schemas"]["RoutingConditionsDto"];
+        };
+        RoutingRuleResponseDto: {
+            /** @description Unique ID of the routing rule */
+            id: string;
+            /** @description URL ID this rule belongs to */
+            urlId: string;
+            /** @description Name of the routing rule */
+            name: string;
+            /** @description Target URL when conditions match */
+            targetUrl: string;
+            /** @description Priority of this rule */
+            priority: number;
+            /** @description Whether this rule is active */
+            isActive: boolean;
+            /** @description Conditions for this routing rule */
+            conditions: components["schemas"]["RoutingConditionsDto"];
+            /** @description Number of times this rule matched */
+            matchCount: number;
+            /**
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            updatedAt: string;
+        };
+        CreateFromTemplateDto: {
+            /**
+             * @description Template key
+             * @example APP_DOWNLOAD_IOS
+             */
+            templateKey: string;
+            /**
+             * @description Target URL for this rule
+             * @example https://apps.apple.com/app/myapp
+             */
+            targetUrl: string;
+            /**
+             * @description Custom name (overrides template name)
+             * @example iOS - App Store
+             */
+            name?: string;
+            /**
+             * @description Priority of this rule
+             * @example 100
+             */
+            priority?: number;
+        };
+        RoutingRuleStatDto: {
+            /**
+             * @description Rule ID
+             * @example clxxx123456789
+             */
+            ruleId: string;
+            /**
+             * @description Rule name
+             * @example iOS Users
+             */
+            name: string;
+            /**
+             * @description Number of matches
+             * @example 150
+             */
+            matchCount: number;
+            /**
+             * @description Match percentage
+             * @example 35.5
+             */
+            matchPercentage: number;
+        };
+        RoutingRulesListResponseDto: {
+            /** @description List of routing rules */
+            rules: components["schemas"]["RoutingRuleResponseDto"][];
+            /** @description Total number of matches across all rules */
+            totalMatches: number;
+            /** @description Statistics for each rule */
+            stats: components["schemas"]["RoutingRuleStatDto"][];
+        };
+        UpdateRoutingRuleDto: {
+            /**
+             * @description Name of the routing rule
+             * @example iOS App Store Redirect
+             */
+            name?: string;
+            /**
+             * @description Target URL when conditions match
+             * @example https://apps.apple.com/app/myapp
+             */
+            targetUrl?: string;
+            /**
+             * @description Priority of this rule (higher = evaluated first)
+             * @default 0
+             * @example 100
+             */
+            priority: number;
+            /**
+             * @description Whether this rule is active
+             * @default true
+             * @example true
+             */
+            isActive: boolean;
+            /** @description Conditions for this routing rule */
+            conditions?: components["schemas"]["RoutingConditionsDto"];
+        };
+        UpdateSmartRoutingSettingsDto: {
+            /**
+             * @description Enable or disable smart routing
+             * @example true
+             */
+            isSmartRouting?: boolean;
+            /**
+             * @description Default URL when no routing rules match (optional)
+             * @example https://example.com/default
+             */
+            defaultUrl?: string | null;
+        };
+        SmartRoutingSettingsResponseDto: {
+            /**
+             * @description Whether smart routing is enabled
+             * @example true
+             */
+            isSmartRouting: boolean;
+            /**
+             * @description Default URL when no routing rules match
+             * @example https://example.com/default
+             */
+            defaultUrl: string | null;
+        };
+        RoutingTemplateDto: {
+            /**
+             * @description Template key
+             * @example APP_DOWNLOAD_IOS
+             */
+            key: string;
+            /**
+             * @description Template name
+             * @example iOS App Download
+             */
+            name: string;
+            /**
+             * @description Template description
+             * @example Redirect iOS users to App Store
+             */
+            description: string;
+            /** @description Template conditions */
+            conditions: components["schemas"]["RoutingConditionsDto"];
+        };
+        TemplateListResponseDto: {
+            /** @description Available routing rule templates */
+            templates: components["schemas"]["RoutingTemplateDto"][];
         };
         RedirectInfoResponseDto: {
             /**
@@ -2786,7 +3474,7 @@ export interface components {
              * @example URL_CREATED
              * @enum {string}
              */
-            action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED";
+            action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "URL_BULK_CREATED" | "URL_BULK_UPDATED" | "URL_BULK_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED" | "ROUTING_RULE_CREATED" | "ROUTING_RULE_UPDATED" | "ROUTING_RULE_DELETED";
             /**
              * @description Filter by entity type (url, user, api_key, bundle, webhook, variant)
              * @example url
@@ -2818,6 +3506,199 @@ export interface components {
              * @enum {string}
              */
             sortOrder: "asc" | "desc";
+        };
+        TimeRangeDto: {
+            /**
+             * @description Start time in HH:mm format
+             * @example 09:00
+             */
+            start: string;
+            /**
+             * @description End time in HH:mm format
+             * @example 18:00
+             */
+            end?: string;
+            /**
+             * @description Timezone (IANA format)
+             * @example Asia/Taipei
+             */
+            timezone?: string;
+        };
+        BulkUpdateStatusDto: {
+            /**
+             * @description Operation type
+             * @example status
+             * @enum {string}
+             */
+            type: "status";
+            /**
+             * @description New status
+             * @example ACTIVE
+             * @enum {string}
+             */
+            status: "ACTIVE" | "INACTIVE" | "EXPIRED";
+        };
+        BulkAddToBundleDto: {
+            /**
+             * @description Operation type
+             * @example bundle
+             * @enum {string}
+             */
+            type: "bundle";
+            /**
+             * @description Bundle ID to add URLs to
+             * @example clxxx123456789
+             */
+            bundleId: string;
+        };
+        BulkUpdateExpirationDto: {
+            /**
+             * @description Operation type
+             * @example expiration
+             * @enum {string}
+             */
+            type: "expiration";
+            /**
+             * Format: date-time
+             * @description New expiration date (ISO 8601 format), null to remove expiration
+             * @example 2025-12-31T23:59:59Z
+             */
+            expiresAt?: string | null;
+        };
+        BulkUpdateUtmDto: {
+            /**
+             * @description Operation type
+             * @example utm
+             * @enum {string}
+             */
+            type: "utm";
+            /** @description UTM Source */
+            utmSource?: string;
+            /** @description UTM Medium */
+            utmMedium?: string;
+            /** @description UTM Campaign */
+            utmCampaign?: string;
+            /** @description UTM Term */
+            utmTerm?: string;
+            /** @description UTM Content */
+            utmContent?: string;
+        };
+        /**
+         * @description Condition type enum values
+         * @enum {string}
+         */
+        ConditionType: "country" | "region" | "city" | "device" | "os" | "browser" | "language" | "referer" | "time" | "day_of_week" | "utm_source" | "utm_medium" | "utm_campaign" | "utm_term" | "utm_content";
+        ConditionTypeDto: {
+            /**
+             * @description Condition type enum values
+             * @example country
+             */
+            type: components["schemas"]["ConditionType"];
+        };
+        /**
+         * @description Condition operator enum values
+         * @enum {string}
+         */
+        ConditionOperator: "equals" | "not_equals" | "contains" | "not_contains" | "in" | "not_in" | "starts_with" | "ends_with" | "between" | "before" | "after";
+        ConditionOperatorDto: {
+            /**
+             * @description Condition operator enum values
+             * @example equals
+             */
+            operator: components["schemas"]["ConditionOperator"];
+        };
+        /**
+         * @description Logical operator enum values
+         * @enum {string}
+         */
+        LogicalOperator: "AND" | "OR";
+        LogicalOperatorDto: {
+            /**
+             * @description Logical operator enum values
+             * @example AND
+             */
+            operator: components["schemas"]["LogicalOperator"];
+        };
+        /**
+         * @description Device type enum values
+         * @enum {string}
+         */
+        DeviceType: "mobile" | "tablet" | "desktop";
+        DeviceTypeDto: {
+            /**
+             * @description Device type enum values
+             * @example mobile
+             */
+            deviceType: components["schemas"]["DeviceType"];
+        };
+        /**
+         * @description Day of week enum values (0=Sunday, 6=Saturday)
+         * @enum {number}
+         */
+        DayOfWeek: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+        DayOfWeekDto: {
+            /**
+             * @description Day of week enum values (0=Sunday, 6=Saturday)
+             * @example 1
+             */
+            dayOfWeek: components["schemas"]["DayOfWeek"];
+        };
+        UrlStatusDto: {
+            /**
+             * @description URL status enum values
+             * @example ACTIVE
+             */
+            status: components["schemas"]["UrlStatus"];
+        };
+        TopPerformingUrlDto: {
+            /**
+             * @description URL ID
+             * @example clxxx123456789
+             */
+            id: string;
+            /**
+             * @description Short URL slug
+             * @example abc123
+             */
+            slug: string;
+            /**
+             * @description Title
+             * @example My Important Link
+             */
+            title?: string | null;
+            /**
+             * @description Original URL
+             * @example https://example.com/very-long-url
+             */
+            originalUrl: string;
+            /**
+             * @description Click count
+             * @example 142
+             */
+            clickCount: number;
+            /**
+             * @description Status
+             * @example ACTIVE
+             */
+            status: components["schemas"]["UrlStatus"];
+            /**
+             * Format: date-time
+             * @description Creation timestamp (ISO 8601 format)
+             * @example 2025-10-01T10:30:00.000Z
+             */
+            createdAt: string;
+        };
+        /**
+         * @description Export format enum values
+         * @enum {string}
+         */
+        ExportFormat: "csv" | "json";
+        ExportFormatDto: {
+            /**
+             * @description Export format enum values
+             * @example csv
+             */
+            format: components["schemas"]["ExportFormat"];
         };
     };
     responses: never;
@@ -3557,6 +4438,170 @@ export interface operations {
                 };
                 content: {
                     "application/json": unknown;
+                };
+            };
+        };
+    };
+    UrlController_bulkCreate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkCreateUrlDto"];
+            };
+        };
+        responses: {
+            /** @description Bulk creation completed (includes success and failure details) */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkCreateResultDto"];
+                };
+            };
+            /** @description Invalid request parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    UrlController_bulkDelete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkDeleteUrlDto"];
+            };
+        };
+        responses: {
+            /** @description Bulk deletion completed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkDeleteResultDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description No URLs found or no permission */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    UrlController_bulkUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkUpdateUrlDto"];
+            };
+        };
+        responses: {
+            /** @description Bulk update completed */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkUpdateResultDto"];
+                };
+            };
+            /** @description Invalid request parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description No URLs found or no permission */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    UrlController_getStats: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Statistics retrieved successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DashboardStatsResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
         };
@@ -4670,6 +5715,43 @@ export interface operations {
             };
         };
     };
+    AnalyticsController_getTopPerformingUrls: {
+        parameters: {
+            query: {
+                /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
+                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
+                /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
+                startDate?: string;
+                /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
+                endDate?: string;
+                limit: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Query successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TopPerformingUrlDto"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
     AnalyticsController_getRecentClicks: {
         parameters: {
             query: {
@@ -4740,6 +5822,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BotAnalyticsResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description URL not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    AnalyticsController_getRoutingAnalytics: {
+        parameters: {
+            query?: {
+                /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
+                timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
+                /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
+                startDate?: string;
+                /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
+                endDate?: string;
+            };
+            header?: never;
+            path: {
+                /** @description URL ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Query successful */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingAnalyticsResponseDto"];
                 };
             };
             /** @description Unauthorized */
@@ -4986,6 +6116,15 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Insufficient permissions (admin role required) */
+            403: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -5380,7 +6519,7 @@ export interface operations {
                 /** @description Number of records per page (maximum 100) */
                 pageSize?: number;
                 /** @description Filter by action type */
-                action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED";
+                action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "URL_BULK_CREATED" | "URL_BULK_UPDATED" | "URL_BULK_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED" | "ROUTING_RULE_CREATED" | "ROUTING_RULE_UPDATED" | "ROUTING_RULE_DELETED";
                 /** @description Filter by entity type (url, user, api_key, bundle, webhook, variant) */
                 entityType?: string;
                 /** @description Filter by entity ID */
@@ -5425,6 +6564,199 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    RoutingController_findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description URL ID */
+                urlId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingRulesListResponseDto"];
+                };
+            };
+        };
+    };
+    RoutingController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description URL ID */
+                urlId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateRoutingRuleDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingRuleResponseDto"];
+                };
+            };
+        };
+    };
+    RoutingController_createFromTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description URL ID */
+                urlId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateFromTemplateDto"];
+            };
+        };
+        responses: {
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingRuleResponseDto"];
+                };
+            };
+        };
+    };
+    RoutingController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description URL ID */
+                urlId: string;
+                /** @description Rule ID */
+                ruleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingRuleResponseDto"];
+                };
+            };
+        };
+    };
+    RoutingController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description URL ID */
+                urlId: string;
+                /** @description Rule ID */
+                ruleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateRoutingRuleDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RoutingRuleResponseDto"];
+                };
+            };
+        };
+    };
+    RoutingController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description URL ID */
+                urlId: string;
+                /** @description Rule ID */
+                ruleId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    RoutingController_updateSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description URL ID */
+                urlId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSmartRoutingSettingsDto"];
+            };
+        };
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SmartRoutingSettingsResponseDto"];
+                };
+            };
+        };
+    };
+    RoutingTemplatesController_getTemplates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TemplateListResponseDto"];
                 };
             };
         };

@@ -1,3 +1,7 @@
+/**
+ * Chat History Hooks
+ */
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -24,16 +28,9 @@ export function useChatHistory() {
   const [isLoading, setIsLoading] = useState(true);
 
   /**
-   * Load histories from localStorage on mount
-   */
-  useEffect(() => {
-    loadHistories();
-  }, []);
-
-  /**
    * Load all histories from localStorage
    */
-  const loadHistories = () => {
+  const loadHistories = useCallback(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
@@ -51,7 +48,14 @@ export function useChatHistory() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
+
+  /**
+   * Load histories from localStorage on mount
+   */
+  useEffect(() => {
+    loadHistories();
+  }, [loadHistories]);
 
   /**
    * Generate a title from the first user message

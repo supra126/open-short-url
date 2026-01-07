@@ -29,7 +29,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useBulkUpdateUrls } from '@/hooks/use-bulk-urls';
 import { useBundles } from '@/hooks/use-bundles';
 import { Loader2 } from 'lucide-react';
-import type { BulkUpdateOperation } from '@/lib/api/schemas';
+import type { BulkUpdateOperation, BulkUpdateOperationType } from '@/hooks/use-bulk-urls';
 
 interface BulkEditDialogProps {
   open: boolean;
@@ -38,15 +38,13 @@ interface BulkEditDialogProps {
   onSuccess: () => void;
 }
 
-type OperationType = 'status' | 'bundle' | 'expiration' | 'utm';
-
 export function BulkEditDialog({
   open,
   onOpenChange,
   selectedIds,
   onSuccess,
 }: BulkEditDialogProps) {
-  const [activeTab, setActiveTab] = useState<OperationType>('status');
+  const [activeTab, setActiveTab] = useState<BulkUpdateOperationType>('status');
   const { toast } = useToast();
   const bulkUpdate = useBulkUpdateUrls();
 
@@ -142,7 +140,7 @@ export function BulkEditDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle>{t('urls.bulk.editTitle')}</DialogTitle>
           <DialogDescription>
@@ -150,7 +148,7 @@ export function BulkEditDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as OperationType)}>
+        <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as BulkUpdateOperationType)}>
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="status">{t('urls.bulk.tabStatus')}</TabsTrigger>
             <TabsTrigger value="bundle">{t('urls.bulk.tabBundle')}</TabsTrigger>
@@ -241,7 +239,7 @@ export function BulkEditDialog({
                 <Input
                   value={utmSource}
                   onChange={(e) => setUtmSource(e.target.value)}
-                  placeholder="e.g., newsletter"
+                  placeholder={t('urls.bulk.utmSourcePlaceholder')}
                 />
               </div>
               <div className="space-y-2">
@@ -249,7 +247,7 @@ export function BulkEditDialog({
                 <Input
                   value={utmMedium}
                   onChange={(e) => setUtmMedium(e.target.value)}
-                  placeholder="e.g., email"
+                  placeholder={t('urls.bulk.utmMediumPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
@@ -257,7 +255,7 @@ export function BulkEditDialog({
                 <Input
                   value={utmCampaign}
                   onChange={(e) => setUtmCampaign(e.target.value)}
-                  placeholder="e.g., summer2024"
+                  placeholder={t('urls.bulk.utmCampaignPlaceholder')}
                 />
               </div>
               <div className="space-y-2">
@@ -265,7 +263,7 @@ export function BulkEditDialog({
                 <Input
                   value={utmTerm}
                   onChange={(e) => setUtmTerm(e.target.value)}
-                  placeholder="e.g., keyword"
+                  placeholder={t('urls.bulk.utmTermPlaceholder')}
                 />
               </div>
               <div className="col-span-2 space-y-2">
@@ -273,7 +271,7 @@ export function BulkEditDialog({
                 <Input
                   value={utmContent}
                   onChange={(e) => setUtmContent(e.target.value)}
-                  placeholder="e.g., banner"
+                  placeholder={t('urls.bulk.utmContentPlaceholder')}
                 />
               </div>
             </div>

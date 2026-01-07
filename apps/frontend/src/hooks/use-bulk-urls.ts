@@ -6,7 +6,7 @@
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { urlKeys } from './use-url';
+import { urlKeys } from '@/hooks/use-url';
 import type {
   BulkCreateUrlDto,
   BulkCreateResultDto,
@@ -16,9 +16,10 @@ import type {
   BulkDeleteResultDto,
   CreateUrlDto,
   BulkUpdateOperation,
+  BulkUpdateOperationType,
 } from '@/lib/api/schemas';
 
-// Re-export types
+// Re-export types for consumers of this hook
 export type {
   BulkCreateUrlDto,
   BulkCreateResultDto,
@@ -27,6 +28,7 @@ export type {
   BulkDeleteUrlDto,
   BulkDeleteResultDto,
   BulkUpdateOperation,
+  BulkUpdateOperationType,
 };
 
 // ==================== API Functions ====================

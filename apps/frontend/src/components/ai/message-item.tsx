@@ -8,6 +8,7 @@ import { Bot, User } from 'lucide-react';
 import { MarkdownRenderer } from './markdown-renderer';
 import { ToolResult } from './tool-result';
 import { CopyButton } from './copy-button';
+import { formatTime } from '@/lib/utils';
 
 /**
  * Message Item Component
@@ -122,10 +123,7 @@ export function MessageItem({ message }: MessageItemProps) {
           ) {
             return (
               <div className={`text-xs text-muted-foreground mt-1 ${isUser ? 'text-right' : 'text-left'}`}>
-                {new Date((message.metadata as { createdAt: string }).createdAt).toLocaleTimeString('zh-TW', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {formatTime((message.metadata as { createdAt: string }).createdAt)}
               </div>
             );
           }

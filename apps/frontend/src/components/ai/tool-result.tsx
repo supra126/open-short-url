@@ -62,7 +62,7 @@ export function ToolResult({ toolName, args, result, state }: ToolResultProps) {
         );
       case 'result':
         return (
-          <Badge variant="default" className="flex items-center gap-1 bg-green-600">
+          <Badge variant="default" className="flex items-center gap-1 bg-success">
             <CheckCircle className="h-3 w-3" />
             {t('ai.tool.completed')}
           </Badge>
@@ -107,7 +107,7 @@ export function ToolResult({ toolName, args, result, state }: ToolResultProps) {
         return (
           <div className="space-y-2">
             {result.message && (
-              <div className="text-sm text-green-600 dark:text-green-400">
+              <div className="text-sm text-success">
                 {result.message}
               </div>
             )}

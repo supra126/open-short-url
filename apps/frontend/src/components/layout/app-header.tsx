@@ -74,7 +74,7 @@ export function AppHeader() {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  className="text-red-600"
+                  className="text-destructive"
                   onClick={handleLogout}
                   disabled={logoutMutation.isPending}
                 >

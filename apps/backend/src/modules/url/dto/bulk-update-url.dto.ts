@@ -71,6 +71,9 @@ export class BulkUpdateExpirationDto {
   @ApiPropertyOptional({
     description: 'New expiration date (ISO 8601 format), null to remove expiration',
     example: '2025-12-31T23:59:59Z',
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
   })
   @IsDateString()
   @IsOptional()
@@ -165,14 +168,14 @@ function transformOperation(value: unknown): BulkUpdateOperation {
  */
 export class BulkUpdateUrlDto {
   @ApiProperty({
-    description: 'URL IDs to update (max 500)',
+    description: 'URL IDs to update (max 100)',
     type: [String],
     example: ['clxxx1', 'clxxx2'],
   })
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1, { message: 'At least 1 URL ID is required' })
-  @ArrayMaxSize(500, { message: 'Maximum 500 URLs per batch' })
+  @ArrayMaxSize(100, { message: 'Maximum 100 URLs per batch for security reasons' })
   urlIds!: string[];
 
   @ApiProperty({

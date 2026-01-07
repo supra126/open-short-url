@@ -7,6 +7,7 @@ import { CacheModule } from './common/cache/cache.module';
 import { LoggerModule } from './common/logger/logger.module';
 import { ThrottlerStorageModule } from './common/throttler/throttler.module';
 import { HybridThrottlerStorage } from './common/throttler/hybrid-throttler-storage';
+import { ServicesModule } from './common/services/services.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UrlModule } from './modules/url/url.module';
 import { RedirectModule } from './modules/redirect/redirect.module';
@@ -17,6 +18,7 @@ import { UsersModule } from './modules/users/users.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { BundleModule } from './modules/bundle/bundle.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
+import { RoutingModule } from './modules/routing/routing.module';
 
 @Module({
   imports: [
@@ -65,6 +67,9 @@ import { AuditLogModule } from './modules/audit-log/audit-log.module';
     // Logger
     LoggerModule,
 
+    // Shared Services
+    ServicesModule,
+
     // Feature modules
     AuthModule,
     UsersModule,
@@ -75,6 +80,7 @@ import { AuditLogModule } from './modules/audit-log/audit-log.module';
     ApiKeysModule,
     WebhookModule,
     AuditLogModule,
+    RoutingModule,
     // RedirectModule must be last to match /:slug after specific routes
     RedirectModule,
   ],

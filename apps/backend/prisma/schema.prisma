@@ -61,6 +61,10 @@ enum AuditAction {
   WEBHOOK_CREATED
   WEBHOOK_UPDATED
   WEBHOOK_DELETED
+  // Routing Rule actions
+  ROUTING_RULE_CREATED
+  ROUTING_RULE_UPDATED
+  ROUTING_RULE_DELETED
 }
 
 // ==================== Models ====================
@@ -125,6 +129,11 @@ model Url {
   isAbTest Boolean      @default(false) // Whether A/B testing is enabled
   variants UrlVariant[] // A/B testing variants
 
+  // Smart Routing
+  isSmartRouting Boolean       @default(false) // Whether smart routing is enabled
+  defaultUrl     String? // Default URL when no routing rules match (optional, defaults to originalUrl)
+  routingRules   RoutingRule[] // Smart routing rules
+
   // Relations
   clicks  Click[]
   bundles BundleUrl[]
@@ -152,6 +161,10 @@ model Click {
   // A/B Testing variant tracking
   variantId String?
   variant   UrlVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  // Smart Routing rule tracking
+  routingRuleId String?
+  routingRule   RoutingRule? @relation(fields: [routingRuleId], references: [id], onDelete: SetNull)
 
   // Visitor information
   ip        String?
@@ -190,6 +203,10 @@ model Click {
   @@index([urlId, device]) // Device statistics
   @@index([createdAt]) // Global time series queries (e.g., viewing click trends across all links)
   @@index([variantId, createdAt]) // A/B testing variant tracking
+  @@index([routingRuleId, createdAt]) // Smart routing rule tracking
+  @@index([urlId, isBot, routingRuleId, createdAt]) // Routing analytics with bot filtering
+  @@index([urlId, isBot, createdAt(sort: Desc)]) // Covering index for analytics with bot filtering
+  @@index([urlId, variantId, isBot, createdAt]) // A/B testing analytics with bot filtering
   @@map("clicks")
 }
 
@@ -415,4 +432,41 @@ model AuditLog {
   @@index([entityType, entityId])
   @@index([createdAt(sort: Desc)])
   @@map("audit_logs")
+}
+
+// ==================== Smart Routing ====================
+
+model RoutingRule {
+  id String @id @default(cuid())
+
+  // Related short URL
+  urlId String
+  url   Url    @relation(fields: [urlId], references: [id], onDelete: Cascade)
+
+  // Rule configuration
+  name      String // Rule name (e.g., "Mobile Users - iOS", "Taiwan Visitors")
+  targetUrl String // Target URL when conditions match
+  priority  Int     @default(0) // Higher priority rules are evaluated first
+  isActive  Boolean @default(true)
+
+  // Conditions (JsonB for flexible structure)
+  // Structure: { operator: 'AND' | 'OR', conditions: ConditionItem[] }
+  // ConditionItem: { type: string, operator: string, value: string | string[] }
+  // Types: 'country', 'region', 'city', 'device', 'os', 'browser', 'language', 'referer', 'time', 'utm_*'
+  conditions Json @db.JsonB
+
+  // Statistics
+  matchCount Int @default(0) // Number of times this rule matched
+
+  // Relations
+  clicks Click[] // Clicks that matched this rule
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes
+  @@index([urlId, priority(sort: Desc), isActive]) // Rule evaluation order
+  @@index([urlId, matchCount(sort: Desc)]) // Statistics sorting
+  @@map("routing_rules")
 }

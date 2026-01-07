@@ -6,8 +6,9 @@
 
 import { t } from '@/lib/i18n';
 import { useState, useEffect } from 'react';
-import { useUrls, useDeleteUrl, type UrlResponseDto } from '@/hooks/use-url';
+import { useUrls, useDeleteUrl } from '@/hooks/use-url';
 import { useBulkDeleteUrls } from '@/hooks/use-bulk-urls';
+import type { UrlStatus, UrlResponseDto } from '@/hooks/use-url';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,8 +47,6 @@ import Link from 'next/link';
 import { Copy, Check, ChevronDown, Trash2, Edit, X } from 'lucide-react';
 import { BulkEditDialog } from './bulk-edit-dialog';
 import { BulkCreateDialog } from './bulk-create-dialog';
-
-type UrlStatus = 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
 
 const statusVariant: Record<UrlStatus, 'success' | 'warning' | 'destructive'> = {
   ACTIVE: 'success',
@@ -308,7 +307,7 @@ export function UrlList() {
                         title={copiedId === url.id ? t('common.copied') : t('common.copy')}
                       >
                         {copiedId === url.id ? (
-                          <Check className="h-4 w-4 text-green-600" />
+                          <Check className="h-4 w-4 text-success" />
                         ) : (
                           <Copy className="h-4 w-4" />
                         )}
@@ -437,7 +436,7 @@ export function UrlList() {
                         id="delete-confirm"
                         value={deleteConfirmText}
                         onChange={(e) => setDeleteConfirmText(e.target.value)}
-                        placeholder="DELETE"
+                        placeholder={t('urls.bulk.deleteConfirmPlaceholder')}
                         className="mt-1"
                       />
                     </div>

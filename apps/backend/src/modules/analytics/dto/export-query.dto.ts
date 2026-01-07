@@ -1,4 +1,4 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsEnum, IsBoolean } from 'class-validator';
 import { Transform } from 'class-transformer';
 import { AnalyticsQueryDto } from './analytics-query.dto';
@@ -6,6 +6,19 @@ import { AnalyticsQueryDto } from './analytics-query.dto';
 export enum ExportFormat {
   CSV = 'csv',
   JSON = 'json',
+}
+
+/**
+ * DTO wrapper for ExportFormat enum to export to OpenAPI schema
+ */
+export class ExportFormatDto {
+  @ApiProperty({
+    description: 'Export format enum values',
+    enum: ExportFormat,
+    enumName: 'ExportFormat',
+    example: ExportFormat.CSV,
+  })
+  format!: ExportFormat;
 }
 
 export class ExportQueryDto extends AnalyticsQueryDto {

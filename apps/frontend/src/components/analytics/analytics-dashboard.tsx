@@ -41,7 +41,7 @@ const StatCard = memo<{
   <Card>
     <CardHeader className="pb-2">
       <CardDescription>{title}</CardDescription>
-      <CardTitle className={`text-3xl ${isPositive !== undefined ? (isPositive ? 'text-green-600' : 'text-red-600') : ''}`}>
+      <CardTitle className={`text-3xl ${isPositive !== undefined ? (isPositive ? 'text-success' : 'text-destructive') : ''}`}>
         {value}
       </CardTitle>
     </CardHeader>
@@ -85,7 +85,7 @@ const UTMProgressBar = memo<{
   const clampedPercentage = Math.min(100, Math.max(0, percentage));
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm font-medium truncate max-w-[120px]">
+      <span className="text-sm font-medium truncate max-w-30">
         {value}
       </span>
       <div className="flex items-center gap-2">

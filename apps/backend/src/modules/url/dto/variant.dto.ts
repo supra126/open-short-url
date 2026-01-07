@@ -9,6 +9,7 @@ import {
   Max,
   MaxLength,
 } from 'class-validator';
+import { IsSafeUrl } from '@/common/validators/safe-url.validator';
 
 /**
  * Create URL Variant DTO
@@ -27,7 +28,8 @@ export class CreateVariantDto {
     description: 'Target URL for this variant',
     example: 'https://example.com/landing-page-v1',
   })
-  @IsUrl()
+  @IsUrl({}, { message: 'Target URL must be a valid URL' })
+  @IsSafeUrl({ message: 'Target URL must be a public URL. Internal network addresses are not allowed.' })
   targetUrl!: string;
 
   @ApiProperty({

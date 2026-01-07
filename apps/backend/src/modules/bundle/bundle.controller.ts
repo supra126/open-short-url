@@ -270,7 +270,7 @@ export class BundleController {
     @Param('id') id: string,
     @Body() addUrlDto: AddUrlToBundleDto,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.addUrl(user.id, id, addUrlDto);
+    return this.bundleService.addUrl(user.id, id, addUrlDto, user.role);
   }
 
   /**
@@ -302,7 +302,7 @@ export class BundleController {
     @Param('id') id: string,
     @Body() addUrlsDto: AddMultipleUrlsDto,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.addMultipleUrls(user.id, id, addUrlsDto);
+    return this.bundleService.addMultipleUrls(user.id, id, addUrlsDto, user.role);
   }
 
   /**
@@ -330,7 +330,7 @@ export class BundleController {
     @Param('id') id: string,
     @Param('urlId') urlId: string,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.removeUrl(user.id, id, urlId);
+    return this.bundleService.removeUrl(user.id, id, urlId, user.role);
   }
 
   /**
@@ -359,7 +359,7 @@ export class BundleController {
     @Param('urlId') urlId: string,
     @Body('order') order: number,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.updateUrlOrder(user.id, id, urlId, order);
+    return this.bundleService.updateUrlOrder(user.id, id, urlId, order, user.role);
   }
 
   /**
@@ -386,7 +386,7 @@ export class BundleController {
     @Param('id') id: string,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.archive(user.id, id, meta);
+    return this.bundleService.archive(user.id, id, user.role, meta);
   }
 
   /**
@@ -413,6 +413,6 @@ export class BundleController {
     @Param('id') id: string,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.restore(user.id, id, meta);
+    return this.bundleService.restore(user.id, id, user.role, meta);
   }
 }

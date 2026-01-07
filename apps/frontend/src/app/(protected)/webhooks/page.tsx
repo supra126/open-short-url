@@ -117,34 +117,16 @@ export default function WebhooksPage() {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
-        <AlertCircle className="h-12 w-12 text-destructive" />
-        <p className="text-lg font-semibold">{t('webhooks.loadError')}</p>
-        <p className="text-sm text-muted-foreground">{t('webhooks.loadErrorDesc')}</p>
-      </div>
-    );
-  }
-
   const webhooks = data?.data || [];
   const hasWebhooks = webhooks.length > 0;
 
   return (
     <>
       <div className="p-6 space-y-6">
-        {/* Header */}
+        {/* Page Header */}
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">{t('webhooks.title')}</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold">{t('webhooks.title')}</h1>
+          <p className="text-muted-foreground mt-1">
             {t('webhooks.description')}
           </p>
         </div>
@@ -168,7 +150,17 @@ export default function WebhooksPage() {
             </div>
           </CardHeader>
           <CardContent>
-            {!hasWebhooks ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-12 gap-4">
+                <AlertCircle className="h-12 w-12 text-destructive" />
+                <p className="text-lg font-semibold">{t('webhooks.loadError')}</p>
+                <p className="text-sm text-muted-foreground">{t('webhooks.loadErrorDesc')}</p>
+              </div>
+            ) : !hasWebhooks ? (
               <div className="text-center py-12">
                 <Webhook className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
                 <h3 className="text-lg font-semibold mb-2">{t('webhooks.noWebhooks')}</h3>
@@ -212,7 +204,7 @@ export default function WebhooksPage() {
                           <TableCell className="font-medium">
                             {webhook.name}
                           </TableCell>
-                          <TableCell className="max-w-[300px] truncate">
+                          <TableCell className="max-w-75 truncate">
                             <a
                               href={webhook.url}
                               target="_blank"
@@ -241,11 +233,11 @@ export default function WebhooksPage() {
                             {webhook.totalSent > 0 ? (
                               <div className="flex items-center justify-center gap-1">
                                 {successRate >= 90 ? (
-                                  <CheckCircle2 className="h-4 w-4 text-green-500" />
+                                  <CheckCircle2 className="h-4 w-4 text-success" />
                                 ) : successRate >= 50 ? (
-                                  <AlertCircle className="h-4 w-4 text-yellow-500" />
+                                  <AlertCircle className="h-4 w-4 text-warning" />
                                 ) : (
-                                  <XCircle className="h-4 w-4 text-red-500" />
+                                  <XCircle className="h-4 w-4 text-destructive" />
                                 )}
                                 <span>{successRate}%</span>
                                 <span className="text-muted-foreground text-xs">
@@ -364,7 +356,7 @@ function WebhookLogsDialog({
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[800px] max-h-[80vh]">
+      <DialogContent className="sm:max-w-200 max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>{t('webhooks.logsTitle')}</DialogTitle>
         </DialogHeader>
@@ -382,9 +374,9 @@ function WebhookLogsDialog({
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{log.event}</Badge>
                       {log.isSuccess ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-500" />
+                        <CheckCircle2 className="h-4 w-4 text-success" />
                       ) : (
-                        <XCircle className="h-4 w-4 text-red-500" />
+                        <XCircle className="h-4 w-4 text-destructive" />
                       )}
                       <span className="text-sm text-muted-foreground">
                         {formatDistanceToNow(new Date(log.createdAt), {
@@ -431,25 +423,27 @@ function WebhookLogsDialog({
             {/* Pagination */}
             {data.totalPages > 1 && (
               <div className="flex items-center justify-between pt-4">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                >
-                  {t('common.previous')}
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  {t('common.page')} {page} {t('common.of')} {data.totalPages}
-                </span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === data.totalPages}
-                >
-                  {t('common.next')}
-                </Button>
+                <p className="text-sm text-muted-foreground">
+                  {t('common.page')} {page} {t('common.of')} {data.totalPages}（{t('common.total')} {data.total} {t('common.items')}）
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                  >
+                    {t('common.previous')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === data.totalPages}
+                  >
+                    {t('common.next')}
+                  </Button>
+                </div>
               </div>
             )}
           </div>

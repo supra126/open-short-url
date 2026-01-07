@@ -8,6 +8,7 @@ import {
   MinLength,
 } from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
+import { IsSafeUrl } from '@/common/validators/safe-url.validator';
 
 /**
  * Transform helper to convert empty strings to undefined
@@ -21,6 +22,7 @@ export class UpdateUrlDto {
     example: 'https://example.com/new-url',
   })
   @IsUrl({}, { message: 'Please enter a valid URL' })
+  @IsSafeUrl({ message: 'URL must be a public address. Internal network addresses are not allowed.' })
   @IsOptional()
   originalUrl?: string;
 
@@ -48,6 +50,8 @@ export class UpdateUrlDto {
   @ApiPropertyOptional({
     description: 'Password protection (set to null to remove password)',
     minLength: 4,
+    type: 'string',
+    nullable: true,
   })
   @IsString()
   @MinLength(4, { message: 'Password must be at least 4 characters' })
@@ -57,6 +61,9 @@ export class UpdateUrlDto {
   @ApiPropertyOptional({
     description: 'Expiration time (ISO 8601 format, set to null to remove expiration)',
     example: '2025-12-31T23:59:59Z',
+    type: 'string',
+    format: 'date-time',
+    nullable: true,
   })
   @IsDateString()
   @IsOptional()

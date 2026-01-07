@@ -21,7 +21,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { useBulkCreateUrls } from '@/hooks/use-bulk-urls';
 import { Loader2, Upload, FileText, CheckCircle2, XCircle, Download } from 'lucide-react';
-import type { CreateUrlDto, BulkCreateResultDto } from '@/lib/api/schemas';
+import type { CreateUrlDto } from '@/hooks/use-url';
+import type { BulkCreateResultDto } from '@/hooks/use-bulk-urls';
 
 interface BulkCreateDialogProps {
   open: boolean;
@@ -272,7 +273,7 @@ export function BulkCreateDialog({ open, onOpenChange, onSuccess }: BulkCreateDi
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-150 max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{t('urls.bulk.createTitle')}</DialogTitle>
           <DialogDescription>
@@ -324,7 +325,7 @@ export function BulkCreateDialog({ open, onOpenChange, onSuccess }: BulkCreateDi
                   {t('urls.bulk.preview', { count: parsedUrls.length })}
                 </span>
               </div>
-              <ScrollArea className="h-[200px] rounded-md border">
+              <ScrollArea className="h-50 rounded-md border">
                 <div className="p-4 space-y-2">
                   {parsedUrls.slice(0, 10).map((url, index) => (
                     <div key={index} className="text-sm">
@@ -350,7 +351,7 @@ export function BulkCreateDialog({ open, onOpenChange, onSuccess }: BulkCreateDi
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 rounded-lg border p-4">
-                  <CheckCircle2 className="h-8 w-8 text-green-500" />
+                  <CheckCircle2 className="h-8 w-8 text-success" />
                   <div>
                     <p className="text-2xl font-bold">{result.successCount}</p>
                     <p className="text-sm text-muted-foreground">{t('urls.bulk.succeeded')}</p>
@@ -368,7 +369,7 @@ export function BulkCreateDialog({ open, onOpenChange, onSuccess }: BulkCreateDi
               {result.failed.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-destructive">{t('urls.bulk.failedDetails')}</p>
-                  <ScrollArea className="h-[150px] rounded-md border">
+                  <ScrollArea className="h-37.5 rounded-md border">
                     <div className="p-4 space-y-2">
                       {result.failed.map((item) => (
                         <div key={item.index} className="text-sm">

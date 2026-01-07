@@ -14,12 +14,13 @@ import type {
   UrlResponseDto,
   UrlListResponseDto,
   UrlQueryParams,
+  UrlStatus,
 } from '@/lib/api/schemas';
 
 // Re-export types for consumers of this hook
-export type { CreateUrlDto, UpdateUrlDto, UrlResponseDto, UrlListResponseDto, UrlQueryParams };
+export type { CreateUrlDto, UpdateUrlDto, UrlResponseDto, UrlListResponseDto, UrlQueryParams, UrlStatus };
 
-// Query Keys
+// Query Keys (exported for external cache management)
 export const urlKeys = {
   all: ['urls'] as const,
   lists: () => [...urlKeys.all, 'list'] as const,

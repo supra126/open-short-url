@@ -28,6 +28,7 @@ import {
   BotAnalyticsResponseDto,
   UserBotAnalyticsResponseDto,
   AbTestAnalyticsResponseDto,
+  RoutingAnalyticsResponseDto,
 } from './dto/analytics-response.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
@@ -106,6 +107,41 @@ export class AnalyticsController {
   }
 
   /**
+   * Get top performing URLs
+   */
+  @Get('top-urls')
+  @ApiOperation({
+    summary: 'Get top performing URLs',
+    description: 'Retrieve top performing URLs by click count within the specified time range',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Query successful',
+    schema: {
+      type: 'array',
+      items: {
+        $ref: '#/components/schemas/TopPerformingUrlDto',
+      },
+    },
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  async getTopPerformingUrls(
+    @CurrentUser() user: User,
+    @Query() queryDto: AnalyticsQueryDto,
+    @Query('limit') limit?: number,
+  ) {
+    return this.analyticsService.getTopPerformingUrls(
+      user,
+      queryDto,
+      limit ? Number(limit) : 5,
+    );
+  }
+
+  /**
    * Get recent clicks for a URL
    */
   @Get('urls/:id/recent-clicks')
@@ -181,6 +217,42 @@ export class AnalyticsController {
     @Query() queryDto: AnalyticsQueryDto,
   ): Promise<BotAnalyticsResponseDto> {
     return this.analyticsService.getBotAnalytics(id, user, queryDto);
+  }
+
+  /**
+   * Get routing analytics for a URL
+   */
+  @Get('urls/:id/routing')
+  @ApiOperation({
+    summary: 'Get routing analytics for a URL',
+    description: 'Retrieve smart routing statistics for the specified URL, including rule match counts, trends, and distributions',
+  })
+  @ApiParam({
+    name: 'id',
+    description: 'URL ID',
+    example: 'clxxx123456789',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Query successful',
+    type: RoutingAnalyticsResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'URL not found',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  async getRoutingAnalytics(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+    @Query() queryDto: AnalyticsQueryDto,
+  ): Promise<RoutingAnalyticsResponseDto> {
+    return this.analyticsService.getRoutingAnalytics(id, user, queryDto);
   }
 
   /**

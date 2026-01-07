@@ -33,6 +33,9 @@ export type CreateUrlDto = components['schemas']['CreateUrlDto'];
 export type UpdateUrlDto = components['schemas']['UpdateUrlDto'];
 export type UrlResponseDto = components['schemas']['UrlResponseDto'];
 export type UrlListResponseDto = components['schemas']['UrlListResponseDto'];
+export type UrlStatus = components['schemas']['UrlStatus'];
+export type DashboardStatsResponseDto = components['schemas']['DashboardStatsResponseDto'];
+export type TopPerformingUrlDto = components['schemas']['TopPerformingUrlDto'];
 
 // ==================== Variant (A/B Testing) Types ====================
 export type CreateVariantDto = components['schemas']['CreateVariantDto'];
@@ -41,84 +44,75 @@ export type VariantResponseDto = components['schemas']['VariantResponseDto'];
 export type VariantStatsDto = components['schemas']['VariantStatsDto'];
 export type VariantListResponseDto = components['schemas']['VariantListResponseDto'];
 
+// ==================== Smart Routing Types ====================
+// Condition and Routing types from OpenAPI
+export type TimeRangeDto = components['schemas']['TimeRangeDto'];
+export type ConditionItemDto = components['schemas']['ConditionItemDto'];
+export type RoutingConditionsDto = components['schemas']['RoutingConditionsDto'];
+export type CreateRoutingRuleDto = components['schemas']['CreateRoutingRuleDto'];
+export type UpdateRoutingRuleDto = components['schemas']['UpdateRoutingRuleDto'];
+export type RoutingRuleResponseDto = components['schemas']['RoutingRuleResponseDto'];
+export type RoutingRuleStatDto = components['schemas']['RoutingRuleStatDto'];
+export type RoutingRulesListResponseDto = components['schemas']['RoutingRulesListResponseDto'];
+export type UpdateSmartRoutingSettingsDto = components['schemas']['UpdateSmartRoutingSettingsDto'];
+export type SmartRoutingSettingsResponseDto = components['schemas']['SmartRoutingSettingsResponseDto'];
+export type CreateFromTemplateDto = components['schemas']['CreateFromTemplateDto'];
+export type RoutingTemplateDto = components['schemas']['RoutingTemplateDto'];
+export type TemplateListResponseDto = components['schemas']['TemplateListResponseDto'];
+
+// Routing Analytics types from OpenAPI
+export type RoutingRuleStat = components['schemas']['RoutingRuleStat'];
+export type RoutingRuleTimeSeriesDataPoint = components['schemas']['RoutingRuleTimeSeriesDataPoint'];
+export type RoutingRuleGeoStat = components['schemas']['RoutingRuleGeoStat'];
+export type RoutingRuleDeviceStat = components['schemas']['RoutingRuleDeviceStat'];
+export type RoutingAnalyticsResponseDto = components['schemas']['RoutingAnalyticsResponseDto'];
+
+// Derived types for convenience (extracted from ConditionItemDto)
+export type ConditionType = ConditionItemDto['type'];
+export type ConditionOperator = ConditionItemDto['operator'];
+export type LogicalOperator = RoutingConditionsDto['operator'];
+
+// Device and time-related types from OpenAPI
+export type DeviceType = components['schemas']['DeviceType'];
+export type DayOfWeek = components['schemas']['DayOfWeek'];
+
+// Legacy alias for backwards compatibility
+export type RoutingRuleAnalyticsStat = RoutingRuleStat;
+export type RoutingTimeRange = TimeRangeDto;
+
 // ==================== Bulk Operation Types ====================
-// Bulk Create
-export interface BulkCreateUrlDto {
-  urls: CreateUrlDto[];
-}
+// Bulk Create types from OpenAPI
+export type BulkCreateUrlDto = components['schemas']['BulkCreateUrlDto'];
+export type BulkCreateSuccessItem = components['schemas']['BulkCreateSuccessItem'];
+export type BulkCreateFailureItem = components['schemas']['BulkCreateFailureItem'];
+export type BulkCreateResultDto = components['schemas']['BulkCreateResultDto'];
 
-export interface BulkCreateSuccessItem {
-  index: number;
-  url: UrlResponseDto;
-}
+// Bulk Update types from OpenAPI
+export type BulkUpdateStatusDto = components['schemas']['BulkUpdateStatusDto'];
+export type BulkAddToBundleDto = components['schemas']['BulkAddToBundleDto'];
+export type BulkUpdateExpirationDto = components['schemas']['BulkUpdateExpirationDto'];
+export type BulkUpdateUtmDto = components['schemas']['BulkUpdateUtmDto'];
+export type BulkUpdateUrlDto = components['schemas']['BulkUpdateUrlDto'];
+export type BulkUpdateResultDto = components['schemas']['BulkUpdateResultDto'];
 
-export interface BulkCreateFailureItem {
-  index: number;
-  data: CreateUrlDto;
-  error: string;
-}
+// Bulk Delete types from OpenAPI
+export type BulkDeleteUrlDto = components['schemas']['BulkDeleteUrlDto'];
+export type BulkDeleteResultDto = components['schemas']['BulkDeleteResultDto'];
 
-export interface BulkCreateResultDto {
-  total: number;
-  successCount: number;
-  failureCount: number;
-  succeeded: BulkCreateSuccessItem[];
-  failed: BulkCreateFailureItem[];
-}
-
-// Bulk Update
-export type BulkUpdateOperationType = 'status' | 'bundle' | 'expiration' | 'utm';
-
-export interface BulkUpdateStatusOperation {
-  type: 'status';
-  status: 'ACTIVE' | 'INACTIVE';
-}
-
-export interface BulkAddToBundleOperation {
-  type: 'bundle';
-  bundleId: string;
-}
-
-export interface BulkUpdateExpirationOperation {
-  type: 'expiration';
-  expiresAt?: string | null;
-}
-
-export interface BulkUpdateUtmOperation {
-  type: 'utm';
-  utmSource?: string;
-  utmMedium?: string;
-  utmCampaign?: string;
-  utmTerm?: string;
-  utmContent?: string;
-}
-
+// Convenience type aliases for bulk operations
+// Derived from OpenAPI generated types
 export type BulkUpdateOperation =
-  | BulkUpdateStatusOperation
-  | BulkAddToBundleOperation
-  | BulkUpdateExpirationOperation
-  | BulkUpdateUtmOperation;
+  | BulkUpdateStatusDto
+  | BulkAddToBundleDto
+  | BulkUpdateExpirationDto
+  | BulkUpdateUtmDto;
+export type BulkUpdateOperationType = BulkUpdateOperation['type'];
 
-export interface BulkUpdateUrlDto {
-  urlIds: string[];
-  operation: BulkUpdateOperation;
-}
-
-export interface BulkUpdateResultDto {
-  updatedCount: number;
-  updatedIds: string[];
-  message?: string;
-}
-
-// Bulk Delete
-export interface BulkDeleteUrlDto {
-  urlIds: string[];
-}
-
-export interface BulkDeleteResultDto {
-  deletedCount: number;
-  deletedIds: string[];
-}
+// Legacy type aliases for backwards compatibility
+export type BulkUpdateStatusOperation = BulkUpdateStatusDto;
+export type BulkAddToBundleOperation = BulkAddToBundleDto;
+export type BulkUpdateExpirationOperation = BulkUpdateExpirationDto;
+export type BulkUpdateUtmOperation = BulkUpdateUtmDto;
 
 // ==================== Analytics Types ====================
 export type AnalyticsResponseDto = components['schemas']['AnalyticsResponseDto'];
@@ -188,6 +182,7 @@ export type AuditAction = AuditLogDto['action'];
 export type PaginationDto = components['schemas']['PaginationDto'];
 export type AnalyticsQueryDto = components['schemas']['AnalyticsQueryDto'];
 export type ExportQueryDto = components['schemas']['ExportQueryDto'];
+export type ExportFormat = components['schemas']['ExportFormat'];
 export type UrlQueryDto = components['schemas']['UrlQueryDto'];
 export type BundleQueryDto = components['schemas']['BundleQueryDto'];
 export type UserListQueryDto = components['schemas']['UserListQueryDto'];
@@ -203,6 +198,7 @@ export type AnalyticsQueryParams = Partial<AnalyticsQueryDto>;
 export type BundleQueryParams = Partial<BundleQueryDto>;
 export type UserQueryParams = Partial<UserListQueryDto>;
 export type AuditLogQueryParams = Partial<AuditLogQueryDto>;
+export type ExportQueryParams = Partial<ExportQueryDto>;
 
 // ==================== API Error Type ====================
 /**

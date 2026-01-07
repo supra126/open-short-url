@@ -19,7 +19,7 @@ import type {
 // Re-export types for consumers of this hook
 export type { LoginDto, AuthResponseDto, UserResponseDto, UpdateUserDto, ChangePasswordDto };
 
-// Query Keys
+// Query Keys (exported for external cache management)
 export const authKeys = {
   all: ['auth'] as const,
   me: () => [...authKeys.all, 'me'] as const,

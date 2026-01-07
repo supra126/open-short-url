@@ -324,25 +324,32 @@ export class BundleService {
   }
 
   /**
-   * Add a URL to a bundle
+   * Add a URL to a bundle (admins can add to any bundle, users to their own)
    */
   async addUrl(
     userId: string,
     bundleId: string,
     addUrlDto: AddUrlToBundleDto,
+    userRole?: UserRole,
   ): Promise<BundleResponseDto> {
-    // Check if bundle exists and belongs to user
+    // Check if bundle exists and user has access
     const bundle = await this.prisma.bundle.findFirst({
-      where: { id: bundleId, userId },
+      where: {
+        id: bundleId,
+        ...(userRole !== UserRole.ADMIN && { userId }),
+      },
     });
 
     if (!bundle) {
       throw new NotFoundException('Bundle not found');
     }
 
-    // Check if URL exists and belongs to user
+    // Check if URL exists and user has access
     const url = await this.prisma.url.findFirst({
-      where: { id: addUrlDto.urlId, userId },
+      where: {
+        id: addUrlDto.urlId,
+        ...(userRole !== UserRole.ADMIN && { userId }),
+      },
     });
 
     if (!url) {
@@ -370,31 +377,35 @@ export class BundleService {
       },
     });
 
-    return this.findOne(userId, bundleId);
+    return this.findOne(userId, bundleId, userRole);
   }
 
   /**
-   * Add multiple URLs to a bundle
+   * Add multiple URLs to a bundle (admins can add to any bundle, users to their own)
    */
   async addMultipleUrls(
     userId: string,
     bundleId: string,
     addUrlsDto: AddMultipleUrlsDto,
+    userRole?: UserRole,
   ): Promise<BundleResponseDto> {
-    // Check if bundle exists and belongs to user
+    // Check if bundle exists and user has access
     const bundle = await this.prisma.bundle.findFirst({
-      where: { id: bundleId, userId },
+      where: {
+        id: bundleId,
+        ...(userRole !== UserRole.ADMIN && { userId }),
+      },
     });
 
     if (!bundle) {
       throw new NotFoundException('Bundle not found');
     }
 
-    // Check if URLs exist and belong to user
+    // Check if URLs exist and user has access
     const urls = await this.prisma.url.findMany({
       where: {
         id: { in: addUrlsDto.urlIds },
-        userId,
+        ...(userRole !== UserRole.ADMIN && { userId }),
       },
     });
 
@@ -425,20 +436,24 @@ export class BundleService {
       })),
     });
 
-    return this.findOne(userId, bundleId);
+    return this.findOne(userId, bundleId, userRole);
   }
 
   /**
-   * Remove a URL from a bundle
+   * Remove a URL from a bundle (admins can remove from any bundle, users from their own)
    */
   async removeUrl(
     userId: string,
     bundleId: string,
     urlId: string,
+    userRole?: UserRole,
   ): Promise<BundleResponseDto> {
-    // Check if bundle exists and belongs to user
+    // Check if bundle exists and user has access
     const bundle = await this.prisma.bundle.findFirst({
-      where: { id: bundleId, userId },
+      where: {
+        id: bundleId,
+        ...(userRole !== UserRole.ADMIN && { userId }),
+      },
     });
 
     if (!bundle) {
@@ -459,21 +474,25 @@ export class BundleService {
       where: { id: bundleUrl.id },
     });
 
-    return this.findOne(userId, bundleId);
+    return this.findOne(userId, bundleId, userRole);
   }
 
   /**
-   * Update URL order in a bundle
+   * Update URL order in a bundle (admins can update any bundle, users their own)
    */
   async updateUrlOrder(
     userId: string,
     bundleId: string,
     urlId: string,
     order: number,
+    userRole?: UserRole,
   ): Promise<BundleResponseDto> {
-    // Check if bundle exists and belongs to user
+    // Check if bundle exists and user has access
     const bundle = await this.prisma.bundle.findFirst({
-      where: { id: bundleId, userId },
+      where: {
+        id: bundleId,
+        ...(userRole !== UserRole.ADMIN && { userId }),
+      },
     });
 
     if (!bundle) {
@@ -495,7 +514,7 @@ export class BundleService {
       data: { order },
     });
 
-    return this.findOne(userId, bundleId);
+    return this.findOne(userId, bundleId, userRole);
   }
 
   /**
@@ -586,17 +605,17 @@ export class BundleService {
   }
 
   /**
-   * Archive a bundle
+   * Archive a bundle (admins can archive any bundle, users their own)
    */
-  async archive(userId: string, id: string, meta?: RequestMeta): Promise<BundleResponseDto> {
-    return this.update(userId, id, { status: BundleStatus.ARCHIVED }, undefined, meta);
+  async archive(userId: string, id: string, userRole?: UserRole, meta?: RequestMeta): Promise<BundleResponseDto> {
+    return this.update(userId, id, { status: BundleStatus.ARCHIVED }, userRole, meta);
   }
 
   /**
-   * Restore an archived bundle
+   * Restore an archived bundle (admins can restore any bundle, users their own)
    */
-  async restore(userId: string, id: string, meta?: RequestMeta): Promise<BundleResponseDto> {
-    return this.update(userId, id, { status: BundleStatus.ACTIVE }, undefined, meta);
+  async restore(userId: string, id: string, userRole?: UserRole, meta?: RequestMeta): Promise<BundleResponseDto> {
+    return this.update(userId, id, { status: BundleStatus.ACTIVE }, userRole, meta);
   }
 
   /**

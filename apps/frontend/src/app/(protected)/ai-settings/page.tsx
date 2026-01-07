@@ -20,20 +20,20 @@ export default function AISettingsPage() {
   const availableProviders = aiEnabled ? getAvailableProviders() : [];
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       {/* Page Header */}
-      <div className="mb-6">
+      <div>
         <h1 className="text-3xl font-bold flex items-center gap-2">
           <Settings className="h-8 w-8" />
           {t('ai.settings.title')}
         </h1>
-        <p className="text-muted-foreground mt-2">
+        <p className="text-muted-foreground mt-1">
           {t('ai.settings.subtitle')}
         </p>
       </div>
 
       {/* Overall Status */}
-      <Card className="p-6 mb-6">
+      <Card className="p-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold mb-2">{t('ai.settings.statusTitle')}</h2>
@@ -44,8 +44,8 @@ export default function AISettingsPage() {
             </p>
           </div>
           <Badge
-            variant={aiEnabled ? 'default' : 'secondary'}
-            className={`text-lg px-4 py-2 ${aiEnabled ? 'bg-green-600' : ''}`}
+            variant={aiEnabled ? 'success' : 'secondary'}
+            className="text-lg px-4 py-2"
           >
             {aiEnabled ? (
               <>
@@ -80,8 +80,7 @@ export default function AISettingsPage() {
                     </p>
                   </div>
                   <Badge
-                    variant={isAvailable ? 'default' : 'secondary'}
-                    className={isAvailable ? 'bg-green-600' : ''}
+                    variant={isAvailable ? 'success' : 'secondary'}
                   >
                     {isAvailable ? (
                       <CheckCircle className="h-3 w-3" />

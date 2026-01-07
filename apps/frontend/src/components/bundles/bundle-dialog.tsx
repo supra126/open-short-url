@@ -155,7 +155,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>
@@ -267,7 +267,7 @@ export function BundleDialog({ open, onOpenChange, bundle }: BundleDialogProps) 
                     <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
                   </div>
                 ) : urlsData && urlsData.data.length > 0 ? (
-                  <ScrollArea className="h-[200px] rounded-md border p-4">
+                  <ScrollArea className="h-50 rounded-md border p-4">
                     <div className="space-y-3">
                       {urlsData.data.map((url: UrlResponseDto) => (
                         <div

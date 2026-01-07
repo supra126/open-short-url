@@ -311,7 +311,7 @@ export function VariantList({ urlId }: VariantListProps) {
                             </Badge>
                           </div>
                         </TableCell>
-                        <TableCell className="max-w-[300px] truncate">
+                        <TableCell className="max-w-75 truncate">
                           <a
                             href={controlGroup.variant.targetUrl}
                             target="_blank"
@@ -368,7 +368,7 @@ export function VariantList({ urlId }: VariantListProps) {
                           <TableCell className="font-medium">
                             {variant.name}
                           </TableCell>
-                          <TableCell className="max-w-[300px] truncate">
+                          <TableCell className="max-w-75 truncate">
                             <a
                               href={variant.targetUrl}
                               target="_blank"
@@ -440,7 +440,7 @@ export function VariantList({ urlId }: VariantListProps) {
             <AlertDialogDescription>
               {t('variants.deleteConfirmDesc')}
               {variants.length === 1 && (
-                <span className="block mt-2 text-yellow-600 dark:text-yellow-500">
+                <span className="block mt-2 text-warning">
                   {t('variants.deleteLastWarning')}
                 </span>
               )}

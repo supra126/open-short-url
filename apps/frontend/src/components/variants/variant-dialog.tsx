@@ -94,7 +94,7 @@ export function VariantDialog({ urlId, variant, trigger }: VariantDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{isEdit ? t('variants.edit') : t('variants.create')}</DialogTitle>

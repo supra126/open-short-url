@@ -126,11 +126,17 @@ export class UrlService implements OnModuleInit {
 
   /**
    * Create short URL
+   * @param userId - User ID
+   * @param createUrlDto - URL creation data
+   * @param meta - Request metadata
+   * @param options - Additional options for internal use
+   * @param options.skipAuditLog - Skip individual audit log (used in bulk operations)
    */
   async create(
     userId: string,
     createUrlDto: CreateUrlDto,
     meta?: RequestMeta,
+    options?: { skipAuditLog?: boolean },
   ): Promise<UrlResponseDto> {
     const {
       originalUrl,
@@ -200,20 +206,22 @@ export class UrlService implements OnModuleInit {
     // Emit url.created event for webhooks
     this.eventEmitter.emit('url.created', url);
 
-    // Audit log
-    await this.auditLogService.create({
-      userId,
-      action: 'URL_CREATED',
-      entityType: 'url',
-      entityId: url.id,
-      newValue: {
-        slug: url.slug,
-        originalUrl: url.originalUrl,
-        title: url.title,
-      },
-      ipAddress: meta?.ipAddress,
-      userAgent: meta?.userAgent,
-    });
+    // Audit log (skip for bulk operations to avoid duplicate logs)
+    if (!options?.skipAuditLog) {
+      await this.auditLogService.create({
+        userId,
+        action: 'URL_CREATED',
+        entityType: 'url',
+        entityId: url.id,
+        newValue: {
+          slug: url.slug,
+          originalUrl: url.originalUrl,
+          title: url.title,
+        },
+        ipAddress: meta?.ipAddress,
+        userAgent: meta?.userAgent,
+      });
+    }
 
     return this.mapToResponse(url);
   }
@@ -266,6 +274,35 @@ export class UrlService implements OnModuleInit {
       page,
       pageSize,
       totalPages,
+    };
+  }
+
+  /**
+   * Get dashboard statistics for URLs
+   */
+  async getStats(
+    userId: string,
+    userRole?: 'ADMIN' | 'USER',
+  ): Promise<{
+    totalUrls: number;
+    activeUrls: number;
+    inactiveUrls: number;
+    expiredUrls: number;
+  }> {
+    const where: Prisma.UrlWhereInput = userRole === 'ADMIN' ? {} : { userId };
+
+    const [total, active, inactive, expired] = await Promise.all([
+      this.prisma.url.count({ where }),
+      this.prisma.url.count({ where: { ...where, status: UrlStatus.ACTIVE } }),
+      this.prisma.url.count({ where: { ...where, status: UrlStatus.INACTIVE } }),
+      this.prisma.url.count({ where: { ...where, status: UrlStatus.EXPIRED } }),
+    ]);
+
+    return {
+      totalUrls: total,
+      activeUrls: active,
+      inactiveUrls: inactive,
+      expiredUrls: expired,
     };
   }
 
@@ -651,6 +688,9 @@ export class UrlService implements OnModuleInit {
       utmCampaign: url.utmCampaign ?? undefined,
       utmTerm: url.utmTerm ?? undefined,
       utmContent: url.utmContent ?? undefined,
+      isAbTest: url.isAbTest,
+      isSmartRouting: url.isSmartRouting,
+      defaultUrl: url.defaultUrl ?? undefined,
       createdAt: url.createdAt,
       updatedAt: url.updatedAt,
     };
@@ -1097,10 +1137,20 @@ export class UrlService implements OnModuleInit {
       existingSlugs.forEach((s) => existingSlugsSet.add(s.slug));
     }
 
-    // Step 2: Pre-mark failed items (duplicate slugs)
+    // Step 2: Pre-mark failed items (duplicate slugs in DB and within batch)
+    // Track slugs to detect duplicates within the same batch (synchronously before parallel processing)
+    const slugsInBatch = new Set<string>();
     const urlsWithValidation = urls.map((urlDto, index) => {
-      if (urlDto.customSlug && existingSlugsSet.has(urlDto.customSlug)) {
-        return { urlDto, index, preValidationError: 'Slug already exists' };
+      if (urlDto.customSlug) {
+        // Check if slug exists in database
+        if (existingSlugsSet.has(urlDto.customSlug)) {
+          return { urlDto, index, preValidationError: 'Slug already exists' };
+        }
+        // Check if slug is duplicate within this batch
+        if (slugsInBatch.has(urlDto.customSlug)) {
+          return { urlDto, index, preValidationError: 'Duplicate slug within batch' };
+        }
+        slugsInBatch.add(urlDto.customSlug);
       }
       return { urlDto, index, preValidationError: null };
     });
@@ -1120,21 +1170,11 @@ export class UrlService implements OnModuleInit {
     // Step 3: Process valid URLs in batches with controlled concurrency
     const validUrls = urlsWithValidation.filter((item) => !item.preValidationError);
 
-    // Track slugs being created in this batch to prevent duplicates within the same request
-    const slugsBeingCreated = new Set<string>();
-
     const settledResults = await this.processBatch(
       validUrls,
       async (item) => {
-        // Check for duplicates within this batch
-        if (item.urlDto.customSlug && slugsBeingCreated.has(item.urlDto.customSlug)) {
-          throw new Error('Duplicate slug within batch');
-        }
-        if (item.urlDto.customSlug) {
-          slugsBeingCreated.add(item.urlDto.customSlug);
-        }
-
-        return this.create(userId, item.urlDto, meta);
+        // Skip individual audit logs - bulk operation will log all at once
+        return this.create(userId, item.urlDto, meta, { skipAuditLog: true });
       },
       10, // Process 10 URLs concurrently
     );
@@ -1181,9 +1221,20 @@ export class UrlService implements OnModuleInit {
     userRole?: 'ADMIN' | 'USER',
     meta?: RequestMeta,
   ): Promise<import('./dto/bulk-update-url.dto').BulkUpdateResultDto> {
+    // Early validation: check for empty or invalid input
+    if (!urlIds || urlIds.length === 0) {
+      throw new BadRequestException('URL IDs cannot be empty');
+    }
+
+    // Filter out any invalid IDs (null, undefined, empty strings)
+    const validInputIds = urlIds.filter((id) => id && typeof id === 'string' && id.trim().length > 0);
+    if (validInputIds.length === 0) {
+      throw new BadRequestException('No valid URL IDs provided');
+    }
+
     // Single query to get all needed data (existence, ownership, cache clearing)
     const urls = await this.prisma.url.findMany({
-      where: { id: { in: urlIds } },
+      where: { id: { in: validInputIds } },
       select: {
         id: true,
         userId: true,
@@ -1192,12 +1243,12 @@ export class UrlService implements OnModuleInit {
     });
 
     if (urls.length === 0) {
-      throw new NotFoundException('No URLs found');
+      throw new NotFoundException('No URLs found with the provided IDs');
     }
 
-    // Check for non-existent IDs
+    // Check for non-existent IDs (use validInputIds instead of urlIds)
     const existingIds = new Set(urls.map((u) => u.id));
-    const notFoundIds = urlIds.filter((id) => !existingIds.has(id));
+    const notFoundIds = validInputIds.filter((id) => !existingIds.has(id));
     if (notFoundIds.length > 0) {
       throw new NotFoundException(
         `${notFoundIds.length} URL(s) not found`,
@@ -1330,9 +1381,20 @@ export class UrlService implements OnModuleInit {
     userRole?: 'ADMIN' | 'USER',
     meta?: RequestMeta,
   ): Promise<import('./dto/bulk-delete-url.dto').BulkDeleteResultDto> {
+    // Early validation: check for empty or invalid input
+    if (!urlIds || urlIds.length === 0) {
+      throw new BadRequestException('URL IDs cannot be empty');
+    }
+
+    // Filter out any invalid IDs (null, undefined, empty strings)
+    const validInputIds = urlIds.filter((id) => id && typeof id === 'string' && id.trim().length > 0);
+    if (validInputIds.length === 0) {
+      throw new BadRequestException('No valid URL IDs provided');
+    }
+
     // Single query to get all needed data (existence, ownership, cache clearing, events)
     const urls = await this.prisma.url.findMany({
-      where: { id: { in: urlIds } },
+      where: { id: { in: validInputIds } },
       select: {
         id: true,
         userId: true,
@@ -1342,12 +1404,12 @@ export class UrlService implements OnModuleInit {
     });
 
     if (urls.length === 0) {
-      throw new NotFoundException('No URLs found');
+      throw new NotFoundException('No URLs found with the provided IDs');
     }
 
-    // Check for non-existent IDs
+    // Check for non-existent IDs (use validInputIds instead of urlIds)
     const existingIds = new Set(urls.map((u) => u.id));
-    const notFoundIds = urlIds.filter((id) => !existingIds.has(id));
+    const notFoundIds = validInputIds.filter((id) => !existingIds.has(id));
     if (notFoundIds.length > 0) {
       throw new NotFoundException(
         `${notFoundIds.length} URL(s) not found`,
@@ -1410,13 +1472,21 @@ export class UrlService implements OnModuleInit {
 
     // Emit events asynchronously (don't block response)
     setImmediate(() => {
-      for (const url of urls) {
-        this.eventEmitter.emit('url.deleted', {
-          id: url.id,
-          slug: url.slug,
-          originalUrl: url.originalUrl,
-          userId: url.userId,
-        });
+      try {
+        for (const url of urls) {
+          this.eventEmitter.emit('url.deleted', {
+            id: url.id,
+            slug: url.slug,
+            originalUrl: url.originalUrl,
+            userId: url.userId,
+          });
+        }
+      } catch (error) {
+        // Log but don't throw - this is fire-and-forget
+        this.logger.error(
+          `Failed to emit url.deleted events: ${error instanceof Error ? error.message : String(error)}`,
+          error instanceof Error ? error.stack : undefined,
+        );
       }
     });
 

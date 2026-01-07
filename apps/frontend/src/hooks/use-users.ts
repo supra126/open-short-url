@@ -39,8 +39,7 @@ export enum UserRole {
   USER = 'USER',
 }
 
-// ==================== Query Keys (exported for external cache management) ====================
-
+// Query Keys (exported for external cache management)
 export const userKeys = {
   all: ['users'] as const,
   lists: () => [...userKeys.all, 'list'] as const,

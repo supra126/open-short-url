@@ -122,33 +122,16 @@ export interface ToolInvocation {
 
 /**
  * Parameters for creating a short URL via AI tools
+ * Maps to CreateUrlDto from backend, with AI-friendly field names
+ * @see CreateUrlDto in @/lib/api/schemas for the backend DTO
  */
-export interface CreateShortUrlParams {
-  /** Original URL to shorten */
-  url: string;
-  /** Custom slug (optional) */
-  customSlug?: string;
-  /** Title for the short URL */
-  title?: string;
-  /** Description */
-  description?: string;
-  /** Password protection */
-  password?: string;
-  /** Expiration date (ISO 8601) */
-  expiresAt?: string;
-}
+export type { CreateUrlDto as CreateShortUrlParams } from '@/lib/api/schemas';
 
 /**
  * Parameters for creating a bundle via AI tools
+ * @see CreateBundleDto in @/lib/api/schemas for the backend DTO
  */
-export interface CreateBundleParams {
-  /** Bundle name */
-  name: string;
-  /** Bundle description */
-  description?: string;
-  /** Array of URL IDs to include */
-  urlIds?: string[];
-}
+export type { CreateBundleDto as CreateBundleParams } from '@/lib/api/schemas';
 
 /**
  * Response from AI provider availability check

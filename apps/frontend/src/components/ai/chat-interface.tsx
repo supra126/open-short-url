@@ -18,6 +18,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { t } from '@/lib/i18n';
+import { formatDateTime } from '@/lib/utils';
 
 /**
  * Chat Interface Component
@@ -117,7 +118,7 @@ export function ChatInterface() {
                       {history.title}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      {new Date(history.updatedAt).toLocaleString('zh-TW')}
+                      {formatDateTime(history.updatedAt)}
                     </div>
                   </DropdownMenuItem>
                 ))}

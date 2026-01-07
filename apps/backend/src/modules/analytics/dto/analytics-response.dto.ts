@@ -149,6 +149,12 @@ export class RecentClickDto {
   @ApiProperty({ description: 'Click ID', example: 'clxxx987654321' })
   id!: string;
 
+  @ApiProperty({ description: 'A/B Testing variant ID', example: 'clxxx111222333', required: false })
+  variantId?: string;
+
+  @ApiProperty({ description: 'Routing rule ID that matched', example: 'clxxx444555666', required: false })
+  routingRuleId?: string;
+
   @ApiProperty({ description: 'IP address', example: '192.168.1.1', required: false })
   ip?: string;
 
@@ -164,6 +170,9 @@ export class RecentClickDto {
   @ApiProperty({ description: 'Country', example: 'Taiwan', required: false })
   country?: string;
 
+  @ApiProperty({ description: 'Region/State', example: 'Taipei City', required: false })
+  region?: string;
+
   @ApiProperty({ description: 'City', example: 'Taipei', required: false })
   city?: string;
 
@@ -178,6 +187,12 @@ export class RecentClickDto {
 
   @ApiProperty({ description: 'UTM Campaign', example: 'summer_sale', required: false })
   utmCampaign?: string;
+
+  @ApiProperty({ description: 'UTM Term', example: 'discount', required: false })
+  utmTerm?: string;
+
+  @ApiProperty({ description: 'UTM Content', example: 'banner_ad', required: false })
+  utmContent?: string;
 
   @ApiProperty({ description: 'Is this click from a bot', example: false })
   isBot!: boolean;
@@ -280,4 +295,118 @@ export class AbTestAnalyticsResponseDto {
     type: [TopPerformingVariant],
   })
   topPerformingVariants!: TopPerformingVariant[];
+}
+
+// Routing rule statistics
+export class RoutingRuleStat {
+  @ApiProperty({ description: 'Rule ID', example: 'clxxx123456789' })
+  ruleId!: string;
+
+  @ApiProperty({ description: 'Rule name', example: 'iOS Users' })
+  ruleName!: string;
+
+  @ApiProperty({ description: 'Target URL', example: 'https://apps.apple.com/app/myapp' })
+  targetUrl!: string;
+
+  @ApiProperty({ description: 'Number of matches', example: 150 })
+  matchCount!: number;
+
+  @ApiProperty({ description: 'Match percentage', example: 35.5 })
+  matchPercentage!: number;
+
+  @ApiProperty({ description: 'Is rule active', example: true })
+  isActive!: boolean;
+}
+
+// Routing rule time series data point
+export class RoutingRuleTimeSeriesDataPoint {
+  @ApiProperty({ description: 'Date', example: '2025-01-15' })
+  date!: string;
+
+  @ApiProperty({ description: 'Rule ID', example: 'clxxx123456789' })
+  ruleId!: string;
+
+  @ApiProperty({ description: 'Rule name', example: 'iOS Users' })
+  ruleName!: string;
+
+  @ApiProperty({ description: 'Number of matches', example: 42 })
+  matches!: number;
+}
+
+// Routing rule geographic distribution
+export class RoutingRuleGeoStat {
+  @ApiProperty({ description: 'Rule ID', example: 'clxxx123456789' })
+  ruleId!: string;
+
+  @ApiProperty({ description: 'Rule name', example: 'iOS Users' })
+  ruleName!: string;
+
+  @ApiProperty({ description: 'Country', example: 'Taiwan' })
+  country!: string;
+
+  @ApiProperty({ description: 'Number of matches', example: 85 })
+  matches!: number;
+
+  @ApiProperty({ description: 'Percentage of rule matches', example: 56.7 })
+  percentage!: number;
+}
+
+// Routing rule device distribution
+export class RoutingRuleDeviceStat {
+  @ApiProperty({ description: 'Rule ID', example: 'clxxx123456789' })
+  ruleId!: string;
+
+  @ApiProperty({ description: 'Rule name', example: 'iOS Users' })
+  ruleName!: string;
+
+  @ApiProperty({ description: 'Device type', example: 'Mobile' })
+  device!: string;
+
+  @ApiProperty({ description: 'Number of matches', example: 120 })
+  matches!: number;
+
+  @ApiProperty({ description: 'Percentage of rule matches', example: 80.0 })
+  percentage!: number;
+}
+
+// Routing analytics response for a URL
+export class RoutingAnalyticsResponseDto {
+  @ApiProperty({ description: 'URL ID', example: 'clxxx987654321' })
+  urlId!: string;
+
+  @ApiProperty({ description: 'Is smart routing enabled', example: true })
+  isSmartRouting!: boolean;
+
+  @ApiProperty({ description: 'Total routing matches', example: 423 })
+  totalMatches!: number;
+
+  @ApiProperty({ description: 'Total clicks (including non-matches)', example: 1250 })
+  totalClicks!: number;
+
+  @ApiProperty({ description: 'Routing match rate (%)', example: 33.8 })
+  matchRate!: number;
+
+  @ApiProperty({
+    description: 'Rule statistics',
+    type: [RoutingRuleStat],
+  })
+  rules!: RoutingRuleStat[];
+
+  @ApiProperty({
+    description: 'Time series data by rule',
+    type: [RoutingRuleTimeSeriesDataPoint],
+  })
+  timeSeries!: RoutingRuleTimeSeriesDataPoint[];
+
+  @ApiProperty({
+    description: 'Geographic distribution by rule',
+    type: [RoutingRuleGeoStat],
+  })
+  geoDistribution!: RoutingRuleGeoStat[];
+
+  @ApiProperty({
+    description: 'Device distribution by rule',
+    type: [RoutingRuleDeviceStat],
+  })
+  deviceDistribution!: RoutingRuleDeviceStat[];
 }

@@ -1,7 +1,9 @@
 import {
   Injectable,
   NotFoundException,
+  BadRequestException,
   Logger,
+  OnModuleInit,
 } from '@nestjs/common';
 import { Prisma, Webhook, WebhookLog } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
@@ -20,13 +22,54 @@ import { WebhookQueryDto, WebhookLogsQueryDto } from './dto/webhook-query.dto';
 import * as crypto from 'crypto';
 
 @Injectable()
-export class WebhookService {
+export class WebhookService implements OnModuleInit {
   private readonly logger = new Logger(WebhookService.name);
+  private encryptionKey: Buffer | null = null;
 
   constructor(
     private prisma: PrismaService,
     private auditLogService: AuditLogService,
   ) {}
+
+  /**
+   * Validate and initialize encryption key on module startup
+   * Throws an error if WEBHOOK_SECRET_KEY is not properly configured
+   */
+  onModuleInit() {
+    const key = process.env.WEBHOOK_SECRET_KEY;
+
+    if (!key) {
+      this.logger.error(
+        'WEBHOOK_SECRET_KEY environment variable is not set. ' +
+        'Webhook secret encryption will fail. ' +
+        'Generate a secure key using: openssl rand -hex 32',
+      );
+      // Don't throw here to allow app to start, but encryption will fail
+      return;
+    }
+
+    if (key.length < 32) {
+      this.logger.warn(
+        `WEBHOOK_SECRET_KEY is only ${key.length} characters. ` +
+        'Recommended minimum is 32 characters for AES-256 encryption.',
+      );
+    }
+
+    this.encryptionKey = Buffer.from(key, 'utf-8').slice(0, 32);
+    this.logger.log('Webhook encryption key initialized successfully');
+  }
+
+  /**
+   * Get the encryption key, throwing an error if not configured
+   */
+  private getEncryptionKey(): Buffer {
+    if (!this.encryptionKey) {
+      throw new BadRequestException(
+        'Webhook encryption is not configured. Please set WEBHOOK_SECRET_KEY environment variable.',
+      );
+    }
+    return this.encryptionKey;
+  }
 
   /**
    * Create a new webhook
@@ -219,7 +262,7 @@ export class WebhookService {
     query: WebhookLogsQueryDto,
     userRole?: 'ADMIN' | 'USER',
   ): Promise<WebhookLogsListResponseDto> {
-    const { page = 1, pageSize = 20 } = query;
+    const { page = 1, pageSize = 10 } = query;
 
     // Check if webhook exists and belongs to user
     const webhook = await this.prisma.webhook.findFirst({
@@ -326,16 +369,12 @@ export class WebhookService {
   }
 
   /**
-   * Encrypt secret for storage
+   * Encrypt secret for storage using AES-256-GCM
+   * @throws BadRequestException if encryption key is not configured
    */
   private encryptSecret(secret: string): string {
-    // Simple encryption using AES-256-GCM
-    // In production, use a proper KMS or encryption service
     const algorithm = 'aes-256-gcm';
-    const key = Buffer.from(
-      process.env.WEBHOOK_SECRET_KEY || 'default-secret-key-change-me-in-production',
-      'utf-8',
-    ).slice(0, 32);
+    const key = this.getEncryptionKey();
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv(algorithm, key, iv);
 
@@ -348,26 +387,66 @@ export class WebhookService {
   }
 
   /**
-   * Decrypt secret from storage
+   * Decrypt secret from storage using AES-256-GCM
+   * @throws BadRequestException if decryption fails or format is invalid
    */
-  private decryptSecret(encryptedSecret: string): string {
-    const algorithm = 'aes-256-gcm';
-    const key = Buffer.from(
-      process.env.WEBHOOK_SECRET_KEY || 'default-secret-key-change-me-in-production',
-      'utf-8',
-    ).slice(0, 32);
+  public decryptSecret(encryptedSecret: string): string {
+    try {
+      // Validate encrypted secret format
+      if (!encryptedSecret || typeof encryptedSecret !== 'string') {
+        throw new Error('Invalid encrypted secret: empty or not a string');
+      }
 
-    const [ivHex, authTagHex, encrypted] = encryptedSecret.split(':');
-    const iv = Buffer.from(ivHex, 'hex');
-    const authTag = Buffer.from(authTagHex, 'hex');
+      const parts = encryptedSecret.split(':');
+      if (parts.length !== 3) {
+        throw new Error(
+          `Invalid encrypted secret format: expected 3 parts (iv:authTag:encrypted), got ${parts.length}`,
+        );
+      }
 
-    const decipher = crypto.createDecipheriv(algorithm, key, iv);
-    decipher.setAuthTag(authTag);
+      const [ivHex, authTagHex, encrypted] = parts;
 
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-    decrypted += decipher.final('utf8');
+      if (!ivHex || !authTagHex || !encrypted) {
+        throw new Error('Invalid encrypted secret: missing components');
+      }
 
-    return decrypted;
+      // Validate hex format
+      if (!/^[0-9a-fA-F]+$/.test(ivHex) || !/^[0-9a-fA-F]+$/.test(authTagHex)) {
+        throw new Error('Invalid encrypted secret: IV or authTag is not valid hex');
+      }
+
+      const algorithm = 'aes-256-gcm';
+      const key = this.getEncryptionKey();
+
+      const iv = Buffer.from(ivHex, 'hex');
+      const authTag = Buffer.from(authTagHex, 'hex');
+
+      // Validate IV and authTag lengths
+      if (iv.length !== 16) {
+        throw new Error(`Invalid IV length: expected 16 bytes, got ${iv.length}`);
+      }
+      if (authTag.length !== 16) {
+        throw new Error(`Invalid authTag length: expected 16 bytes, got ${authTag.length}`);
+      }
+
+      const decipher = crypto.createDecipheriv(algorithm, key, iv);
+      decipher.setAuthTag(authTag);
+
+      let decrypted = decipher.update(encrypted, 'hex', 'utf8');
+      decrypted += decipher.final('utf8');
+
+      return decrypted;
+    } catch (error) {
+      // Log the error for debugging but don't expose details to client
+      this.logger.error(
+        `Failed to decrypt webhook secret: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        error instanceof Error ? error.stack : undefined,
+      );
+
+      throw new BadRequestException(
+        'Failed to decrypt webhook secret. The secret may be corrupted or the encryption key may have changed.',
+      );
+    }
   }
 
   /**

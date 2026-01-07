@@ -10,6 +10,7 @@ import {
   ArrayMinSize,
 } from 'class-validator';
 import { PaginationMetaDto } from '@/common/dto/paginated-response.dto';
+import { IsSafeUrl } from '@/common/validators/safe-url.validator';
 
 /**
  * Create Webhook DTO
@@ -28,7 +29,8 @@ export class CreateWebhookDto {
     description: 'Target URL for webhook delivery',
     example: 'https://hooks.slack.com/services/YOUR/WEBHOOK/URL',
   })
-  @IsUrl()
+  @IsUrl({}, { message: 'Webhook URL must be a valid URL' })
+  @IsSafeUrl({ message: 'Webhook URL must be a public URL. Internal network addresses are not allowed.' })
   url!: string;
 
   @ApiProperty({

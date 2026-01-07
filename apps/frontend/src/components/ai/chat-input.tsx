@@ -80,7 +80,7 @@ export function ChatInput({
           placeholder={placeholder}
           disabled={isLoading}
           rows={rows}
-          className="flex-1 resize-none min-h-[40px]"
+          className="flex-1 resize-none min-h-10"
         />
 
         {/* Submit/Stop button */}

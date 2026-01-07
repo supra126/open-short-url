@@ -32,10 +32,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Eye,
-  ChevronLeft,
-  ChevronRight,
+  Loader2,
 } from 'lucide-react';
 import { t, TranslationKey } from '@/lib/i18n';
+import { formatDateTime } from '@/lib/utils';
 
 // Available actions based on backend enum
 const AUDIT_ACTIONS = [
@@ -102,21 +102,17 @@ export default function AuditLogsPage() {
 
   const { data, isLoading } = useAuditLogs(queryParams);
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleString();
-  };
-
   const formatJson = (value: Record<string, unknown> | null | undefined) => {
     if (!value) return '-';
     return JSON.stringify(value, null, 2);
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-6">
+    <div className="p-6 space-y-6">
+      {/* Page Header */}
+      <div>
         <h1 className="text-3xl font-bold">{t('auditLogs.title')}</h1>
-        <p className="text-muted-foreground">{t('auditLogs.description')}</p>
+        <p className="text-muted-foreground mt-1">{t('auditLogs.description')}</p>
       </div>
 
       <div className="space-y-6">
@@ -129,7 +125,7 @@ export default function AuditLogsPage() {
               setPage(1); // Reset page when filter changes
             }}
           >
-            <SelectTrigger className="w-[200px]">
+            <SelectTrigger className="w-50">
               <SelectValue placeholder={t('auditLogs.filters.action')} />
             </SelectTrigger>
             <SelectContent>
@@ -149,7 +145,7 @@ export default function AuditLogsPage() {
               setPage(1); // Reset page when filter changes
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-45">
               <SelectValue placeholder={t('auditLogs.filters.entityType')} />
             </SelectTrigger>
             <SelectContent>
@@ -168,19 +164,21 @@ export default function AuditLogsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[180px]">{t('auditLogs.table.time')}</TableHead>
+                <TableHead className="w-45">{t('auditLogs.table.time')}</TableHead>
                 <TableHead>{t('auditLogs.table.user')}</TableHead>
                 <TableHead>{t('auditLogs.table.action')}</TableHead>
                 <TableHead>{t('auditLogs.table.entity')}</TableHead>
                 <TableHead>{t('auditLogs.table.ipAddress')}</TableHead>
-                <TableHead className="w-[80px]">{t('auditLogs.table.details')}</TableHead>
+                <TableHead className="w-20">{t('auditLogs.table.details')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    {t('common.loading')}
+                  <TableCell colSpan={6} className="text-center py-12">
+                    <div className="flex items-center justify-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : !data?.data || data.data.length === 0 ? (
@@ -250,27 +248,24 @@ export default function AuditLogsPage() {
         {data && data.totalPages > 1 && (
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
-              {t('common.showing')} {(page - 1) * 20 + 1} {t('common.to')}{' '}
-              {Math.min(page * 20, data.total)} {t('common.of')} {data.total}
+              {t('common.page')} {page} {t('common.of')} {data.totalPages}（{t('common.total')} {data.total} {t('common.items')}）
             </p>
             <div className="flex gap-2">
               <Button
-                variant="outline"
                 size="sm"
+                variant="outline"
                 onClick={() => setPage(page - 1)}
                 disabled={page === 1}
               >
-                <ChevronLeft className="h-4 w-4 mr-1" />
                 {t('common.previous')}
               </Button>
               <Button
-                variant="outline"
                 size="sm"
+                variant="outline"
                 onClick={() => setPage(page + 1)}
                 disabled={page === data.totalPages}
               >
                 {t('common.next')}
-                <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
           </div>

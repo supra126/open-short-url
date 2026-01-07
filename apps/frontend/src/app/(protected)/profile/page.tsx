@@ -231,14 +231,14 @@ export default function ProfilePage() {
 
   if (isLoadingUser) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="flex items-center justify-center min-h-100">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       {/* Page Header */}
       <div>
         <h1 className="text-3xl font-bold">{t('profile.title')}</h1>
@@ -485,7 +485,7 @@ export default function ProfilePage() {
                         <Input
                           id="disable-code"
                           type="text"
-                          placeholder="123456"
+                          placeholder={t('profile.verificationCodePlaceholder')}
                           maxLength={6}
                           value={disable2FAData.code}
                           onChange={(e) =>
@@ -577,7 +577,7 @@ export default function ProfilePage() {
                           <Input
                             id="verification-code"
                             type="text"
-                            placeholder="123456"
+                            placeholder={t('profile.verificationCodePlaceholder')}
                             maxLength={6}
                             value={verificationCode}
                             onChange={(e) =>

@@ -22,6 +22,9 @@ import type {
   DeviceStat,
   GeoLocationStat,
   UtmStat,
+  TimeSeriesDataPoint,
+  ExportFormat,
+  ExportQueryParams,
 } from '@/lib/api/schemas';
 
 // Re-export types for consumers of this hook
@@ -39,6 +42,9 @@ export type {
   DeviceStat,
   GeoLocationStat,
   UtmStat,
+  TimeSeriesDataPoint,
+  ExportFormat,
+  ExportQueryParams,
 };
 
 // Query Keys (exported for external cache management)

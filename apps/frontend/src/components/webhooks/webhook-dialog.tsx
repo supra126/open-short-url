@@ -31,9 +31,17 @@ interface WebhookDialogProps {
   trigger?: React.ReactNode;
 }
 
-const AVAILABLE_EVENTS: Array<{ value: string; labelKey: TranslationKey }> = [
-  { value: 'url.created', labelKey: 'webhooks.eventUrlCreated' },
-  { value: 'url.clicked', labelKey: 'webhooks.eventUrlClicked' },
+const AVAILABLE_EVENTS: Array<{ value: string; labelKey: TranslationKey; group: 'url' | 'routing' }> = [
+  // URL Events
+  { value: 'url.created', labelKey: 'webhooks.eventUrlCreated', group: 'url' },
+  { value: 'url.updated', labelKey: 'webhooks.eventUrlUpdated', group: 'url' },
+  { value: 'url.deleted', labelKey: 'webhooks.eventUrlDeleted', group: 'url' },
+  { value: 'url.clicked', labelKey: 'webhooks.eventUrlClicked', group: 'url' },
+  // Smart Routing Events
+  { value: 'routing.rule_created', labelKey: 'webhooks.eventRoutingRuleCreated', group: 'routing' },
+  { value: 'routing.rule_updated', labelKey: 'webhooks.eventRoutingRuleUpdated', group: 'routing' },
+  { value: 'routing.rule_deleted', labelKey: 'webhooks.eventRoutingRuleDeleted', group: 'routing' },
+  { value: 'routing.rule_matched', labelKey: 'webhooks.eventRoutingRuleMatched', group: 'routing' },
 ];
 
 export function WebhookDialog({ webhook, trigger }: WebhookDialogProps) {
@@ -141,7 +149,7 @@ export function WebhookDialog({ webhook, trigger }: WebhookDialogProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-150 max-h-[90vh] overflow-y-auto">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle>{isEdit ? t('webhooks.editWebhook') : t('webhooks.create')}</DialogTitle>
@@ -210,28 +218,61 @@ export function WebhookDialog({ webhook, trigger }: WebhookDialogProps) {
               <Label>
                 {t('webhooks.eventsRequired')}
               </Label>
-              <div className="space-y-2">
-                {AVAILABLE_EVENTS.map((event) => (
-                  <div key={event.value} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={event.value}
-                      checked={events.includes(event.value)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setEvents([...events, event.value]);
-                        } else {
-                          setEvents(events.filter((e) => e !== event.value));
-                        }
-                      }}
-                    />
-                    <Label
-                      htmlFor={event.value}
-                      className="text-sm font-normal cursor-pointer"
-                    >
-                      {t(event.labelKey)}
-                    </Label>
-                  </div>
-                ))}
+              <div className="space-y-4">
+                {/* URL Events */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t('webhooks.eventGroupUrl')}
+                  </p>
+                  {AVAILABLE_EVENTS.filter((e) => e.group === 'url').map((event) => (
+                    <div key={event.value} className="flex items-center space-x-2 ml-2">
+                      <Checkbox
+                        id={event.value}
+                        checked={events.includes(event.value)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setEvents([...events, event.value]);
+                          } else {
+                            setEvents(events.filter((e) => e !== event.value));
+                          }
+                        }}
+                      />
+                      <Label
+                        htmlFor={event.value}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {t(event.labelKey)}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+                {/* Smart Routing Events */}
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {t('webhooks.eventGroupRouting')}
+                  </p>
+                  {AVAILABLE_EVENTS.filter((e) => e.group === 'routing').map((event) => (
+                    <div key={event.value} className="flex items-center space-x-2 ml-2">
+                      <Checkbox
+                        id={event.value}
+                        checked={events.includes(event.value)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setEvents([...events, event.value]);
+                          } else {
+                            setEvents(events.filter((e) => e !== event.value));
+                          }
+                        }}
+                      />
+                      <Label
+                        htmlFor={event.value}
+                        className="text-sm font-normal cursor-pointer"
+                      >
+                        {t(event.labelKey)}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
               {events.length === 0 && (
                 <p className="text-sm text-destructive">{t('webhooks.eventsMinError')}</p>

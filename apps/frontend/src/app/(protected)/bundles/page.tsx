@@ -184,9 +184,9 @@ export default function BundlesPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-6 space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold">{t('bundles.title')}</h1>
           <p className="text-muted-foreground mt-1">
@@ -200,7 +200,7 @@ export default function BundlesPage() {
       </div>
 
       {/* Filters */}
-      <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -217,7 +217,7 @@ export default function BundlesPage() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-45">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -366,26 +366,28 @@ export default function BundlesPage() {
 
           {/* Pagination */}
           {data.totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
-              >
-                {t('common.previous')}
-              </Button>
-              <span className="text-sm text-muted-foreground">
-                {t('common.page')} {page} {t('common.of')} {data.totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(page + 1)}
-                disabled={page === data.totalPages}
-              >
-                {t('common.next')}
-              </Button>
+            <div className="mt-6 flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                {t('common.page')} {page} {t('common.of')} {data.totalPages}（{t('common.total')} {data.total} {t('common.items')}）
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setPage(page - 1)}
+                  disabled={page === 1}
+                >
+                  {t('common.previous')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setPage(page + 1)}
+                  disabled={page === data.totalPages}
+                >
+                  {t('common.next')}
+                </Button>
+              </div>
             </div>
           )}
         </>

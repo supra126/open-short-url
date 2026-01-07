@@ -1,12 +1,12 @@
+/**
+ * AI Status Hooks
+ */
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { ErrorHandler } from '@/lib/error-handler';
-
-interface AIStatusResponse {
-  enabled: boolean;
-  providers: string[];
-}
+import type { AIStatusResponse } from '@/app/api/ai-status/route';
 
 /**
  * Hook to check if AI functionality is enabled

@@ -65,12 +65,14 @@ export class SettingsController {
   }
 
   /**
-   * Get single system setting
+   * Get single system setting (ADMIN only)
    */
   @Get('system/:key')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Get system setting',
-    description: 'Retrieve system setting by key',
+    description: 'Retrieve system setting by key (admin only)',
   })
   @ApiParam({
     name: 'key',
@@ -90,6 +92,11 @@ export class SettingsController {
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.FORBIDDEN,
+    description: 'Insufficient permissions (admin role required)',
     type: ErrorResponseDto,
   })
   async getSystemSetting(

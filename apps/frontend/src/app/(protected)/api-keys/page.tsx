@@ -15,7 +15,8 @@ import {
   type ApiKeyResponseDto,
 } from '@/hooks/use-api-keys';
 import { Button } from '@/components/ui/button';
-import { t, getLocale } from '@/lib/i18n';
+import { t } from '@/lib/i18n';
+import { formatDateTime } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -158,14 +159,7 @@ export default function ApiKeysPage() {
 
   const formatDate = (date?: string | Date) => {
     if (!date) return t('common.noValue');
-    const locale = getLocale() === 'zh-TW' ? 'zh-TW' : 'en-US';
-    return new Date(date).toLocaleString(locale, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    return formatDateTime(date);
   };
 
   const isExpired = (expiresAt?: string | Date) => {
@@ -173,17 +167,14 @@ export default function ApiKeysPage() {
     return new Date(expiresAt) < new Date();
   };
 
-  if (isLoading) {
-    return <Loading text={t('common.loading')} />;
-  }
-
   return (
     <>
-    <div className="p-6">
-      <div className="flex items-center justify-between">
+    <div className="p-6 space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold">{t('apiKeys.title')}</h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-1">
             {t('apiKeys.description')}
           </p>
         </div>
@@ -233,8 +224,8 @@ export default function ApiKeysPage() {
                       </Button>
                     </div>
                   </div>
-                  <div className="rounded-lg bg-yellow-50 dark:bg-yellow-950 p-4">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <div className="rounded-lg bg-warning/10 dark:bg-warning/20 p-4">
+                    <p className="text-sm text-warning-foreground dark:text-warning">
                       {t('apiKeys.createDialogWarning')}
                     </p>
                   </div>
@@ -321,7 +312,11 @@ export default function ApiKeysPage() {
           <CardDescription>{t('apiKeys.keysDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
-          {!apiKeys?.data.length ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loading text={t('common.loading')} />
+            </div>
+          ) : !apiKeys?.data.length ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Key className="h-12 w-12 text-muted-foreground mb-4" />
               <h3 className="text-lg font-semibold mb-2">

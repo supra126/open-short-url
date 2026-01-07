@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, memo } from 'react';
+import { useState, useCallback, useMemo, memo } from 'react';
 import { format, subDays, isAfter, differenceInDays } from 'date-fns';
 import { CalendarIcon } from 'lucide-react';
 import {
@@ -12,13 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { t } from '@/lib/i18n';
-import type { TimeRange } from '@/hooks/use-analytics';
+import type { TimeRange, AnalyticsQueryParams } from '@/hooks/use-analytics';
 
-interface DateRangeValue {
-  timeRange: TimeRange;
-  startDate?: string;
-  endDate?: string;
-}
+// DateRangeValue uses AnalyticsQueryParams but with required timeRange
+export type DateRangeValue = Pick<Required<AnalyticsQueryParams>, 'timeRange'> &
+  Pick<AnalyticsQueryParams, 'startDate' | 'endDate'>;
 
 interface DateRangePickerProps {
   value: DateRangeValue;
@@ -39,12 +37,15 @@ export const DateRangePicker = memo<DateRangePickerProps>(
     );
     const [error, setError] = useState<string | null>(null);
 
-    const presetOptions: { value: TimeRange; label: string }[] = [
-      { value: 'last_7_days', label: t('analytics.timeRange.last7Days') },
-      { value: 'last_30_days', label: t('analytics.timeRange.last30Days') },
-      { value: 'last_90_days', label: t('analytics.timeRange.last90Days') },
-      { value: 'last_365_days', label: t('analytics.timeRange.last365Days') },
-    ];
+    const presetOptions = useMemo<{ value: TimeRange; label: string }[]>(
+      () => [
+        { value: 'last_7_days', label: t('analytics.timeRange.last7Days') },
+        { value: 'last_30_days', label: t('analytics.timeRange.last30Days') },
+        { value: 'last_90_days', label: t('analytics.timeRange.last90Days') },
+        { value: 'last_365_days', label: t('analytics.timeRange.last365Days') },
+      ],
+      []
+    );
 
     const handlePresetClick = useCallback(
       (preset: TimeRange) => {

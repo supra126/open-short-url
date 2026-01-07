@@ -8,6 +8,7 @@ import {
   Matches,
   IsDateString,
 } from 'class-validator';
+import { IsSafeUrl } from '@/common/validators/safe-url.validator';
 
 export class CreateUrlDto {
   @ApiProperty({
@@ -15,6 +16,7 @@ export class CreateUrlDto {
     example: 'https://example.com/very-long-url',
   })
   @IsUrl({}, { message: 'Please enter a valid URL' })
+  @IsSafeUrl({ message: 'URL must be a public address. Internal network addresses are not allowed.' })
   originalUrl!: string;
 
   @ApiPropertyOptional({
@@ -35,17 +37,21 @@ export class CreateUrlDto {
   @ApiPropertyOptional({
     description: 'Title',
     example: 'My Important Link',
+    maxLength: 255,
   })
   @IsString()
+  @MaxLength(255, { message: 'Title must not exceed 255 characters' })
   @IsOptional()
   title?: string;
 
   @ApiPropertyOptional({
     description: 'Password protection (optional)',
     minLength: 4,
+    maxLength: 128,
   })
   @IsString()
   @MinLength(4, { message: 'Password must be at least 4 characters' })
+  @MaxLength(128, { message: 'Password must not exceed 128 characters' })
   @IsOptional()
   password?: string;
 
@@ -60,40 +66,50 @@ export class CreateUrlDto {
   @ApiPropertyOptional({
     description: 'UTM Source',
     example: 'newsletter',
+    maxLength: 255,
   })
   @IsString()
+  @MaxLength(255, { message: 'UTM Source must not exceed 255 characters' })
   @IsOptional()
   utmSource?: string;
 
   @ApiPropertyOptional({
     description: 'UTM Medium',
     example: 'email',
+    maxLength: 255,
   })
   @IsString()
+  @MaxLength(255, { message: 'UTM Medium must not exceed 255 characters' })
   @IsOptional()
   utmMedium?: string;
 
   @ApiPropertyOptional({
     description: 'UTM Campaign',
     example: 'summer_sale',
+    maxLength: 255,
   })
   @IsString()
+  @MaxLength(255, { message: 'UTM Campaign must not exceed 255 characters' })
   @IsOptional()
   utmCampaign?: string;
 
   @ApiPropertyOptional({
     description: 'UTM Term',
     example: 'discount',
+    maxLength: 255,
   })
   @IsString()
+  @MaxLength(255, { message: 'UTM Term must not exceed 255 characters' })
   @IsOptional()
   utmTerm?: string;
 
   @ApiPropertyOptional({
     description: 'UTM Content',
     example: 'banner_top',
+    maxLength: 255,
   })
   @IsString()
+  @MaxLength(255, { message: 'UTM Content must not exceed 255 characters' })
   @IsOptional()
   utmContent?: string;
 }

@@ -12,8 +12,13 @@ import {
   UtmStat,
   RecentClicksResponseDto,
   RecentClickDto,
+  RoutingAnalyticsResponseDto,
+  RoutingRuleStat,
+  RoutingRuleTimeSeriesDataPoint,
+  RoutingRuleGeoStat,
+  RoutingRuleDeviceStat,
 } from './dto/analytics-response.dto';
-import { ERROR_MESSAGES } from '@/common/constants/errors';
+import { ERROR_MESSAGES, ANALYTICS_CONFIG } from '@/common/constants';
 import { User, UserRole, Prisma } from '@prisma/client';
 
 /**
@@ -71,6 +76,8 @@ export class AnalyticsService {
 
   /**
    * Get analytics data for a URL
+   * Uses hybrid approach: in-memory processing for small datasets,
+   * database aggregation for large datasets to prevent memory exhaustion
    */
   async getUrlAnalytics(
     urlId: string,
@@ -90,74 +97,27 @@ export class AnalyticsService {
     // Calculate date range
     const { startDate, endDate } = this.calculateDateRange(queryDto);
 
-    // Query click data - optimized to select only necessary fields
-    // First, get ALL clicks (including bots) to filter separately
-    // This ensures we capture all valid clicks regardless of bot status
-    const allClicks = await this.prisma.click.findMany({
+    // Check click count to decide processing strategy
+    const clickCount = await this.prisma.click.count({
       where: {
         urlId,
+        isBot: false,
         createdAt: {
           gte: startDate,
           lte: endDate,
         },
       },
-      select: {
-        id: true,
-        ip: true,
-        country: true,
-        region: true,
-        city: true,
-        browser: true,
-        os: true,
-        device: true,
-        referer: true,
-        utmSource: true,
-        utmMedium: true,
-        utmCampaign: true,
-        isBot: true,
-        createdAt: true,
-      },
-      orderBy: {
-        createdAt: 'asc',
-      },
     });
 
-    // Filter out bot traffic for analytics
-    const clicks = allClicks.filter((click) => !click.isBot);
+    let result: AnalyticsResponseDto;
 
-    // Calculate various statistics
-    const overview = await this.calculateOverview(
-      urlId,
-      clicks,
-      startDate,
-      endDate,
-    );
-    const timeSeries = this.calculateTimeSeries(clicks, startDate, endDate);
-    const countries = this.calculateGeoStats(clicks, 'country');
-    const regions = this.calculateGeoStats(clicks, 'region');
-    const cities = this.calculateGeoStats(clicks, 'city');
-    const browsers = this.calculateDeviceStats(clicks, 'browser');
-    const operatingSystems = this.calculateDeviceStats(clicks, 'os');
-    const devices = this.calculateDeviceStats(clicks, 'device');
-    const referers = this.calculateRefererStats(clicks);
-    const utmSources = this.calculateUtmStats(clicks, 'utmSource');
-    const utmMediums = this.calculateUtmStats(clicks, 'utmMedium');
-    const utmCampaigns = this.calculateUtmStats(clicks, 'utmCampaign');
-
-    const result: AnalyticsResponseDto = {
-      overview,
-      timeSeries,
-      countries,
-      regions,
-      cities,
-      browsers,
-      operatingSystems,
-      devices,
-      referers,
-      utmSources,
-      utmMediums,
-      utmCampaigns,
-    };
+    // Use database aggregation for large datasets to prevent memory exhaustion
+    if (clickCount > ANALYTICS_CONFIG.AGGREGATION_THRESHOLD) {
+      result = await this.getUrlAnalyticsWithAggregation(urlId, startDate, endDate);
+    } else {
+      // Use in-memory processing for small datasets (faster)
+      result = await this.getUrlAnalyticsInMemory(urlId, startDate, endDate);
+    }
 
     // Cache result
     await this.cacheService.set(cacheKey, result, this.CACHE_TTL);
@@ -166,22 +126,18 @@ export class AnalyticsService {
   }
 
   /**
-   * Get analytics data for all user URLs
+   * Get URL analytics using in-memory processing (for small datasets)
    */
-  async getUserAnalytics(
-    user: User,
-    queryDto: AnalyticsQueryDto,
+  private async getUrlAnalyticsInMemory(
+    urlId: string,
+    startDate: Date,
+    endDate: Date,
   ): Promise<AnalyticsResponseDto> {
-    // Calculate date range
-    const { startDate, endDate } = this.calculateDateRange(queryDto);
-
-    // Query click data for all user URLs - optimized to select only necessary fields
-    // First, get ALL clicks (including bots) to filter separately
+    // Query click data with limit to prevent memory exhaustion
     const allClicks = await this.prisma.click.findMany({
       where: {
-        url: {
-          userId: user.id,
-        },
+        urlId,
+        isBot: false,
         createdAt: {
           gte: startDate,
           lte: endDate,
@@ -206,18 +162,13 @@ export class AnalyticsService {
       orderBy: {
         createdAt: 'asc',
       },
+      take: ANALYTICS_CONFIG.MAX_IN_MEMORY_CLICKS,
     });
 
-    // Filter out bot traffic for analytics
-    const clicks = allClicks.filter((click) => !click.isBot);
+    const clicks = allClicks;
 
-    // Calculate statistics (same logic as single URL)
-    const overview = await this.calculateUserOverview(
-      user.id,
-      clicks,
-      startDate,
-      endDate,
-    );
+    // Calculate various statistics
+    const overview = await this.calculateOverview(urlId, clicks, startDate, endDate);
     const timeSeries = this.calculateTimeSeries(clicks, startDate, endDate);
     const countries = this.calculateGeoStats(clicks, 'country');
     const regions = this.calculateGeoStats(clicks, 'region');
@@ -244,6 +195,490 @@ export class AnalyticsService {
       utmMediums,
       utmCampaigns,
     };
+  }
+
+  /**
+   * Get URL analytics using database aggregation (for large datasets)
+   * Uses GROUP BY queries to avoid loading all data into memory
+   */
+  private async getUrlAnalyticsWithAggregation(
+    urlId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<AnalyticsResponseDto> {
+    // Execute all aggregation queries in parallel for efficiency
+    const [
+      overviewData,
+      timeSeriesData,
+      countryStats,
+      regionStats,
+      cityStats,
+      browserStats,
+      osStats,
+      deviceStats,
+      refererStats,
+      utmSourceStats,
+      utmMediumStats,
+      utmCampaignStats,
+    ] = await Promise.all([
+      // Overview statistics
+      this.getOverviewWithAggregation(urlId, startDate, endDate),
+      // Time series using database GROUP BY
+      this.getTimeSeriesWithAggregation(urlId, startDate, endDate),
+      // Geographic stats
+      this.getGroupedStats(urlId, startDate, endDate, 'country'),
+      this.getGroupedStats(urlId, startDate, endDate, 'region'),
+      this.getGroupedStats(urlId, startDate, endDate, 'city'),
+      // Device stats
+      this.getGroupedStats(urlId, startDate, endDate, 'browser'),
+      this.getGroupedStats(urlId, startDate, endDate, 'os'),
+      this.getGroupedStats(urlId, startDate, endDate, 'device'),
+      // Referer stats
+      this.getGroupedStats(urlId, startDate, endDate, 'referer'),
+      // UTM stats
+      this.getGroupedStats(urlId, startDate, endDate, 'utmSource'),
+      this.getGroupedStats(urlId, startDate, endDate, 'utmMedium'),
+      this.getGroupedStats(urlId, startDate, endDate, 'utmCampaign'),
+    ]);
+
+    return {
+      overview: overviewData,
+      timeSeries: timeSeriesData,
+      countries: countryStats as GeoLocationStat[],
+      regions: regionStats as GeoLocationStat[],
+      cities: cityStats as GeoLocationStat[],
+      browsers: browserStats as DeviceStat[],
+      operatingSystems: osStats as DeviceStat[],
+      devices: deviceStats as DeviceStat[],
+      referers: refererStats.map((s) => ({ referer: s.name, clicks: s.clicks, percentage: s.percentage })) as RefererStat[],
+      utmSources: utmSourceStats.map((s) => ({ value: s.name, clicks: s.clicks, percentage: s.percentage })) as UtmStat[],
+      utmMediums: utmMediumStats.map((s) => ({ value: s.name, clicks: s.clicks, percentage: s.percentage })) as UtmStat[],
+      utmCampaigns: utmCampaignStats.map((s) => ({ value: s.name, clicks: s.clicks, percentage: s.percentage })) as UtmStat[],
+    };
+  }
+
+  /**
+   * Get overview statistics using database aggregation
+   */
+  private async getOverviewWithAggregation(
+    urlId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<OverviewStats> {
+    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const previousStartDate = new Date(startDate.getTime() - (endDate.getTime() - startDate.getTime()));
+
+    const [currentStats, previousStats] = await Promise.all([
+      this.prisma.$queryRaw<[{ total: bigint; unique_ips: bigint }]>`
+        SELECT COUNT(*)::bigint as total, COUNT(DISTINCT ip)::bigint as unique_ips
+        FROM "clicks"
+        WHERE "urlId" = ${urlId}
+          AND "isBot" = false
+          AND "createdAt" >= ${startDate}
+          AND "createdAt" <= ${endDate}
+      `,
+      this.prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*)::bigint as count
+        FROM "clicks"
+        WHERE "urlId" = ${urlId}
+          AND "isBot" = false
+          AND "createdAt" >= ${previousStartDate}
+          AND "createdAt" < ${startDate}
+      `,
+    ]);
+
+    const totalClicks = Number(currentStats[0]?.total || 0);
+    const uniqueVisitors = Number(currentStats[0]?.unique_ips || 0);
+    const previousClicks = Number(previousStats[0]?.count || 0);
+    const averageClicksPerDay = days > 0 ? Math.round((totalClicks / days) * 10) / 10 : 0;
+    const growthRate = previousClicks > 0
+      ? Math.round(((totalClicks - previousClicks) / previousClicks) * 1000) / 10
+      : totalClicks > 0 ? 100 : 0;
+
+    return { totalClicks, uniqueVisitors, averageClicksPerDay, growthRate };
+  }
+
+  /**
+   * Get time series data using database aggregation
+   */
+  private async getTimeSeriesWithAggregation(
+    urlId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<TimeSeriesDataPoint[]> {
+    const rawData = await this.prisma.$queryRaw<{ date: Date; count: bigint }[]>`
+      SELECT DATE("createdAt") as date, COUNT(*)::bigint as count
+      FROM "clicks"
+      WHERE "urlId" = ${urlId}
+        AND "isBot" = false
+        AND "createdAt" >= ${startDate}
+        AND "createdAt" <= ${endDate}
+      GROUP BY DATE("createdAt")
+      ORDER BY date
+    `;
+
+    // Create a map for all dates in range
+    const dateMap = new Map<string, number>();
+    const current = new Date(startDate);
+    while (current <= endDate) {
+      dateMap.set(this.formatDateToString(current), 0);
+      current.setDate(current.getDate() + 1);
+    }
+
+    // Fill in actual counts
+    rawData.forEach((row) => {
+      const dateStr = row.date instanceof Date
+        ? this.formatDateToString(row.date)
+        : String(row.date).split('T')[0];
+      dateMap.set(dateStr, Number(row.count));
+    });
+
+    return Array.from(dateMap.entries())
+      .map(([date, clicks]) => ({ date, clicks }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  /**
+   * Get grouped statistics using database aggregation
+   */
+  private async getGroupedStats(
+    urlId: string,
+    startDate: Date,
+    endDate: Date,
+    field: string,
+  ): Promise<{ name: string; clicks: number; percentage: number }[]> {
+    // Use parameterized column name safely
+    const columnMap: Record<string, string> = {
+      country: 'country',
+      region: 'region',
+      city: 'city',
+      browser: 'browser',
+      os: 'os',
+      device: 'device',
+      referer: 'referer',
+      utmSource: '"utmSource"',
+      utmMedium: '"utmMedium"',
+      utmCampaign: '"utmCampaign"',
+    };
+
+    const column = columnMap[field];
+    if (!column) {
+      return [];
+    }
+
+    // Get total count for percentage calculation
+    const totalResult = await this.prisma.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*)::bigint as count
+      FROM "clicks"
+      WHERE "urlId" = ${urlId}
+        AND "isBot" = false
+        AND "createdAt" >= ${startDate}
+        AND "createdAt" <= ${endDate}
+    `;
+    const total = Number(totalResult[0]?.count || 0);
+
+    // Get grouped counts - use raw SQL with dynamic column
+    const rawStats = await this.prisma.$queryRawUnsafe<{ name: string; count: bigint }[]>(`
+      SELECT COALESCE(${column}, 'Unknown') as name, COUNT(*)::bigint as count
+      FROM "clicks"
+      WHERE "urlId" = $1
+        AND "isBot" = false
+        AND "createdAt" >= $2
+        AND "createdAt" <= $3
+      GROUP BY ${column}
+      ORDER BY count DESC
+      LIMIT 10
+    `, urlId, startDate, endDate);
+
+    return rawStats.map((row) => ({
+      name: row.name || 'Unknown',
+      clicks: Number(row.count),
+      percentage: total > 0 ? Math.round((Number(row.count) / total) * 1000) / 10 : 0,
+    }));
+  }
+
+  /**
+   * Get analytics data for all user URLs
+   * Uses hybrid approach: in-memory processing for small datasets,
+   * database aggregation for large datasets to prevent memory exhaustion
+   */
+  async getUserAnalytics(
+    user: User,
+    queryDto: AnalyticsQueryDto,
+  ): Promise<AnalyticsResponseDto> {
+    // Calculate date range
+    const { startDate, endDate } = this.calculateDateRange(queryDto);
+
+    // Check click count to decide processing strategy
+    const clickCount = await this.prisma.click.count({
+      where: {
+        url: { userId: user.id },
+        isBot: false,
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+    });
+
+    // Use database aggregation for large datasets to prevent memory exhaustion
+    if (clickCount > ANALYTICS_CONFIG.AGGREGATION_THRESHOLD) {
+      return this.getUserAnalyticsWithAggregation(user.id, startDate, endDate);
+    }
+
+    // Use in-memory processing for small datasets (faster)
+    const allClicks = await this.prisma.click.findMany({
+      where: {
+        url: { userId: user.id },
+        isBot: false,
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      select: {
+        id: true,
+        ip: true,
+        country: true,
+        region: true,
+        city: true,
+        browser: true,
+        os: true,
+        device: true,
+        referer: true,
+        utmSource: true,
+        utmMedium: true,
+        utmCampaign: true,
+        isBot: true,
+        createdAt: true,
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+      take: ANALYTICS_CONFIG.MAX_IN_MEMORY_CLICKS,
+    });
+
+    const clicks = allClicks;
+
+    // Calculate statistics (same logic as single URL)
+    const overview = await this.calculateUserOverview(user.id, clicks, startDate, endDate);
+    const timeSeries = this.calculateTimeSeries(clicks, startDate, endDate);
+    const countries = this.calculateGeoStats(clicks, 'country');
+    const regions = this.calculateGeoStats(clicks, 'region');
+    const cities = this.calculateGeoStats(clicks, 'city');
+    const browsers = this.calculateDeviceStats(clicks, 'browser');
+    const operatingSystems = this.calculateDeviceStats(clicks, 'os');
+    const devices = this.calculateDeviceStats(clicks, 'device');
+    const referers = this.calculateRefererStats(clicks);
+    const utmSources = this.calculateUtmStats(clicks, 'utmSource');
+    const utmMediums = this.calculateUtmStats(clicks, 'utmMedium');
+    const utmCampaigns = this.calculateUtmStats(clicks, 'utmCampaign');
+
+    return {
+      overview,
+      timeSeries,
+      countries,
+      regions,
+      cities,
+      browsers,
+      operatingSystems,
+      devices,
+      referers,
+      utmSources,
+      utmMediums,
+      utmCampaigns,
+    };
+  }
+
+  /**
+   * Get user analytics using database aggregation (for large datasets)
+   */
+  private async getUserAnalyticsWithAggregation(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<AnalyticsResponseDto> {
+    // Execute all aggregation queries in parallel
+    const [
+      overviewData,
+      timeSeriesData,
+      countryStats,
+      regionStats,
+      cityStats,
+      browserStats,
+      osStats,
+      deviceStats,
+      refererStats,
+      utmSourceStats,
+      utmMediumStats,
+      utmCampaignStats,
+    ] = await Promise.all([
+      this.getUserOverviewWithAggregation(userId, startDate, endDate),
+      this.getUserTimeSeriesWithAggregation(userId, startDate, endDate),
+      this.getUserGroupedStats(userId, startDate, endDate, 'country'),
+      this.getUserGroupedStats(userId, startDate, endDate, 'region'),
+      this.getUserGroupedStats(userId, startDate, endDate, 'city'),
+      this.getUserGroupedStats(userId, startDate, endDate, 'browser'),
+      this.getUserGroupedStats(userId, startDate, endDate, 'os'),
+      this.getUserGroupedStats(userId, startDate, endDate, 'device'),
+      this.getUserGroupedStats(userId, startDate, endDate, 'referer'),
+      this.getUserGroupedStats(userId, startDate, endDate, 'utmSource'),
+      this.getUserGroupedStats(userId, startDate, endDate, 'utmMedium'),
+      this.getUserGroupedStats(userId, startDate, endDate, 'utmCampaign'),
+    ]);
+
+    return {
+      overview: overviewData,
+      timeSeries: timeSeriesData,
+      countries: countryStats as GeoLocationStat[],
+      regions: regionStats as GeoLocationStat[],
+      cities: cityStats as GeoLocationStat[],
+      browsers: browserStats as DeviceStat[],
+      operatingSystems: osStats as DeviceStat[],
+      devices: deviceStats as DeviceStat[],
+      referers: refererStats.map((s) => ({ referer: s.name, clicks: s.clicks, percentage: s.percentage })) as RefererStat[],
+      utmSources: utmSourceStats.map((s) => ({ value: s.name, clicks: s.clicks, percentage: s.percentage })) as UtmStat[],
+      utmMediums: utmMediumStats.map((s) => ({ value: s.name, clicks: s.clicks, percentage: s.percentage })) as UtmStat[],
+      utmCampaigns: utmCampaignStats.map((s) => ({ value: s.name, clicks: s.clicks, percentage: s.percentage })) as UtmStat[],
+    };
+  }
+
+  /**
+   * Get user overview statistics using database aggregation
+   */
+  private async getUserOverviewWithAggregation(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<OverviewStats> {
+    const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const previousStartDate = new Date(startDate.getTime() - (endDate.getTime() - startDate.getTime()));
+
+    const [currentStats, previousStats] = await Promise.all([
+      this.prisma.$queryRaw<[{ total: bigint; unique_ips: bigint }]>`
+        SELECT COUNT(*)::bigint as total, COUNT(DISTINCT c.ip)::bigint as unique_ips
+        FROM "clicks" c
+        INNER JOIN "urls" u ON c."urlId" = u."id"
+        WHERE u."userId" = ${userId}
+          AND c."isBot" = false
+          AND c."createdAt" >= ${startDate}
+          AND c."createdAt" <= ${endDate}
+      `,
+      this.prisma.$queryRaw<[{ count: bigint }]>`
+        SELECT COUNT(*)::bigint as count
+        FROM "clicks" c
+        INNER JOIN "urls" u ON c."urlId" = u."id"
+        WHERE u."userId" = ${userId}
+          AND c."isBot" = false
+          AND c."createdAt" >= ${previousStartDate}
+          AND c."createdAt" < ${startDate}
+      `,
+    ]);
+
+    const totalClicks = Number(currentStats[0]?.total || 0);
+    const uniqueVisitors = Number(currentStats[0]?.unique_ips || 0);
+    const previousClicks = Number(previousStats[0]?.count || 0);
+    const averageClicksPerDay = days > 0 ? Math.round((totalClicks / days) * 10) / 10 : 0;
+    const growthRate = previousClicks > 0
+      ? Math.round(((totalClicks - previousClicks) / previousClicks) * 1000) / 10
+      : totalClicks > 0 ? 100 : 0;
+
+    return { totalClicks, uniqueVisitors, averageClicksPerDay, growthRate };
+  }
+
+  /**
+   * Get user time series data using database aggregation
+   */
+  private async getUserTimeSeriesWithAggregation(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<TimeSeriesDataPoint[]> {
+    const rawData = await this.prisma.$queryRaw<{ date: Date; count: bigint }[]>`
+      SELECT DATE(c."createdAt") as date, COUNT(*)::bigint as count
+      FROM "clicks" c
+      INNER JOIN "urls" u ON c."urlId" = u."id"
+      WHERE u."userId" = ${userId}
+        AND c."isBot" = false
+        AND c."createdAt" >= ${startDate}
+        AND c."createdAt" <= ${endDate}
+      GROUP BY DATE(c."createdAt")
+      ORDER BY date
+    `;
+
+    const dateMap = new Map<string, number>();
+    const current = new Date(startDate);
+    while (current <= endDate) {
+      dateMap.set(this.formatDateToString(current), 0);
+      current.setDate(current.getDate() + 1);
+    }
+
+    rawData.forEach((row) => {
+      const dateStr = row.date instanceof Date
+        ? this.formatDateToString(row.date)
+        : String(row.date).split('T')[0];
+      dateMap.set(dateStr, Number(row.count));
+    });
+
+    return Array.from(dateMap.entries())
+      .map(([date, clicks]) => ({ date, clicks }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  /**
+   * Get user grouped statistics using database aggregation
+   */
+  private async getUserGroupedStats(
+    userId: string,
+    startDate: Date,
+    endDate: Date,
+    field: string,
+  ): Promise<{ name: string; clicks: number; percentage: number }[]> {
+    const columnMap: Record<string, string> = {
+      country: 'country',
+      region: 'region',
+      city: 'city',
+      browser: 'browser',
+      os: 'os',
+      device: 'device',
+      referer: 'referer',
+      utmSource: '"utmSource"',
+      utmMedium: '"utmMedium"',
+      utmCampaign: '"utmCampaign"',
+    };
+
+    const column = columnMap[field];
+    if (!column) return [];
+
+    const totalResult = await this.prisma.$queryRaw<[{ count: bigint }]>`
+      SELECT COUNT(*)::bigint as count
+      FROM "clicks" c
+      INNER JOIN "urls" u ON c."urlId" = u."id"
+      WHERE u."userId" = ${userId}
+        AND c."isBot" = false
+        AND c."createdAt" >= ${startDate}
+        AND c."createdAt" <= ${endDate}
+    `;
+    const total = Number(totalResult[0]?.count || 0);
+
+    const rawStats = await this.prisma.$queryRawUnsafe<{ name: string; count: bigint }[]>(`
+      SELECT COALESCE(c.${column}, 'Unknown') as name, COUNT(*)::bigint as count
+      FROM "clicks" c
+      INNER JOIN "urls" u ON c."urlId" = u."id"
+      WHERE u."userId" = $1
+        AND c."isBot" = false
+        AND c."createdAt" >= $2
+        AND c."createdAt" <= $3
+      GROUP BY c.${column}
+      ORDER BY count DESC
+      LIMIT 10
+    `, userId, startDate, endDate);
+
+    return rawStats.map((row) => ({
+      name: row.name || 'Unknown',
+      clicks: Number(row.count),
+      percentage: total > 0 ? Math.round((Number(row.count) / total) * 1000) / 10 : 0,
+    }));
   }
 
   /**
@@ -577,16 +1012,21 @@ export class AnalyticsService {
       take: limit,
       select: {
         id: true,
+        variantId: true,
+        routingRuleId: true,
         ip: true,
         browser: true,
         os: true,
         device: true,
         country: true,
+        region: true,
         city: true,
         referer: true,
         utmSource: true,
         utmMedium: true,
         utmCampaign: true,
+        utmTerm: true,
+        utmContent: true,
         isBot: true,
         botName: true,
         createdAt: true,
@@ -596,16 +1036,21 @@ export class AnalyticsService {
     return {
       clicks: clicks.map((click) => ({
         id: click.id,
+        variantId: click.variantId || undefined,
+        routingRuleId: click.routingRuleId || undefined,
         ip: click.ip || undefined,
         browser: click.browser || undefined,
         os: click.os || undefined,
         device: click.device || undefined,
         country: click.country || undefined,
+        region: click.region || undefined,
         city: click.city || undefined,
         referer: click.referer || undefined,
         utmSource: click.utmSource || undefined,
         utmMedium: click.utmMedium || undefined,
         utmCampaign: click.utmCampaign || undefined,
+        utmTerm: click.utmTerm || undefined,
+        utmContent: click.utmContent || undefined,
         isBot: click.isBot,
         botName: click.botName || undefined,
         createdAt: click.createdAt,
@@ -766,6 +1211,7 @@ export class AnalyticsService {
   /**
    * Get user-level A/B Testing analytics
    * Aggregates statistics across all URLs with A/B Testing enabled
+   * Optimized to use database aggregation instead of loading all clicks into memory
    */
   async getUserAbTestAnalytics(
     user: User,
@@ -822,27 +1268,49 @@ export class AnalyticsService {
     // Get all URL IDs
     const urlIds = abTestUrls.map((url) => url.id);
 
-    // Get all clicks for A/B Test URLs in the time range
-    const allClicks = await this.prisma.click.findMany({
-      where: {
-        urlId: { in: urlIds },
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
+    // Step 1: Use database aggregation to count clicks by urlId and variantId
+    // This is much more efficient than loading all clicks into memory
+    const [clicksByVariant, totalClicksResult, controlClicksResult] = await Promise.all([
+      // Get click counts grouped by urlId and variantId
+      this.prisma.click.groupBy({
+        by: ['urlId', 'variantId'],
+        where: {
+          urlId: { in: urlIds },
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+          variantId: { not: null }, // Only variant clicks
         },
-      },
-      select: {
-        variantId: true,
-        urlId: true,
-      },
-    });
+        _count: {
+          id: true,
+        },
+      }),
+      // Get total clicks count
+      this.prisma.click.count({
+        where: {
+          urlId: { in: urlIds },
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+      }),
+      // Get control group clicks count (variantId is null)
+      this.prisma.click.count({
+        where: {
+          urlId: { in: urlIds },
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+          variantId: null,
+        },
+      }),
+    ]);
 
-    const totalTestClicks = allClicks.length;
-
-    // Separate control group clicks (variantId is null) and variant clicks
-    const controlGroupClicks = allClicks.filter(
-      (click) => click.variantId === null,
-    ).length;
+    const totalTestClicks = totalClicksResult;
+    const controlGroupClicks = controlClicksResult;
     const variantClicks = totalTestClicks - controlGroupClicks;
 
     const controlGroupPercentage =
@@ -854,62 +1322,54 @@ export class AnalyticsService {
         ? Math.round((variantClicks / totalTestClicks) * 1000) / 10
         : 0;
 
-    // Calculate top performing variants
-    const variantClicksMap = new Map<
-      string,
-      {
-        urlSlug: string;
-        variantName: string;
-        clicks: number;
-        totalUrlClicks: number;
-      }
-    >();
-
-    // Count clicks by variant
-    allClicks.forEach((click) => {
-      if (click.variantId) {
-        const key = `${click.urlId}-${click.variantId}`;
-        const existing = variantClicksMap.get(key);
-        if (existing) {
-          existing.clicks++;
-        } else {
-          // Find the variant info
-          const url = abTestUrls.find((u) => u.id === click.urlId);
-          const variant = url?.variants.find((v) => v.id === click.variantId);
-          if (url && variant) {
-            variantClicksMap.set(key, {
-              urlSlug: url.slug,
-              variantName: variant.name,
-              clicks: 1,
-              totalUrlClicks: 0, // Will calculate below
-            });
-          }
-        }
-      }
+    // Step 2: Get total clicks per URL for click-through rate calculation
+    const clicksByUrl = await this.prisma.click.groupBy({
+      by: ['urlId'],
+      where: {
+        urlId: { in: urlIds },
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+      },
+      _count: {
+        id: true,
+      },
     });
 
-    // Calculate total clicks per URL for click-through rate
-    const urlClicksMap = new Map<string, number>();
-    allClicks.forEach((click) => {
-      urlClicksMap.set(click.urlId, (urlClicksMap.get(click.urlId) || 0) + 1);
+    // Create URL clicks map for quick lookup
+    const urlClicksMap = new Map(clicksByUrl.map((c) => [c.urlId, c._count.id]));
+
+    // Step 3: Build variant info lookup maps
+    const urlMap = new Map(abTestUrls.map((url) => [url.id, url]));
+    const variantMap = new Map<string, { name: string; urlSlug: string }>();
+
+    abTestUrls.forEach((url) => {
+      url.variants.forEach((variant) => {
+        variantMap.set(variant.id, { name: variant.name, urlSlug: url.slug });
+      });
     });
 
-    // Update totalUrlClicks for each variant
-    variantClicksMap.forEach((value, key) => {
-      const urlId = key.split('-')[0];
-      value.totalUrlClicks = urlClicksMap.get(urlId) || 0;
-    });
+    // Step 4: Calculate top performing variants using aggregated data
+    const topPerformingVariants = clicksByVariant
+      .filter((c) => c.variantId !== null)
+      .map((clickData) => {
+        const variantInfo = variantMap.get(clickData.variantId!);
+        const totalUrlClicks = urlClicksMap.get(clickData.urlId) || 0;
 
-    const topPerformingVariants = Array.from(variantClicksMap.values())
-      .map((variant) => ({
-        urlSlug: variant.urlSlug,
-        variantName: variant.variantName,
-        clicks: variant.clicks,
-        clickThroughRate:
-          variant.totalUrlClicks > 0
-            ? Math.round((variant.clicks / variant.totalUrlClicks) * 1000) / 10
-            : 0,
-      }))
+        if (!variantInfo) return null;
+
+        return {
+          urlSlug: variantInfo.urlSlug,
+          variantName: variantInfo.name,
+          clicks: clickData._count.id,
+          clickThroughRate:
+            totalUrlClicks > 0
+              ? Math.round((clickData._count.id / totalUrlClicks) * 1000) / 10
+              : 0,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null)
       .sort((a, b) => b.clicks - a.clicks)
       .slice(0, 10); // Top 10
 
@@ -962,32 +1422,28 @@ export class AnalyticsService {
     // Get analytics data
     const analytics = await this.getUrlAnalytics(urlId, user, queryDto);
 
-    // Get all clicks within date range for export
+    // Get clicks within date range using cursor-based pagination
+    // to avoid loading too many records at once
     const { startDate, endDate } = this.calculateDateRange(queryDto);
-    const clicks = await this.prisma.click.findMany({
-      where: {
-        urlId,
-        createdAt: {
-          gte: startDate,
-          lte: endDate,
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: 10000, // Limit to prevent memory issues
-    });
+    const clicks = await this.fetchClicksInBatches(urlId, startDate, endDate);
 
     const recentClicks: RecentClickDto[] = clicks.map((click) => ({
       id: click.id,
+      variantId: click.variantId ?? undefined,
+      routingRuleId: click.routingRuleId ?? undefined,
       ip: click.ip ?? undefined,
       browser: click.browser ?? undefined,
       os: click.os ?? undefined,
       device: click.device ?? undefined,
       country: click.country ?? undefined,
+      region: click.region ?? undefined,
       city: click.city ?? undefined,
       referer: click.referer ?? undefined,
       utmSource: click.utmSource ?? undefined,
       utmMedium: click.utmMedium ?? undefined,
       utmCampaign: click.utmCampaign ?? undefined,
+      utmTerm: click.utmTerm ?? undefined,
+      utmContent: click.utmContent ?? undefined,
       isBot: click.isBot,
       botName: click.botName ?? undefined,
       createdAt: click.createdAt,
@@ -1024,5 +1480,347 @@ export class AnalyticsService {
         endDate: endDate.toISOString().split('T')[0],
       },
     };
+  }
+
+  /**
+   * Get routing analytics for a URL
+   * Shows statistics for each routing rule including match counts, trends, and distributions
+   * Uses database aggregations to avoid loading all clicks into memory
+   */
+  async getRoutingAnalytics(
+    urlId: string,
+    user: User,
+    queryDto: AnalyticsQueryDto,
+  ): Promise<RoutingAnalyticsResponseDto> {
+    // Check ownership
+    await this.checkUrlOwnership(urlId, user);
+
+    // Calculate date range
+    const { startDate, endDate } = this.calculateDateRange(queryDto);
+
+    // Get URL with routing rules
+    const url = await this.prisma.url.findUnique({
+      where: { id: urlId },
+      include: {
+        routingRules: {
+          orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }],
+        },
+      },
+    });
+
+    if (!url) {
+      throw new NotFoundException(ERROR_MESSAGES.URL_NOT_FOUND);
+    }
+
+    // Build rule name map for later use
+    const ruleNameMap = new Map(url.routingRules.map((r) => [r.id, r.name]));
+
+    // Use database aggregations instead of loading all clicks
+    const whereClause = {
+      urlId,
+      createdAt: { gte: startDate, lte: endDate },
+      isBot: false,
+    };
+
+    // Execute all aggregation queries in parallel
+    const [
+      totalClicksCount,
+      totalMatchesCount,
+      ruleStats,
+      timeSeriesStats,
+      geoStats,
+      deviceStats,
+    ] = await Promise.all([
+      // Total clicks count
+      this.prisma.click.count({ where: whereClause }),
+
+      // Total matches count (clicks with routingRuleId)
+      this.prisma.click.count({
+        where: { ...whereClause, routingRuleId: { not: null } },
+      }),
+
+      // Rule match counts using groupBy
+      this.prisma.click.groupBy({
+        by: ['routingRuleId'],
+        where: { ...whereClause, routingRuleId: { not: null } },
+        _count: { id: true },
+      }),
+
+      // Time series by rule using raw SQL with DATE() for proper date grouping
+      this.prisma.$queryRaw<{ routingRuleId: string; date: Date; count: bigint }[]>`
+        SELECT "routingRuleId", DATE("createdAt") as date, COUNT(*)::bigint as count
+        FROM "clicks"
+        WHERE "urlId" = ${urlId}
+          AND "createdAt" >= ${startDate}
+          AND "createdAt" <= ${endDate}
+          AND "isBot" = false
+          AND "routingRuleId" IS NOT NULL
+        GROUP BY "routingRuleId", DATE("createdAt")
+        ORDER BY date
+      `,
+
+      // Geographic distribution by rule
+      this.prisma.click.groupBy({
+        by: ['routingRuleId', 'country'],
+        where: { ...whereClause, routingRuleId: { not: null }, country: { not: null } },
+        _count: { id: true },
+      }),
+
+      // Device distribution by rule
+      this.prisma.click.groupBy({
+        by: ['routingRuleId', 'device'],
+        where: { ...whereClause, routingRuleId: { not: null }, device: { not: null } },
+        _count: { id: true },
+      }),
+    ]);
+
+    const totalClicks = totalClicksCount;
+    const totalMatches = totalMatchesCount;
+    const matchRate = totalClicks > 0
+      ? Math.round((totalMatches / totalClicks) * 1000) / 10
+      : 0;
+
+    // Build rule statistics map for quick lookup
+    const ruleMatchCounts = new Map(
+      ruleStats.map((s) => [s.routingRuleId, s._count.id]),
+    );
+
+    // Build rule statistics
+    const rules: RoutingRuleStat[] = url.routingRules.map((rule) => {
+      const matchCount = ruleMatchCounts.get(rule.id) || 0;
+      const matchPercentage = totalMatches > 0
+        ? Math.round((matchCount / totalMatches) * 1000) / 10
+        : 0;
+
+      return {
+        ruleId: rule.id,
+        ruleName: rule.name,
+        targetUrl: rule.targetUrl,
+        matchCount,
+        matchPercentage,
+        isActive: rule.isActive,
+      };
+    });
+
+    // Build time series data - already grouped by date from raw SQL query
+    const timeSeries: RoutingRuleTimeSeriesDataPoint[] = timeSeriesStats.map((stat) => ({
+      date: stat.date instanceof Date
+        ? stat.date.toISOString().split('T')[0]
+        : String(stat.date).split('T')[0],
+      ruleId: stat.routingRuleId,
+      ruleName: ruleNameMap.get(stat.routingRuleId) || 'Unknown',
+      matches: Number(stat.count),
+    }));
+    timeSeries.sort((a, b) => a.date.localeCompare(b.date));
+
+    // Build geographic distribution
+    const geoDistribution: RoutingRuleGeoStat[] = [];
+    geoStats.forEach((stat) => {
+      if (stat.routingRuleId && stat.country) {
+        const ruleTotal = ruleMatchCounts.get(stat.routingRuleId) || 0;
+        geoDistribution.push({
+          ruleId: stat.routingRuleId,
+          ruleName: ruleNameMap.get(stat.routingRuleId) || 'Unknown',
+          country: stat.country,
+          matches: stat._count.id,
+          percentage: ruleTotal > 0
+            ? Math.round((stat._count.id / ruleTotal) * 1000) / 10
+            : 0,
+        });
+      }
+    });
+
+    // Build device distribution
+    const deviceDistribution: RoutingRuleDeviceStat[] = [];
+    deviceStats.forEach((stat) => {
+      if (stat.routingRuleId && stat.device) {
+        const ruleTotal = ruleMatchCounts.get(stat.routingRuleId) || 0;
+        deviceDistribution.push({
+          ruleId: stat.routingRuleId,
+          ruleName: ruleNameMap.get(stat.routingRuleId) || 'Unknown',
+          device: stat.device,
+          matches: stat._count.id,
+          percentage: ruleTotal > 0
+            ? Math.round((stat._count.id / ruleTotal) * 1000) / 10
+            : 0,
+        });
+      }
+    });
+
+    return {
+      urlId,
+      isSmartRouting: url.isSmartRouting,
+      totalMatches,
+      totalClicks,
+      matchRate,
+      rules,
+      timeSeries,
+      geoDistribution,
+      deviceDistribution,
+    };
+  }
+
+  /**
+   * Fetch clicks in batches using cursor-based pagination
+   * to reduce memory usage for large exports
+   */
+  private async fetchClicksInBatches(
+    urlId: string,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<
+    {
+      id: string;
+      variantId: string | null;
+      routingRuleId: string | null;
+      ip: string | null;
+      browser: string | null;
+      os: string | null;
+      device: string | null;
+      country: string | null;
+      region: string | null;
+      city: string | null;
+      referer: string | null;
+      utmSource: string | null;
+      utmMedium: string | null;
+      utmCampaign: string | null;
+      utmTerm: string | null;
+      utmContent: string | null;
+      isBot: boolean;
+      botName: string | null;
+      createdAt: Date;
+    }[]
+  > {
+    const BATCH_SIZE = ANALYTICS_CONFIG.EXPORT_BATCH_SIZE;
+    const MAX_RECORDS = ANALYTICS_CONFIG.EXPORT_MAX_RECORDS;
+    type ClickRecord = Awaited<ReturnType<typeof this.prisma.click.findMany>>[number];
+    const allClicks: ClickRecord[] = [];
+    let cursor: string | undefined = undefined;
+
+    while (allClicks.length < MAX_RECORDS) {
+      const batch: ClickRecord[] = await this.prisma.click.findMany({
+        where: {
+          urlId,
+          createdAt: {
+            gte: startDate,
+            lte: endDate,
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        take: BATCH_SIZE,
+        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+      });
+
+      if (batch.length === 0) {
+        break;
+      }
+
+      allClicks.push(...batch);
+      cursor = batch[batch.length - 1].id;
+
+      if (batch.length < BATCH_SIZE) {
+        break;
+      }
+    }
+
+    return allClicks;
+  }
+
+  /**
+   * Get top performing URLs by click count within a time range
+   * Optimized to use database aggregation instead of loading all clicks into memory
+   */
+  async getTopPerformingUrls(
+    user: User,
+    queryDto: AnalyticsQueryDto,
+    limit: number = 5,
+  ): Promise<
+    Array<{
+      id: string;
+      slug: string;
+      title: string | null;
+      originalUrl: string;
+      clickCount: number;
+      status: string;
+      createdAt: Date;
+    }>
+  > {
+    const { startDate, endDate } = this.calculateDateRange(queryDto);
+
+    // Build user filter for admin/non-admin access
+    const isAdmin = user.role === UserRole.ADMIN;
+
+    // Step 1: Get top URL IDs by click count using database aggregation
+    // This is much more efficient than loading all clicks into memory
+    const clickCounts = await this.prisma.click.groupBy({
+      by: ['urlId'],
+      where: {
+        createdAt: {
+          gte: startDate,
+          lte: endDate,
+        },
+        // Filter by user's URLs if not admin
+        ...(isAdmin
+          ? {}
+          : {
+              url: {
+                userId: user.id,
+              },
+            }),
+      },
+      _count: {
+        id: true,
+      },
+      orderBy: {
+        _count: {
+          id: 'desc',
+        },
+      },
+      take: limit,
+    });
+
+    // If no clicks found, return empty array
+    if (clickCounts.length === 0) {
+      return [];
+    }
+
+    // Step 2: Get URL details for the top URLs
+    const urlIds = clickCounts.map((c) => c.urlId);
+    const urls = await this.prisma.url.findMany({
+      where: {
+        id: { in: urlIds },
+      },
+      select: {
+        id: true,
+        slug: true,
+        title: true,
+        originalUrl: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    // Step 3: Create a map for quick lookup
+    const urlMap = new Map(urls.map((url) => [url.id, url]));
+
+    // Step 4: Merge click counts with URL details, maintaining sort order
+    const result = clickCounts
+      .map((clickCount) => {
+        const url = urlMap.get(clickCount.urlId);
+        if (!url) return null;
+
+        return {
+          id: url.id,
+          slug: url.slug,
+          title: url.title,
+          originalUrl: url.originalUrl,
+          clickCount: clickCount._count.id,
+          status: url.status,
+          createdAt: url.createdAt,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => item !== null);
+
+    return result;
   }
 }
