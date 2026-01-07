@@ -691,11 +691,10 @@ app.listen(3000);
 
 ## 開發路線圖
 
-- [x] 審計日誌
-- [x] 自訂日期範圍分析
-- [x] 資料匯出 (CSV/JSON)
-- [ ] 進階連結排程
-- [ ] 自訂品牌 QR Code
+- [ ] 智慧條件式路由 (依裝置、地區、時間條件重導向)
+- [ ] Open Graph / 社群預覽自訂
+- [ ] 深度連結 (App Links / Universal Links)
+- [ ] Retargeting Pixel 整合
 
 ---
 

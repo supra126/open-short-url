@@ -41,6 +41,85 @@ export type VariantResponseDto = components['schemas']['VariantResponseDto'];
 export type VariantStatsDto = components['schemas']['VariantStatsDto'];
 export type VariantListResponseDto = components['schemas']['VariantListResponseDto'];
 
+// ==================== Bulk Operation Types ====================
+// Bulk Create
+export interface BulkCreateUrlDto {
+  urls: CreateUrlDto[];
+}
+
+export interface BulkCreateSuccessItem {
+  index: number;
+  url: UrlResponseDto;
+}
+
+export interface BulkCreateFailureItem {
+  index: number;
+  data: CreateUrlDto;
+  error: string;
+}
+
+export interface BulkCreateResultDto {
+  total: number;
+  successCount: number;
+  failureCount: number;
+  succeeded: BulkCreateSuccessItem[];
+  failed: BulkCreateFailureItem[];
+}
+
+// Bulk Update
+export type BulkUpdateOperationType = 'status' | 'bundle' | 'expiration' | 'utm';
+
+export interface BulkUpdateStatusOperation {
+  type: 'status';
+  status: 'ACTIVE' | 'INACTIVE';
+}
+
+export interface BulkAddToBundleOperation {
+  type: 'bundle';
+  bundleId: string;
+}
+
+export interface BulkUpdateExpirationOperation {
+  type: 'expiration';
+  expiresAt?: string | null;
+}
+
+export interface BulkUpdateUtmOperation {
+  type: 'utm';
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmTerm?: string;
+  utmContent?: string;
+}
+
+export type BulkUpdateOperation =
+  | BulkUpdateStatusOperation
+  | BulkAddToBundleOperation
+  | BulkUpdateExpirationOperation
+  | BulkUpdateUtmOperation;
+
+export interface BulkUpdateUrlDto {
+  urlIds: string[];
+  operation: BulkUpdateOperation;
+}
+
+export interface BulkUpdateResultDto {
+  updatedCount: number;
+  updatedIds: string[];
+  message?: string;
+}
+
+// Bulk Delete
+export interface BulkDeleteUrlDto {
+  urlIds: string[];
+}
+
+export interface BulkDeleteResultDto {
+  deletedCount: number;
+  deletedIds: string[];
+}
+
 // ==================== Analytics Types ====================
 export type AnalyticsResponseDto = components['schemas']['AnalyticsResponseDto'];
 export type TimeSeriesDataPoint = components['schemas']['TimeSeriesDataPoint'];

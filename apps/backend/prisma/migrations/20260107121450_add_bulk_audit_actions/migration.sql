@@ -1,0 +1,4 @@
+-- Add missing AuditAction enum values for bulk operations
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'URL_BULK_CREATED';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'URL_BULK_UPDATED';
+ALTER TYPE "AuditAction" ADD VALUE IF NOT EXISTS 'URL_BULK_DELETED';

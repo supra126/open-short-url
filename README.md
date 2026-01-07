@@ -691,11 +691,10 @@ app.listen(3000);
 
 ## Roadmap
 
-- [x] Audit logs
-- [x] Custom date range analytics
-- [x] Data export (CSV/JSON)
-- [ ] Advanced link scheduling
-- [ ] Custom branded QR codes
+- [ ] Smart Routing (conditional redirects based on device, location, time)
+- [ ] Open Graph / Social Preview Customization
+- [ ] Deep Linking (App Links / Universal Links)
+- [ ] Retargeting Pixel Integration
 
 ---
 

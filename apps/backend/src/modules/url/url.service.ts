@@ -3,12 +3,13 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  ForbiddenException,
   OnModuleInit,
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Prisma, UrlStatus, Url, UrlVariant } from '@prisma/client';
+import { Prisma, UrlStatus, Url, UrlVariant, AuditAction } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { CacheService } from '@/common/cache/cache.service';
 import { AuditLogService } from '@/modules/audit-log/audit-log.service';
@@ -611,6 +612,25 @@ export class UrlService implements OnModuleInit {
   }
 
   /**
+   * Bulk clear URL cache with batching to prevent Redis overload
+   */
+  private async bulkClearUrlCache(urls: { id: string; slug: string }[]): Promise<void> {
+    const BATCH_SIZE = 50;
+
+    for (let i = 0; i < urls.length; i += BATCH_SIZE) {
+      const batch = urls.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map((url) => this.clearUrlCache(url.id, url.slug)),
+      );
+
+      // Add small delay between batches to prevent Redis overload
+      if (i + BATCH_SIZE < urls.length) {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+    }
+  }
+
+  /**
    * Map to response DTO
    */
   private mapToResponse(url: Url): UrlResponseDto {
@@ -1012,6 +1032,397 @@ export class UrlService implements OnModuleInit {
       clickCount: variant.clickCount,
       createdAt: variant.createdAt,
       updatedAt: variant.updatedAt,
+    };
+  }
+
+  // ==================== Bulk Operations ====================
+
+  /**
+   * Process items in batches with controlled concurrency
+   */
+  private async processBatch<T, R>(
+    items: T[],
+    processor: (item: T, index: number) => Promise<R>,
+    batchSize: number = 10,
+  ): Promise<Array<{ status: 'fulfilled'; value: R; index: number } | { status: 'rejected'; reason: string; data: T; index: number }>> {
+    const results: Array<{ status: 'fulfilled'; value: R; index: number } | { status: 'rejected'; reason: string; data: T; index: number }> = [];
+
+    for (let i = 0; i < items.length; i += batchSize) {
+      const batch = items.slice(i, i + batchSize);
+      const batchPromises = batch.map(async (item, batchIndex) => {
+        const globalIndex = i + batchIndex;
+        try {
+          const value = await processor(item, globalIndex);
+          return { status: 'fulfilled' as const, value, index: globalIndex };
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          return { status: 'rejected' as const, reason: errorMessage, data: item, index: globalIndex };
+        }
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      results.push(...batchResults);
+    }
+
+    return results;
+  }
+
+  /**
+   * Bulk create URLs (partial success strategy with batch optimization)
+   */
+  async bulkCreate(
+    userId: string,
+    urls: import('./dto/bulk-create-url.dto').BulkCreateUrlDto['urls'],
+    meta?: RequestMeta,
+  ): Promise<import('./dto/bulk-create-url.dto').BulkCreateResultDto> {
+    const results: import('./dto/bulk-create-url.dto').BulkCreateResultDto = {
+      total: urls.length,
+      successCount: 0,
+      failureCount: 0,
+      succeeded: [],
+      failed: [],
+    };
+
+    // Step 1: Batch pre-check custom slugs to reduce N+1 queries
+    const customSlugs = urls
+      .map((u, i) => ({ slug: u.customSlug, index: i }))
+      .filter((s) => s.slug);
+
+    const existingSlugsSet = new Set<string>();
+    if (customSlugs.length > 0) {
+      const existingSlugs = await this.prisma.url.findMany({
+        where: { slug: { in: customSlugs.map((s) => s.slug!) } },
+        select: { slug: true },
+      });
+      existingSlugs.forEach((s) => existingSlugsSet.add(s.slug));
+    }
+
+    // Step 2: Pre-mark failed items (duplicate slugs)
+    const urlsWithValidation = urls.map((urlDto, index) => {
+      if (urlDto.customSlug && existingSlugsSet.has(urlDto.customSlug)) {
+        return { urlDto, index, preValidationError: 'Slug already exists' };
+      }
+      return { urlDto, index, preValidationError: null };
+    });
+
+    // Add pre-validation failures to results
+    for (const item of urlsWithValidation) {
+      if (item.preValidationError) {
+        results.failureCount++;
+        results.failed.push({
+          index: item.index,
+          data: item.urlDto,
+          error: item.preValidationError,
+        });
+      }
+    }
+
+    // Step 3: Process valid URLs in batches with controlled concurrency
+    const validUrls = urlsWithValidation.filter((item) => !item.preValidationError);
+
+    // Track slugs being created in this batch to prevent duplicates within the same request
+    const slugsBeingCreated = new Set<string>();
+
+    const settledResults = await this.processBatch(
+      validUrls,
+      async (item) => {
+        // Check for duplicates within this batch
+        if (item.urlDto.customSlug && slugsBeingCreated.has(item.urlDto.customSlug)) {
+          throw new Error('Duplicate slug within batch');
+        }
+        if (item.urlDto.customSlug) {
+          slugsBeingCreated.add(item.urlDto.customSlug);
+        }
+
+        return this.create(userId, item.urlDto, meta);
+      },
+      10, // Process 10 URLs concurrently
+    );
+
+    for (const result of settledResults) {
+      if (result.status === 'fulfilled') {
+        results.successCount++;
+        results.succeeded.push({ index: result.index, url: result.value });
+      } else {
+        results.failureCount++;
+        results.failed.push({
+          index: result.index,
+          data: result.data.urlDto,
+          error: result.reason,
+        });
+      }
+    }
+
+    // Audit log for bulk operation
+    await this.auditLogService.create({
+      userId,
+      action: AuditAction.URL_BULK_CREATED,
+      entityType: 'url',
+      newValue: {
+        total: urls.length,
+        successCount: results.successCount,
+        failureCount: results.failureCount,
+        succeededIds: results.succeeded.map((s) => s.url.id),
+      },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
+    return results;
+  }
+
+  /**
+   * Bulk update URLs
+   */
+  async bulkUpdate(
+    userId: string,
+    urlIds: string[],
+    operation: import('./dto/bulk-update-url.dto').BulkUpdateOperation,
+    userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta,
+  ): Promise<import('./dto/bulk-update-url.dto').BulkUpdateResultDto> {
+    // Single query to get all needed data (existence, ownership, cache clearing)
+    const urls = await this.prisma.url.findMany({
+      where: { id: { in: urlIds } },
+      select: {
+        id: true,
+        userId: true,
+        slug: true,
+      },
+    });
+
+    if (urls.length === 0) {
+      throw new NotFoundException('No URLs found');
+    }
+
+    // Check for non-existent IDs
+    const existingIds = new Set(urls.map((u) => u.id));
+    const notFoundIds = urlIds.filter((id) => !existingIds.has(id));
+    if (notFoundIds.length > 0) {
+      throw new NotFoundException(
+        `${notFoundIds.length} URL(s) not found`,
+      );
+    }
+
+    // Check permissions (non-admin users can only update their own URLs)
+    if (userRole !== 'ADMIN') {
+      const unauthorizedUrls = urls.filter((url) => url.userId !== userId);
+      if (unauthorizedUrls.length > 0) {
+        throw new ForbiddenException(
+          `You do not have permission to update ${unauthorizedUrls.length} URL(s)`,
+        );
+      }
+    }
+
+    const validIds = urls.map((url) => url.id);
+
+    // Use transaction for atomic update and audit log
+    const result = await this.prisma.$transaction(async (tx) => {
+      let message: string | undefined;
+
+      // Execute operation based on type
+      if (operation.type === 'status') {
+        await tx.url.updateMany({
+          where: { id: { in: validIds } },
+          data: { status: operation.status },
+        });
+        message = `Status updated to ${operation.status}`;
+      } else if (operation.type === 'bundle') {
+        // Check if bundle exists and belongs to user
+        const bundle = await tx.bundle.findFirst({
+          where: {
+            id: operation.bundleId,
+            ...(userRole !== 'ADMIN' && { userId }),
+          },
+        });
+
+        if (!bundle) {
+          throw new NotFoundException('Bundle not found or no permission');
+        }
+
+        // Get existing URLs in bundle
+        const existingBundleUrls = await tx.bundleUrl.findMany({
+          where: { bundleId: operation.bundleId },
+          select: { urlId: true },
+        });
+        const existingUrlIds = new Set(existingBundleUrls.map((bu) => bu.urlId));
+
+        // Filter out already-added URLs
+        const newUrlIds = validIds.filter((id) => !existingUrlIds.has(id));
+
+        if (newUrlIds.length > 0) {
+          await tx.bundleUrl.createMany({
+            data: newUrlIds.map((urlId, index) => ({
+              bundleId: operation.bundleId,
+              urlId,
+              order: existingBundleUrls.length + index,
+            })),
+          });
+        }
+
+        message = `Added ${newUrlIds.length} URLs to bundle (${validIds.length - newUrlIds.length} already existed)`;
+      } else if (operation.type === 'expiration') {
+        const expirationDate = operation.expiresAt ? new Date(operation.expiresAt) : null;
+        await tx.url.updateMany({
+          where: { id: { in: validIds } },
+          data: { expiresAt: expirationDate },
+        });
+        message = operation.expiresAt ? `Expiration set to ${operation.expiresAt}` : 'Expiration removed';
+      } else if (operation.type === 'utm') {
+        const utmData: Record<string, string | undefined> = {};
+        if (operation.utmSource !== undefined) utmData.utmSource = operation.utmSource;
+        if (operation.utmMedium !== undefined) utmData.utmMedium = operation.utmMedium;
+        if (operation.utmCampaign !== undefined) utmData.utmCampaign = operation.utmCampaign;
+        if (operation.utmTerm !== undefined) utmData.utmTerm = operation.utmTerm;
+        if (operation.utmContent !== undefined) utmData.utmContent = operation.utmContent;
+
+        await tx.url.updateMany({
+          where: { id: { in: validIds } },
+          data: utmData,
+        });
+        message = 'UTM parameters updated';
+      }
+
+      // Create audit log in same transaction
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: AuditAction.URL_BULK_UPDATED,
+          entityType: 'url',
+          newValue: {
+            urlIds: validIds,
+            operation: { ...operation },
+            count: validIds.length,
+          } as unknown as Prisma.InputJsonValue,
+          ipAddress: meta?.ipAddress,
+          userAgent: meta?.userAgent,
+        },
+      });
+
+      return { message };
+    });
+
+    // Non-critical operations after transaction success
+    try {
+      await this.bulkClearUrlCache(urls);
+    } catch (error) {
+      this.logger.error(`Failed to clear cache for bulk updated URLs: ${error}`);
+      this.eventEmitter.emit('cache.clear.failed', {
+        operation: 'bulkUpdate',
+        urlIds: validIds,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    return {
+      updatedCount: validIds.length,
+      updatedIds: validIds,
+      message: result.message,
+    };
+  }
+
+  /**
+   * Bulk delete URLs
+   */
+  async bulkDelete(
+    userId: string,
+    urlIds: string[],
+    userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta,
+  ): Promise<import('./dto/bulk-delete-url.dto').BulkDeleteResultDto> {
+    // Single query to get all needed data (existence, ownership, cache clearing, events)
+    const urls = await this.prisma.url.findMany({
+      where: { id: { in: urlIds } },
+      select: {
+        id: true,
+        userId: true,
+        slug: true,
+        originalUrl: true,
+      },
+    });
+
+    if (urls.length === 0) {
+      throw new NotFoundException('No URLs found');
+    }
+
+    // Check for non-existent IDs
+    const existingIds = new Set(urls.map((u) => u.id));
+    const notFoundIds = urlIds.filter((id) => !existingIds.has(id));
+    if (notFoundIds.length > 0) {
+      throw new NotFoundException(
+        `${notFoundIds.length} URL(s) not found`,
+      );
+    }
+
+    // Check permissions (non-admin users can only delete their own URLs)
+    if (userRole !== 'ADMIN') {
+      const unauthorizedUrls = urls.filter((url) => url.userId !== userId);
+      if (unauthorizedUrls.length > 0) {
+        throw new ForbiddenException(
+          `You do not have permission to delete ${unauthorizedUrls.length} URL(s)`,
+        );
+      }
+    }
+
+    const validIds = urls.map((url) => url.id);
+
+    // Use transaction for atomic delete and audit log
+    const result = await this.prisma.$transaction(async (tx) => {
+      // Delete URLs (cascade deletes clicks)
+      const deleteResult = await tx.url.deleteMany({
+        where: { id: { in: validIds } },
+      });
+
+      // Create audit log in same transaction
+      await tx.auditLog.create({
+        data: {
+          userId,
+          action: AuditAction.URL_BULK_DELETED,
+          entityType: 'url',
+          oldValue: {
+            urlIds: validIds,
+            count: deleteResult.count,
+            urls: urls.map((u) => ({ id: u.id, slug: u.slug, originalUrl: u.originalUrl })),
+          } as Prisma.InputJsonValue,
+          ipAddress: meta?.ipAddress,
+          userAgent: meta?.userAgent,
+        },
+      });
+
+      return deleteResult;
+    });
+
+    // Non-critical operations after transaction success
+    // Clear cache (failure won't affect the main operation)
+    try {
+      await this.bulkClearUrlCache(urls);
+    } catch (error) {
+      this.logger.error(`Failed to clear cache for bulk deleted URLs: ${error}`);
+      this.eventEmitter.emit('cache.clear.failed', {
+        operation: 'bulkDelete',
+        urlIds: validIds,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+
+    // Update URL count (use validIds.length for accuracy in concurrent scenarios)
+    this.urlCount = Math.max(0, this.urlCount - validIds.length);
+
+    // Emit events asynchronously (don't block response)
+    setImmediate(() => {
+      for (const url of urls) {
+        this.eventEmitter.emit('url.deleted', {
+          id: url.id,
+          slug: url.slug,
+          originalUrl: url.originalUrl,
+          userId: url.userId,
+        });
+      }
+    });
+
+    return {
+      deletedCount: result.count,
+      deletedIds: validIds,
     };
   }
 }

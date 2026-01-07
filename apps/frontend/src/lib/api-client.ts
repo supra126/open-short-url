@@ -200,12 +200,18 @@ class ApiClient {
   /**
    * DELETE request
    */
-  async delete<T>(endpoint: string, config?: RequestInit): Promise<T> {
+  async delete<T>(
+    endpoint: string,
+    config?: RequestInit & { data?: ApiRequestBody }
+  ): Promise<T> {
+    const { data, ...restConfig } = config || {};
+    const hasBody = data !== undefined && data !== null;
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'DELETE',
-      headers: this.getHeadersWithoutContentType(),
+      headers: hasBody ? this.getHeaders() : this.getHeadersWithoutContentType(),
+      ...(hasBody && { body: JSON.stringify(data) }),
       credentials: 'include',
-      ...config,
+      ...restConfig,
     });
     return this.handleResponse<T>(response);
   }

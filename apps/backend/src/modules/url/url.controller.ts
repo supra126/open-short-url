@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -10,7 +11,9 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import {
   ApiTags,
   ApiOperation,
@@ -31,10 +34,17 @@ import {
   VariantResponseDto,
   VariantListResponseDto,
 } from './dto/variant.dto';
+import { BulkCreateUrlDto, BulkCreateResultDto } from './dto/bulk-create-url.dto';
+import { BulkUpdateUrlDto, BulkUpdateResultDto } from './dto/bulk-update-url.dto';
+import { BulkDeleteUrlDto, BulkDeleteResultDto } from './dto/bulk-delete-url.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
+
+// Maximum items per bulk request to prevent resource exhaustion
+const MAX_BULK_ITEMS = 500;
+const MAX_BULK_ITEMS_USER = 100; // Lower limit for regular users
 
 @ApiTags('URLs')
 @Controller('api/urls')
@@ -45,6 +55,21 @@ export class UrlController {
   constructor(
     private readonly urlService: UrlService,
   ) {}
+
+  /**
+   * Validate bulk operation item count based on user role
+   */
+  private validateBulkItemCount(itemCount: number, isAdmin: boolean): void {
+    const maxItems = isAdmin ? MAX_BULK_ITEMS : MAX_BULK_ITEMS_USER;
+    if (itemCount > maxItems) {
+      throw new BadRequestException(
+        `Maximum ${maxItems} items per request. You requested ${itemCount} items.`,
+      );
+    }
+    if (itemCount === 0) {
+      throw new BadRequestException('At least 1 item is required for bulk operations.');
+    }
+  }
 
   /**
    * Create short URL
@@ -95,6 +120,142 @@ export class UrlController {
     @RequestMeta() meta: RequestMetaType,
   ): Promise<UrlResponseDto> {
     return this.urlService.create(user.id, createUrlDto, meta);
+  }
+
+  // ==================== Bulk Operations ====================
+
+  /**
+   * Bulk create short URLs
+   */
+  @Post('bulk')
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
+  @ApiOperation({
+    summary: 'Bulk create short URLs',
+    description: `Bulk create short URLs (max 500 per request).
+
+**Features:**
+- Partial success strategy: successful URLs are created, failed ones return error details
+- Supports all single URL creation parameters (customSlug, title, password, etc.)
+- Perfect for CSV import scenarios
+
+**Limits:**
+- Maximum 500 URLs per request
+- Duplicate customSlug will cause that specific URL to fail`,
+  })
+  @ApiResponse({
+    status: HttpStatus.CREATED,
+    description: 'Bulk creation completed (includes success and failure details)',
+    type: BulkCreateResultDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid request parameters',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  async bulkCreate(
+    @CurrentUser() user: User,
+    @Body() bulkCreateDto: BulkCreateUrlDto,
+    @RequestMeta() meta: RequestMetaType,
+  ): Promise<BulkCreateResultDto> {
+    this.validateBulkItemCount(bulkCreateDto.urls.length, user.role === 'ADMIN');
+    return this.urlService.bulkCreate(user.id, bulkCreateDto.urls, meta);
+  }
+
+  /**
+   * Bulk update short URLs
+   */
+  @Patch('bulk')
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
+  @ApiOperation({
+    summary: 'Bulk update short URLs',
+    description: `Bulk update short URLs with various operations.
+
+**Supported operations:**
+- \`status\`: Change status to ACTIVE or INACTIVE
+- \`bundle\`: Add URLs to a bundle
+- \`expiration\`: Set or remove expiration date
+- \`utm\`: Update UTM parameters
+
+**Limits:**
+- Maximum 500 URLs per request
+- Only URLs owned by the user (or all if ADMIN) will be updated`,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Bulk update completed',
+    type: BulkUpdateResultDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid request parameters',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No URLs found or no permission',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  async bulkUpdate(
+    @CurrentUser() user: User,
+    @Body() bulkUpdateDto: BulkUpdateUrlDto,
+    @RequestMeta() meta: RequestMetaType,
+  ): Promise<BulkUpdateResultDto> {
+    this.validateBulkItemCount(bulkUpdateDto.urlIds.length, user.role === 'ADMIN');
+    return this.urlService.bulkUpdate(
+      user.id,
+      bulkUpdateDto.urlIds,
+      bulkUpdateDto.operation,
+      user.role,
+      meta,
+    );
+  }
+
+  /**
+   * Bulk delete short URLs
+   */
+  @Delete('bulk')
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 10, ttl: 60000 } }) // 10 requests per minute
+  @ApiOperation({
+    summary: 'Bulk delete short URLs',
+    description: `Bulk delete short URLs and their related click records.
+
+**Limits:**
+- Maximum 500 URLs per request
+- Only URLs owned by the user (or all if ADMIN) will be deleted`,
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Bulk deletion completed',
+    type: BulkDeleteResultDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No URLs found or no permission',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  async bulkDelete(
+    @CurrentUser() user: User,
+    @Body() bulkDeleteDto: BulkDeleteUrlDto,
+    @RequestMeta() meta: RequestMetaType,
+  ): Promise<BulkDeleteResultDto> {
+    this.validateBulkItemCount(bulkDeleteDto.urlIds.length, user.role === 'ADMIN');
+    return this.urlService.bulkDelete(user.id, bulkDeleteDto.urlIds, user.role, meta);
   }
 
   /**
