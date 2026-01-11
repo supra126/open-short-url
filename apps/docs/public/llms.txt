@@ -1,0 +1,38 @@
+# Open Short URL
+
+> A powerful, self-hosted URL shortener with advanced analytics, A/B testing, and AI integration.
+
+Open Short URL is an open-source, white-label URL shortening platform that gives you complete control over your data. It features comprehensive analytics, link bundles, webhook notifications, and Model Context Protocol (MCP) integration for AI assistants.
+
+## Documentation
+
+- [Introduction](https://supra126.github.io/open-short-url/en/guide/introduction): Overview of the project and its features
+- [Getting Started](https://supra126.github.io/open-short-url/en/guide/getting-started): Quick start guide for new users
+- [Installation](https://supra126.github.io/open-short-url/en/guide/installation): Step-by-step installation instructions
+- [Configuration](https://supra126.github.io/open-short-url/en/guide/configuration): Environment variables and settings
+- [API Reference](https://supra126.github.io/open-short-url/en/api/reference): Complete REST API documentation
+
+## Features
+
+- [URL Shortening](https://supra126.github.io/open-short-url/en/features/url-shortening): Create and manage short URLs
+- [Analytics](https://supra126.github.io/open-short-url/en/features/analytics): Click tracking, geographic data, device stats
+- [A/B Testing](https://supra126.github.io/open-short-url/en/features/ab-testing): URL variants with traffic allocation
+- [Bundles](https://supra126.github.io/open-short-url/en/features/bundles): Organize URLs into collections
+- [Webhooks](https://supra126.github.io/open-short-url/en/features/webhooks): Event notifications with HMAC-SHA256 signing
+- [API Keys](https://supra126.github.io/open-short-url/en/features/api-keys): Manage API access tokens
+
+## Deployment
+
+- [Docker](https://supra126.github.io/open-short-url/en/deployment/docker): Container-based deployment
+- [Self-Hosted](https://supra126.github.io/open-short-url/en/deployment/self-hosted): Manual installation guide
+- [One-Click Railway Deploy](https://railway.com/deploy/EATit9): Deploy instantly on Railway
+
+## AI Integration
+
+- [MCP Server](https://www.npmjs.com/package/@open-short-url/mcp): Model Context Protocol server for AI assistants
+- Built-in AI Chat: Support for Claude, GPT, Gemini, Mistral, Cohere
+
+## Optional
+
+- [GitHub Repository](https://github.com/supra126/open-short-url): Source code and issue tracker
+- [繁體中文文檔](https://supra126.github.io/open-short-url/zh-TW/): Traditional Chinese documentation

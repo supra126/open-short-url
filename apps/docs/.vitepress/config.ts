@@ -1,5 +1,29 @@
-import { defineConfig } from 'vitepress'
+import { defineConfig, HeadConfig } from 'vitepress'
 import { withMermaid } from 'vitepress-plugin-mermaid'
+
+// Google Analytics 4 configuration
+const GA4_ID = process.env.VITE_GA4_ID || ''
+
+const head: HeadConfig[] = [
+  ['meta', { name: 'theme-color', content: '#8b5cf6' }],
+  ['meta', { name: 'og:type', content: 'website' }],
+  ['meta', { name: 'og:site_name', content: 'Open Short URL' }],
+]
+
+// Add GA4 scripts only if GA4_ID is configured
+if (GA4_ID) {
+  head.push(
+    ['script', { async: '', src: `https://www.googletagmanager.com/gtag/js?id=${GA4_ID}` }],
+    [
+      'script',
+      {},
+      `window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${GA4_ID}');`,
+    ]
+  )
+}
 
 export default withMermaid(
   defineConfig({
@@ -19,11 +43,7 @@ export default withMermaid(
       },
     },
 
-    head: [
-      ['meta', { name: 'theme-color', content: '#8b5cf6' }],
-      ['meta', { name: 'og:type', content: 'website' }],
-      ['meta', { name: 'og:site_name', content: 'Open Short URL' }],
-    ],
+    head,
 
     // Mermaid configuration
     mermaid: {

@@ -1,0 +1,182 @@
+# Open Short URL
+
+> A powerful, self-hosted URL shortener with advanced analytics, A/B testing, and AI integration.
+
+Open Short URL is an open-source, white-label URL shortening platform designed for businesses, marketers, and privacy-conscious users who need more than basic link shortening. It provides complete data ownership, comprehensive analytics, and enterprise features without vendor lock-in.
+
+## Key Benefits
+
+- **Privacy-First**: Your data stays on your server. No third-party tracking, no data selling.
+- **Cost-Effective**: No monthly fees, no link/click limits. One-time infrastructure investment.
+- **White-Label Ready**: Custom domain support, branded password pages, personalized branding.
+- **Enterprise Features**: A/B testing, webhooks, API keys, role-based access control, 2FA.
+
+## Technology Stack
+
+- **Backend**: NestJS, Prisma, PostgreSQL, Redis (optional)
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS, TanStack Query
+- **Security**: JWT, bcrypt, Cloudflare Turnstile
+- **AI Integration**: Model Context Protocol (MCP), Built-in AI Chat
+
+---
+
+## Documentation
+
+### Guide
+
+- [Introduction](https://supra126.github.io/open-short-url/en/guide/introduction): Overview of the project, why it exists, and what problems it solves
+- [Getting Started](https://supra126.github.io/open-short-url/en/guide/getting-started): Quick start guide for new users to get up and running
+- [Installation](https://supra126.github.io/open-short-url/en/guide/installation): Detailed step-by-step installation instructions for different environments
+- [Configuration](https://supra126.github.io/open-short-url/en/guide/configuration): Complete guide to environment variables and application settings
+
+### Features
+
+- [URL Shortening](https://supra126.github.io/open-short-url/en/features/url-shortening): Create short URLs with custom slugs, expiration dates, password protection
+- [Analytics](https://supra126.github.io/open-short-url/en/features/analytics): Real-time click tracking, geographic data, device/browser stats, UTM tracking
+- [A/B Testing](https://supra126.github.io/open-short-url/en/features/ab-testing): Create URL variants with configurable traffic allocation for testing
+- [Smart Routing](https://supra126.github.io/open-short-url/en/features/smart-routing): Conditional redirects based on device, location, time (roadmap)
+- [Bundles](https://supra126.github.io/open-short-url/en/features/bundles): Organize URLs into themed collections with aggregate analytics
+- [Webhooks](https://supra126.github.io/open-short-url/en/features/webhooks): Event notifications with HMAC-SHA256 signature verification
+- [API Keys](https://supra126.github.io/open-short-url/en/features/api-keys): Generate and manage API access tokens for integrations
+- [Audit Logs](https://supra126.github.io/open-short-url/en/features/audit-logs): Track all user actions and system events
+
+### API Reference
+
+- [API Reference](https://supra126.github.io/open-short-url/en/api/reference): Complete REST API documentation with endpoints, parameters, and examples
+
+### Deployment
+
+- [Docker](https://supra126.github.io/open-short-url/en/deployment/docker): Container-based deployment using Docker and Docker Compose
+- [Self-Hosted](https://supra126.github.io/open-short-url/en/deployment/self-hosted): Manual installation guide for VPS or bare-metal servers
+
+---
+
+## AI Integration
+
+### MCP Server (Model Context Protocol)
+
+The MCP server allows AI assistants like Claude Desktop, Cursor, and Windsurf to manage short URLs through natural conversation.
+
+**Installation:**
+```bash
+npm install -g @open-short-url/mcp
+```
+
+**Configuration:**
+```json
+{
+  "mcpServers": {
+    "open-short-url": {
+      "command": "open-short-url-mcp",
+      "env": {
+        "API_URL": "https://your-backend.com",
+        "API_KEY": "ak_your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+**Available Tools (29 total):**
+- URL Management: create, list, update, delete, generate QR codes
+- Bundle Management: create collections, add/remove URLs, get statistics
+- Analytics: click tracking, geographic data, device breakdown
+- A/B Testing: create variants, configure traffic allocation
+
+**Resources:**
+- [MCP Server NPM Package](https://www.npmjs.com/package/@open-short-url/mcp): Installation and usage
+- [MCP Server Documentation](https://github.com/supra126/open-short-url/blob/main/packages/mcp/README.md): Detailed configuration guide
+
+### Built-in AI Chat
+
+Manage URLs through conversational AI directly in the web interface.
+
+**Supported Providers:**
+- Anthropic Claude (claude-3-5-sonnet, claude-3-5-haiku)
+- OpenAI GPT (gpt-4o, gpt-4o-mini, gpt-4-turbo)
+- Google Gemini (gemini-2.0-flash-exp, gemini-1.5-pro)
+- Mistral (mistral-large-latest, mistral-medium)
+- Cohere (command-r-plus, command-r)
+
+---
+
+## Quick Start
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 14+
+- Redis 6+ (optional, for caching)
+
+### Installation Steps
+
+1. Clone the repository:
+```bash
+git clone https://github.com/supra126/open-short-url.git
+cd open-short-url
+```
+
+2. Install dependencies:
+```bash
+pnpm install
+```
+
+3. Configure environment:
+```bash
+cp apps/backend/.env.example apps/backend/.env.local
+cp apps/frontend/.env.example apps/frontend/.env.local
+```
+
+4. Setup database:
+```bash
+cd apps/backend
+pnpm prisma:migrate
+pnpm prisma:seed
+```
+
+5. Start development:
+```bash
+pnpm dev
+```
+
+**Default URLs:**
+- Frontend: http://localhost:4100
+- Backend API: http://localhost:4101
+- API Docs: http://localhost:4101/api
+
+**Default Credentials:** admin@example.com / admin123
+
+---
+
+## One-Click Deploy
+
+Deploy instantly to Railway with automatic PostgreSQL and Redis provisioning:
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/EATit9)
+
+---
+
+## Webhook Events
+
+Supported events with HMAC-SHA256 signature verification:
+
+- `url.created`: Triggered when a short URL is created
+- `url.updated`: Triggered when a short URL is updated
+- `url.deleted`: Triggered when a short URL is deleted
+- `url.clicked`: Triggered when a short URL is clicked (includes click data)
+- `webhook.test`: Triggered when testing webhook configuration
+
+---
+
+## Use Cases
+
+- **Marketing Campaigns**: Branded short links with UTM tracking and A/B testing
+- **Developers**: Self-hosted solution with full API access and no vendor lock-in
+- **Privacy Advocates**: Complete data ownership, GDPR compliant, open source
+
+---
+
+## Optional
+
+- [GitHub Repository](https://github.com/supra126/open-short-url): Source code, issues, and contributions
+- [繁體中文文檔](https://supra126.github.io/open-short-url/zh-TW/): Traditional Chinese documentation
+- [Issue Tracker](https://github.com/supra126/open-short-url/issues): Bug reports and feature requests

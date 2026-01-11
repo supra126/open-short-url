@@ -40,6 +40,8 @@ jobs:
 
       - name: Build docs
         run: pnpm build:docs
+        env:
+          VITE_GA4_ID: ${{ secrets.VITE_GA4_ID }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
