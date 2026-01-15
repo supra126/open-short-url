@@ -74,7 +74,7 @@ model User {
   email    String   @unique
   password String // bcrypt hashed
   name     String?
-  role     UserRole @default(ADMIN)
+  role     UserRole @default(USER)
   isActive Boolean  @default(true) // Whether the account is active
 
   // Two-Factor Authentication

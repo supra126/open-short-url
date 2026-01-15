@@ -308,7 +308,7 @@ export interface paths {
         put?: never;
         /**
          * Bulk create short URLs
-         * @description Bulk create short URLs (max 500 per request).
+         * @description Bulk create short URLs (max 100 per request).
          *
          *     **Features:**
          *     - Partial success strategy: successful URLs are created, failed ones return error details
@@ -316,7 +316,7 @@ export interface paths {
          *     - Perfect for CSV import scenarios
          *
          *     **Limits:**
-         *     - Maximum 500 URLs per request
+         *     - Maximum 100 URLs per request (50 for regular users)
          *     - Duplicate customSlug will cause that specific URL to fail
          */
         post: operations["UrlController_bulkCreate"];
@@ -325,7 +325,7 @@ export interface paths {
          * @description Bulk delete short URLs and their related click records.
          *
          *     **Limits:**
-         *     - Maximum 500 URLs per request
+         *     - Maximum 100 URLs per request (50 for regular users)
          *     - Only URLs owned by the user (or all if ADMIN) will be deleted
          */
         delete: operations["UrlController_bulkDelete"];
@@ -342,7 +342,7 @@ export interface paths {
          *     - `utm`: Update UTM parameters
          *
          *     **Limits:**
-         *     - Maximum 500 URLs per request
+         *     - Maximum 100 URLs per request (50 for regular users)
          *     - Only URLs owned by the user (or all if ADMIN) will be updated
          */
         patch: operations["UrlController_bulkUpdate"];
@@ -1093,10 +1093,46 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get all routing rules for a URL */
+        /**
+         * Get all routing rules for a URL
+         * @description Retrieve all routing rules for the specified URL with match statistics. Rules are sorted by priority (highest first).
+         */
         get: operations["RoutingController_findAll"];
         put?: never;
-        /** Create a new routing rule */
+        /**
+         * Create a new routing rule
+         * @description Create a new smart routing rule for the specified URL.
+         *
+         *     **Routing Conditions:**
+         *     - Geographic: country, region, city
+         *     - Device: device type, OS, browser
+         *     - User: language preferences
+         *     - Traffic: referer source
+         *     - Time: time of day, day of week
+         *     - UTM: utm_source, utm_medium, utm_campaign, etc.
+         *
+         *     **Condition Operators:**
+         *     - equals, not_equals, contains, not_contains
+         *     - in, not_in (for arrays)
+         *     - starts_with, ends_with
+         *     - between, before, after (for time)
+         *
+         *     **Example:**
+         *     Redirect iOS users to App Store:
+         *     ```json
+         *     {
+         *       "name": "iOS App Store",
+         *       "targetUrl": "https://apps.apple.com/app/myapp",
+         *       "priority": 100,
+         *       "conditions": {
+         *         "operator": "AND",
+         *         "conditions": [
+         *           { "type": "os", "operator": "equals", "value": "iOS" }
+         *         ]
+         *       }
+         *     }
+         *     ```
+         */
         post: operations["RoutingController_create"];
         delete?: never;
         options?: never;
@@ -1113,7 +1149,21 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Create a routing rule from template */
+        /**
+         * Create a routing rule from template
+         * @description Create a routing rule using a predefined template.
+         *
+         *     **Available Templates:**
+         *     - `APP_DOWNLOAD_IOS`: Redirect iOS users to App Store
+         *     - `APP_DOWNLOAD_ANDROID`: Redirect Android users to Google Play
+         *     - `MULTILANG_TW`: Redirect Traditional Chinese users
+         *     - `MULTILANG_CN`: Redirect Simplified Chinese users
+         *     - `BUSINESS_HOURS`: Redirect during business hours (9:00-18:00, Mon-Fri)
+         *     - `MOBILE_ONLY`: Redirect mobile device users
+         *     - `DESKTOP_ONLY`: Redirect desktop users
+         *
+         *     Use GET /api/routing-templates to see all available templates.
+         */
         post: operations["RoutingController_createFromTemplate"];
         delete?: never;
         options?: never;
@@ -1128,12 +1178,21 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get a single routing rule */
+        /**
+         * Get a single routing rule
+         * @description Retrieve detailed information about a specific routing rule.
+         */
         get: operations["RoutingController_findOne"];
-        /** Update a routing rule */
+        /**
+         * Update a routing rule
+         * @description Update an existing routing rule. All fields are optional - only provided fields will be updated.
+         */
         put: operations["RoutingController_update"];
         post?: never;
-        /** Delete a routing rule */
+        /**
+         * Delete a routing rule
+         * @description Delete a routing rule permanently. If this is the last rule and smart routing is enabled, consider disabling smart routing first.
+         */
         delete: operations["RoutingController_delete"];
         options?: never;
         head?: never;
@@ -1153,7 +1212,18 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        /** Update smart routing settings */
+        /**
+         * Update smart routing settings
+         * @description Update smart routing settings for a URL.
+         *
+         *     **Settings:**
+         *     - `isSmartRouting`: Enable or disable smart routing for this URL
+         *     - `defaultUrl`: Fallback URL when no routing rules match (optional)
+         *
+         *     **Note:** When smart routing is enabled and no rules match, visitors will be redirected to:
+         *     1. The defaultUrl if set
+         *     2. Otherwise, the URL's original target URL
+         */
         patch: operations["RoutingController_updateSettings"];
         trace?: never;
     };
@@ -1164,7 +1234,18 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Get available routing rule templates */
+        /**
+         * Get available routing rule templates
+         * @description Get all predefined routing rule templates.
+         *
+         *     Templates provide pre-configured conditions for common routing scenarios:
+         *     - **App Downloads**: Redirect users to App Store or Google Play based on OS
+         *     - **Multi-Language**: Redirect users based on language/country preferences
+         *     - **Device Targeting**: Redirect mobile or desktop users separately
+         *     - **Business Hours**: Redirect based on time of day and day of week
+         *
+         *     Use POST /api/urls/{urlId}/routing-rules/from-template to create a rule from a template.
+         */
         get: operations["RoutingTemplatesController_getTemplates"];
         put?: never;
         post?: never;
@@ -1181,6 +1262,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Get favicon
+         * @description Redirects to the SVG favicon. This is a public endpoint.
+         */
         get: operations["RedirectController_handleFavicon"];
         put?: never;
         post?: never;
@@ -1197,6 +1282,10 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
+        /**
+         * Get robots.txt
+         * @description Returns the robots.txt file for search engine crawlers. This is a public endpoint.
+         */
         get: operations["RedirectController_handleRobots"];
         put?: never;
         post?: never;
@@ -1215,7 +1304,15 @@ export interface paths {
         };
         /**
          * Get short URL information
-         * @description Check if the short URL requires password verification
+         * @description Check if the short URL requires password verification before redirecting.
+         *
+         *     **Public Endpoint** - No authentication required.
+         *
+         *     **Use Case:**
+         *     - Use this endpoint to check if a short URL is password-protected before attempting to redirect
+         *     - Useful for client-side applications that need to show a password input form
+         *
+         *     **Rate Limit:** 30 requests per minute per IP
          */
         get: operations["RedirectController_getInfo"];
         put?: never;
@@ -1235,7 +1332,21 @@ export interface paths {
         };
         /**
          * Redirect to original URL
-         * @description Access short URL and redirect to the original URL (when no password is required)
+         * @description Access a short URL and redirect to the original URL.
+         *
+         *     **Public Endpoint** - No authentication required.
+         *
+         *     **Behavior:**
+         *     - If the URL has no password protection: Immediately redirects (302) to the original URL
+         *     - If the URL requires password: Returns HTML password verification page (200)
+         *     - If smart routing is enabled: Redirects to the matched routing rule target URL
+         *     - If A/B testing is enabled: Randomly selects a variant based on weights
+         *
+         *     **UTM Parameters:**
+         *     - All UTM parameters (utm_source, utm_medium, etc.) are tracked and passed through to the original URL
+         *     - Click analytics are recorded including IP, device, browser, country, etc.
+         *
+         *     **Rate Limit:** 100 requests per minute per IP
          */
         get: operations["RedirectController_redirect"];
         put?: never;
@@ -1257,7 +1368,21 @@ export interface paths {
         put?: never;
         /**
          * Verify password and redirect
-         * @description Provide password to access protected short URL
+         * @description Verify the password for a password-protected short URL and redirect to the original URL.
+         *
+         *     **Public Endpoint** - No authentication required.
+         *
+         *     **Request Body:**
+         *     - `password`: The password to verify
+         *     - `turnstileToken`: Cloudflare Turnstile verification token (required if Turnstile is enabled)
+         *
+         *     **Behavior:**
+         *     - On success: Returns HTML page with JavaScript redirect to the original URL
+         *     - On failure: Redirects back to the short URL page with error parameter
+         *
+         *     **Security:**
+         *     - Rate limited to 5 requests per minute to prevent brute force attacks
+         *     - Supports Cloudflare Turnstile for additional bot protection
          */
         post: operations["RedirectController_verifyPassword"];
         delete?: never;
@@ -1684,7 +1809,7 @@ export interface components {
             path?: string;
         };
         BulkCreateUrlDto: {
-            /** @description URL list (max 500) */
+            /** @description URL list (max 100 for admin, 50 for regular users) */
             urls: components["schemas"]["CreateUrlDto"][];
         };
         BulkCreateSuccessItem: {
@@ -1715,7 +1840,7 @@ export interface components {
         };
         BulkUpdateUrlDto: {
             /**
-             * @description URL IDs to update (max 500)
+             * @description URL IDs to update (max 100)
              * @example [
              *       "clxxx1",
              *       "clxxx2"
@@ -1735,7 +1860,7 @@ export interface components {
         };
         BulkDeleteUrlDto: {
             /**
-             * @description URL IDs to delete (max 500)
+             * @description URL IDs to delete (max 100 for admin, 50 for regular users)
              * @example [
              *       "clxxx1",
              *       "clxxx2",
@@ -3299,7 +3424,7 @@ export interface components {
         };
         PaginationDto: {
             /**
-             * @description Page number (starts from 1)
+             * @description Page number (starts from 1, maximum 10000)
              * @default 1
              * @example 1
              */
@@ -3364,7 +3489,7 @@ export interface components {
         };
         UrlQueryDto: {
             /**
-             * @description Page number (starts from 1)
+             * @description Page number (starts from 1, maximum 10000)
              * @default 1
              * @example 1
              */
@@ -3403,7 +3528,7 @@ export interface components {
         };
         BundleQueryDto: {
             /**
-             * @description Page number (starts from 1)
+             * @description Page number (starts from 1, maximum 10000)
              * @default 1
              * @example 1
              */
@@ -3428,7 +3553,7 @@ export interface components {
         };
         UserListQueryDto: {
             /**
-             * @description Page number (starts from 1)
+             * @description Page number (starts from 1, maximum 10000)
              * @default 1
              * @example 1
              */
@@ -3458,7 +3583,7 @@ export interface components {
         };
         AuditLogQueryDto: {
             /**
-             * @description Page number (starts from 1)
+             * @description Page number (starts from 1, maximum 10000)
              * @default 1
              * @example 1
              */
@@ -3993,7 +4118,7 @@ export interface operations {
     UsersController_getUsers: {
         parameters: {
             query?: {
-                /** @description Page number (starts from 1) */
+                /** @description Page number (starts from 1, maximum 10000) */
                 page?: number;
                 /** @description Number of records per page (maximum 100) */
                 pageSize?: number;
@@ -4343,7 +4468,7 @@ export interface operations {
     UrlController_findAll: {
         parameters: {
             query?: {
-                /** @description Page number (starts from 1) */
+                /** @description Page number (starts from 1, maximum 10000) */
                 page?: number;
                 /** @description Number of records per page (maximum 100) */
                 pageSize?: number;
@@ -5010,7 +5135,7 @@ export interface operations {
     ApiKeysController_findAll: {
         parameters: {
             query?: {
-                /** @description Page number (starts from 1) */
+                /** @description Page number (starts from 1, maximum 10000) */
                 page?: number;
                 /** @description Number of records per page (maximum 100) */
                 pageSize?: number;
@@ -5175,7 +5300,7 @@ export interface operations {
     BundleController_findAll: {
         parameters: {
             query?: {
-                /** @description Page number (starts from 1) */
+                /** @description Page number (starts from 1, maximum 10000) */
                 page?: number;
                 /** @description Number of records per page (maximum 100) */
                 pageSize?: number;
@@ -6226,7 +6351,7 @@ export interface operations {
     WebhookController_findAll: {
         parameters: {
             query?: {
-                /** @description Page number (starts from 1) */
+                /** @description Page number (starts from 1, maximum 10000) */
                 page?: number;
                 /** @description Number of records per page (maximum 100) */
                 pageSize?: number;
@@ -6427,7 +6552,7 @@ export interface operations {
     WebhookController_getLogs: {
         parameters: {
             query?: {
-                /** @description Page number (starts from 1) */
+                /** @description Page number (starts from 1, maximum 10000) */
                 page?: number;
                 /** @description Number of records per page (maximum 100) */
                 pageSize?: number;
@@ -6514,7 +6639,7 @@ export interface operations {
     AuditLogController_getAuditLogs: {
         parameters: {
             query?: {
-                /** @description Page number (starts from 1) */
+                /** @description Page number (starts from 1, maximum 10000) */
                 page?: number;
                 /** @description Number of records per page (maximum 100) */
                 pageSize?: number;
@@ -6580,12 +6705,31 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Routing rules retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["RoutingRulesListResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description URL not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
         };
@@ -6606,12 +6750,40 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Routing rule created successfully */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["RoutingRuleResponseDto"];
+                };
+            };
+            /** @description Invalid request parameters (e.g., invalid condition type or operator) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description URL not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
         };
@@ -6632,12 +6804,40 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Routing rule created from template successfully */
             201: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["RoutingRuleResponseDto"];
+                };
+            };
+            /** @description Invalid template key or request parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description URL or template not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
         };
@@ -6649,19 +6849,38 @@ export interface operations {
             path: {
                 /** @description URL ID */
                 urlId: string;
-                /** @description Rule ID */
+                /** @description Routing Rule ID */
                 ruleId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description Routing rule retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["RoutingRuleResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description URL or routing rule not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
         };
@@ -6673,7 +6892,7 @@ export interface operations {
             path: {
                 /** @description URL ID */
                 urlId: string;
-                /** @description Rule ID */
+                /** @description Routing Rule ID */
                 ruleId: string;
             };
             cookie?: never;
@@ -6684,12 +6903,40 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Routing rule updated successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["RoutingRuleResponseDto"];
+                };
+            };
+            /** @description Invalid request parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description URL or routing rule not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
         };
@@ -6701,18 +6948,37 @@ export interface operations {
             path: {
                 /** @description URL ID */
                 urlId: string;
-                /** @description Rule ID */
+                /** @description Routing Rule ID */
                 ruleId: string;
             };
             cookie?: never;
         };
         requestBody?: never;
         responses: {
+            /** @description Routing rule deleted successfully */
             204: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description URL or routing rule not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -6732,12 +6998,31 @@ export interface operations {
             };
         };
         responses: {
+            /** @description Smart routing settings updated successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["SmartRoutingSettingsResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description URL not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
         };
@@ -6751,12 +7036,22 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Templates retrieved successfully */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
                     "application/json": components["schemas"]["TemplateListResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
                 };
             };
         };
@@ -6770,7 +7065,8 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            200: {
+            /** @description Redirects to /static/favicon.svg */
+            301: {
                 headers: {
                     [name: string]: unknown;
                 };
@@ -6787,6 +7083,7 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
+            /** @description Returns robots.txt content */
             200: {
                 headers: {
                     [name: string]: unknown;

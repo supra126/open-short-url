@@ -1097,7 +1097,9 @@
       "completed": "完成",
       "error": "錯誤",
       "executingMessage": "正在執行工具...",
-      "parameters": "參數："
+      "parameters": "參數：",
+      "unknownTool": "未知工具",
+      "unknownError": "未知錯誤"
     },
     "settings": {
       "title": "AI 服務設定",

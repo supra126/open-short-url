@@ -46,6 +46,8 @@ import {
   AlertCircle,
   ArrowUpDown,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
+import { formatNumber } from '@/lib/utils';
 import {
   PieChart,
   Pie,
@@ -108,8 +110,8 @@ export function RoutingList({ urlId }: RoutingListProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <div className="py-8">
+            <Loading />
           </div>
         </CardContent>
       </Card>
@@ -227,7 +229,7 @@ export function RoutingList({ urlId }: RoutingListProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {totalMatches.toLocaleString()}
+                      {formatNumber(totalMatches)}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {t('routing.totalMatchesDesc')}
@@ -339,7 +341,7 @@ export function RoutingList({ urlId }: RoutingListProps) {
                           <TableCell className="text-center">
                             <div className="flex flex-col items-center">
                               <span className="font-medium">
-                                {rule.matchCount.toLocaleString()}
+                                {formatNumber(rule.matchCount)}
                               </span>
                               {stat && (
                                 <span className="text-xs text-muted-foreground">

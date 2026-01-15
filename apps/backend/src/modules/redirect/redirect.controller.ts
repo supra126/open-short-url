@@ -695,14 +695,41 @@ export class RedirectController {
     try {
       const parsed = new URL(url);
 
-      // Only allow http and https protocols
+      // Only allow http and https protocols (strict check on parsed protocol)
       if (!['http:', 'https:'].includes(parsed.protocol)) {
         return undefined;
       }
 
-      // Block javascript: and data: URLs (extra safety)
-      if (url.toLowerCase().startsWith('javascript:') || url.toLowerCase().startsWith('data:')) {
-        return undefined;
+      // Normalize URL for checking dangerous patterns
+      const normalizedUrl = url.toLowerCase().trim();
+
+      // Block all dangerous protocols (case-insensitive, handles URL encoding)
+      // Note: URL() parsing should already catch these, but we add defense in depth
+      const dangerousProtocols = [
+        'javascript:',
+        'data:',
+        'vbscript:',
+        'file:',
+        'about:',
+        'blob:',
+      ];
+
+      for (const protocol of dangerousProtocols) {
+        if (normalizedUrl.startsWith(protocol)) {
+          return undefined;
+        }
+      }
+
+      // Block URL-encoded dangerous patterns (e.g., %6A%61%76%61%73%63%72%69%70%74 = javascript)
+      try {
+        const decodedUrl = decodeURIComponent(normalizedUrl);
+        for (const protocol of dangerousProtocols) {
+          if (decodedUrl.startsWith(protocol)) {
+            return undefined;
+          }
+        }
+      } catch {
+        // decodeURIComponent may throw on malformed URLs, which is fine
       }
 
       // Ensure no newlines or special characters that could break out of context

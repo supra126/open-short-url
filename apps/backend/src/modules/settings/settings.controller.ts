@@ -28,7 +28,8 @@ import { User, UserRole } from '@prisma/client';
 
 @ApiTags('Settings')
 @Controller('api/settings')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(UserRole.ADMIN)
 @ApiBearerAuth('JWT-auth')
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
@@ -37,8 +38,6 @@ export class SettingsController {
    * Get all system settings (ADMIN only)
    */
   @Get('system')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Get all system settings',
     description: 'Retrieve all system settings (admin only)',
@@ -68,8 +67,6 @@ export class SettingsController {
    * Get single system setting (ADMIN only)
    */
   @Get('system/:key')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Get system setting',
     description: 'Retrieve system setting by key (admin only)',
@@ -109,8 +106,6 @@ export class SettingsController {
    * Update system setting (ADMIN only)
    */
   @Put('system/:key')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
   @ApiOperation({
     summary: 'Update system setting',
     description: 'Update or create system setting (admin only)',
@@ -150,8 +145,6 @@ export class SettingsController {
    * Delete system setting (ADMIN only)
    */
   @Delete('system/:key')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete system setting',

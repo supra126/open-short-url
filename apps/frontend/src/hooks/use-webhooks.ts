@@ -7,6 +7,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { QUERY_CONFIG } from '@/lib/query-config';
+import { buildQueryParams } from '@/lib/utils';
 import type {
   CreateWebhookDto,
   UpdateWebhookDto,
@@ -17,6 +18,10 @@ import type {
   WebhookTestResponseDto,
   PaginationParams,
 } from '@/lib/api/schemas';
+
+// Query params type for webhooks list
+// Using PaginationParams as backend WebhookQueryDto only supports pagination
+export type WebhookQueryParams = PaginationParams;
 
 // Re-export types for consumers of this hook
 export type {
@@ -34,16 +39,18 @@ export type {
 export const webhookKeys = {
   all: ['webhooks'] as const,
   lists: () => [...webhookKeys.all, 'list'] as const,
+  list: (params?: WebhookQueryParams) => [...webhookKeys.lists(), params] as const,
   details: () => [...webhookKeys.all, 'detail'] as const,
   detail: (id: string) => [...webhookKeys.details(), id] as const,
-  logs: (id: string, params: PaginationParams) =>
+  logs: (id: string, params?: PaginationParams) =>
     [...webhookKeys.all, 'logs', id, params] as const,
 };
 
 // ==================== API Functions ====================
 
-async function getWebhooks(): Promise<WebhookListResponseDto> {
-  return apiClient.get<WebhookListResponseDto>('/api/webhooks');
+async function getWebhooks(params?: WebhookQueryParams): Promise<WebhookListResponseDto> {
+  const query = params ? buildQueryParams(params) : '';
+  return apiClient.get<WebhookListResponseDto>(`/api/webhooks${query ? `?${query}` : ''}`);
 }
 
 async function getWebhook(id: string): Promise<WebhookResponseDto> {
@@ -69,11 +76,11 @@ async function deleteWebhook(id: string): Promise<void> {
 
 async function getWebhookLogs(
   id: string,
-  params: PaginationParams = {},
+  params?: PaginationParams,
 ): Promise<WebhookLogsListResponseDto> {
-  const { page = 1, pageSize = 20 } = params;
+  const query = params ? buildQueryParams(params) : '';
   return apiClient.get<WebhookLogsListResponseDto>(
-    `/api/webhooks/${id}/logs?page=${page}&pageSize=${pageSize}`,
+    `/api/webhooks/${id}/logs${query ? `?${query}` : ''}`,
   );
 }
 
@@ -84,12 +91,12 @@ async function testWebhook(id: string): Promise<WebhookTestResponseDto> {
 // ==================== Hooks ====================
 
 /**
- * Get all webhooks
+ * Get all webhooks with pagination
  */
-export function useWebhooks() {
+export function useWebhooks(params?: WebhookQueryParams) {
   return useQuery({
-    queryKey: webhookKeys.lists(),
-    queryFn: getWebhooks,
+    queryKey: webhookKeys.list(params),
+    queryFn: () => getWebhooks(params),
     ...QUERY_CONFIG.STANDARD,
   });
 }
@@ -109,7 +116,7 @@ export function useWebhook(id: string) {
 /**
  * Get webhook logs (paginated)
  */
-export function useWebhookLogs(id: string, params: PaginationParams = {}) {
+export function useWebhookLogs(id: string, params?: PaginationParams) {
   return useQuery({
     queryKey: webhookKeys.logs(id, params),
     queryFn: () => getWebhookLogs(id, params),

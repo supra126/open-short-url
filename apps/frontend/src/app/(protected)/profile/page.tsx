@@ -28,6 +28,7 @@ import {
 } from '@/hooks/use-auth';
 import { useSetup2FA, useEnable2FA, useDisable2FA } from '@/hooks/use-2fa';
 import { User, Mail, Calendar, Loader2, Lock, Shield } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 import Image from 'next/image';
 import { t } from '@/lib/i18n';
 import { formatDate } from '@/lib/utils';
@@ -232,7 +233,7 @@ export default function ProfilePage() {
   if (isLoadingUser) {
     return (
       <div className="flex items-center justify-center min-h-100">
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <Loading />
       </div>
     );
   }
@@ -554,7 +555,7 @@ export default function ProfilePage() {
                             <div className="border rounded-lg p-4 bg-white">
                               <Image
                                 src={qrCodeData}
-                                alt="QR Code"
+                                alt={t('urls.qrCode')}
                                 width={200}
                                 height={200}
                               />

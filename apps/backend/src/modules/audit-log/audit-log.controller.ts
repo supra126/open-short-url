@@ -18,11 +18,12 @@ import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
+import { UserRole } from '@prisma/client';
 
 @ApiTags('Audit Logs')
 @Controller('api/audit-logs')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
+@Roles(UserRole.ADMIN)
 @ApiBearerAuth('JWT-auth')
 export class AuditLogController {
   constructor(private readonly auditLogService: AuditLogService) {}

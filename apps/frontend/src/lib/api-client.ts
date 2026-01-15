@@ -89,15 +89,41 @@ class ApiClient {
         const shouldRedirect = !NO_REDIRECT_401_PATHS.some(path => url.pathname.includes(path));
 
         if (shouldRedirect && typeof window !== 'undefined') {
+          // Prevent infinite redirect loop - don't redirect if already on login page
+          const currentPath = window.location.pathname;
+          if (currentPath === '/login') {
+            // Already on login page - likely a configuration issue, don't redirect
+            ErrorHandler.log(new Error('401 error on login page - possible configuration issue'), 'API Client');
+            throw error;
+          }
+
           // Not a whitelisted path - redirect to login
           // Backend has already cleared the expired cookie via Set-Cookie header
-          const redirectUrl = window.location.pathname + window.location.search;
+          const redirectUrl = currentPath + window.location.search;
 
           // Validate redirect URL to prevent Open Redirect attacks
-          // Must start with '/' and not contain '//' (prevents //evil.com)
-          const safeRedirect = redirectUrl.startsWith('/') && !redirectUrl.startsWith('//')
-            ? redirectUrl
-            : '/';
+          // Must start with '/' and only contain safe characters
+          // Prevents //evil.com, /\evil.com, and encoded bypasses
+          const MAX_REDIRECT_LENGTH = 200;
+          const safeRedirectPattern = /^\/[a-zA-Z0-9\/_\-?=&]*$/; // Removed % to prevent encoded bypasses
+
+          let safeRedirect = '/';
+          try {
+            // Decode first to catch encoded bypass attempts like //%65vil.com
+            const decoded = decodeURIComponent(redirectUrl);
+
+            if (
+              decoded.length <= MAX_REDIRECT_LENGTH &&
+              decoded.startsWith('/') &&
+              !decoded.startsWith('//') &&
+              !decoded.includes('\\') &&
+              safeRedirectPattern.test(decoded)
+            ) {
+              safeRedirect = decoded;
+            }
+          } catch {
+            // decodeURIComponent failed, use default '/'
+          }
 
           window.location.href = `/login?redirect=${encodeURIComponent(safeRedirect)}`;
         }

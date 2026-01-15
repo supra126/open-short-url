@@ -319,7 +319,7 @@ export default function DashboardPage() {
             />
             <StatCard
               title={t('dashboard.averageClicksPerDay')}
-              value={Math.round(stats.averageClicksPerDay).toLocaleString()}
+              value={formatNumber(Math.round(stats.averageClicksPerDay))}
               description={
                 timeRange === 'last_7_days'
                   ? t('dashboard.last7Days')

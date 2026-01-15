@@ -6,6 +6,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { buildQueryParams } from '@/lib/utils';
 import { urlKeys } from '@/hooks/use-url';
 import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
@@ -130,12 +131,7 @@ async function getRoutingAnalytics(
   urlId: string,
   params?: AnalyticsQueryParams,
 ): Promise<RoutingAnalyticsResponseDto> {
-  const searchParams = new URLSearchParams();
-  if (params?.timeRange) searchParams.set('timeRange', params.timeRange);
-  if (params?.startDate) searchParams.set('startDate', params.startDate);
-  if (params?.endDate) searchParams.set('endDate', params.endDate);
-
-  const query = searchParams.toString();
+  const query = params ? buildQueryParams(params) : '';
   const url = `/api/analytics/urls/${urlId}/routing${query ? `?${query}` : ''}`;
   return apiClient.get<RoutingAnalyticsResponseDto>(url);
 }

@@ -137,25 +137,25 @@ export class AuditLogService {
       }
     }
 
-    // Get total count
-    const total = await this.prisma.auditLog.count({ where });
-
-    // Get paginated results
-    const items = await this.prisma.auditLog.findMany({
-      where,
-      include: {
-        user: {
-          select: {
-            id: true,
-            email: true,
-            name: true,
+    // Get total count and paginated results in parallel for better performance
+    const [total, items] = await Promise.all([
+      this.prisma.auditLog.count({ where }),
+      this.prisma.auditLog.findMany({
+        where,
+        include: {
+          user: {
+            select: {
+              id: true,
+              email: true,
+              name: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: sortOrder },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    });
+        orderBy: { createdAt: sortOrder },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
 
     const totalPages = Math.ceil(total / pageSize);
 

@@ -4,6 +4,9 @@
 
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { formatDistanceToNow as dateFnsFormatDistanceToNow } from 'date-fns';
+import { zhTW, enUS, ptBR } from 'date-fns/locale';
+import type { Locale } from 'date-fns';
 import { getLocale } from './i18n';
 import { ErrorHandler } from './error-handler';
 
@@ -123,4 +126,32 @@ export function buildQueryParams<T extends object>(params: T): string {
     }
   });
   return searchParams.toString();
+}
+
+/**
+ * Get date-fns locale based on current app locale
+ */
+export function getDateFnsLocale(): Locale {
+  const appLocale = getLocale();
+  const localeMap: Record<string, Locale> = {
+    'zh-TW': zhTW,
+    'en': enUS,
+    'pt-BR': ptBR,
+  };
+  return localeMap[appLocale] || enUS;
+}
+
+/**
+ * Format relative time (e.g., "3 hours ago")
+ * Uses the current app locale
+ */
+export function formatDistanceToNow(
+  date: string | Date,
+  options?: { addSuffix?: boolean }
+): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return dateFnsFormatDistanceToNow(d, {
+    addSuffix: options?.addSuffix ?? true,
+    locale: getDateFnsLocale(),
+  });
 }

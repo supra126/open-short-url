@@ -57,7 +57,7 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
         return delay;
       },
       lazyConnect: true,
-      keepAlive: 60000, // Increased from 30s to 60s to avoid collision with health checks
+      keepAlive: 45000, // 45 seconds - offset from health check (65s) to avoid timing collision
       connectTimeout: 5000, // Add connection timeout
       commandTimeout: 5000, // Add command timeout
     });
@@ -131,15 +131,15 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Start periodic health check for Redis recovery
-   * Optimized: Reduced frequency to 60 seconds to minimize overhead
+   * Optimized: 65 seconds interval - offset from keepAlive (45s) to avoid timing collision
    */
   private startHealthCheck(): void {
     this.healthCheckInterval = setInterval(async () => {
       await this.checkRedisAvailability();
-    }, 60 * 1000);
+    }, 65 * 1000);
 
     this.loggerService.log(
-      'Redis health check started (runs every 60 seconds)',
+      'Redis health check started (runs every 65 seconds)',
       'CacheService',
     );
   }

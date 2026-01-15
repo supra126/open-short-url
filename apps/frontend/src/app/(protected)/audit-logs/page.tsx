@@ -30,10 +30,8 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Eye,
-  Loader2,
-} from 'lucide-react';
+import { Eye } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 import { t, TranslationKey } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/utils';
 
@@ -176,9 +174,7 @@ export default function AuditLogsPage() {
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-12">
-                    <div className="flex items-center justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                    </div>
+                    <Loading />
                   </TableCell>
                 </TableRow>
               ) : !data?.data || data.data.length === 0 ? (

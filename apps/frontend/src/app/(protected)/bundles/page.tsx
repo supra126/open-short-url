@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { t } from '@/lib/i18n';
+import { formatNumber } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -37,6 +38,7 @@ import {
   useRestoreBundle,
 } from '@/hooks/use-bundles';
 import { BundleDialog } from '@/components/bundles/bundle-dialog';
+import { Loading } from '@/components/ui/loading';
 import {
   Package,
   Plus,
@@ -234,8 +236,8 @@ export default function BundlesPage() {
 
       {/* Loading State */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="py-12">
+          <Loading />
         </div>
       ) : data && data.data.length > 0 ? (
         <>
@@ -346,7 +348,7 @@ export default function BundlesPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <MousePointerClick className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-semibold">{bundle.totalClicks.toLocaleString()}</span>
+                        <span className="font-semibold">{formatNumber(bundle.totalClicks)}</span>
                         <span className="text-muted-foreground">{t('bundles.clicks')}</span>
                       </div>
                     </div>

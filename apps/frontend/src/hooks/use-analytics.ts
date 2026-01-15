@@ -90,8 +90,9 @@ async function getRecentClicks(
   limit: number,
   includeBots: boolean = false,
 ): Promise<RecentClicksResponseDto> {
+  const query = buildQueryParams({ limit, includeBots });
   return apiClient.get<RecentClicksResponseDto>(
-    `/api/analytics/urls/${id}/recent-clicks?limit=${limit}&includeBots=${includeBots}`,
+    `/api/analytics/urls/${id}/recent-clicks${query ? `?${query}` : ''}`,
   );
 }
 

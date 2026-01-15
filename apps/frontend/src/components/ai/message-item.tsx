@@ -9,6 +9,7 @@ import { MarkdownRenderer } from './markdown-renderer';
 import { ToolResult } from './tool-result';
 import { CopyButton } from './copy-button';
 import { formatTime } from '@/lib/utils';
+import { t } from '@/lib/i18n';
 
 /**
  * Message Item Component
@@ -94,7 +95,7 @@ export function MessageItem({ message }: MessageItemProps) {
                   result?: unknown;
                   output?: unknown;
                 };
-                const toolName = toolInfo.toolName ?? toolInfo.title ?? 'Unknown Tool';
+                const toolName = toolInfo.toolName ?? toolInfo.title ?? t('ai.tool.unknownTool');
                 const args = (toolInfo.args ?? toolInfo.input ?? {}) as Record<string, unknown>;
                 const result = toolInfo.result ?? toolInfo.output;
                 const hasResult = 'result' in toolInfo || 'output' in toolInfo;

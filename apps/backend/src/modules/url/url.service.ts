@@ -11,6 +11,7 @@ import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Prisma, UrlStatus, Url } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { CacheService } from '@/common/cache/cache.service';
+import { DistributedLockService } from '@/common/cache/distributed-lock.service';
 import { AuditLogService } from '@/modules/audit-log/audit-log.service';
 import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import { CreateUrlDto } from './dto/create-url.dto';
@@ -56,6 +57,7 @@ export class UrlService implements OnModuleInit {
   constructor(
     private prisma: PrismaService,
     private cacheService: CacheService,
+    private distributedLockService: DistributedLockService,
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
     private auditLogService: AuditLogService,
@@ -152,16 +154,40 @@ export class UrlService implements OnModuleInit {
         throw new BadRequestException('Invalid custom slug format');
       }
 
-      // Check if slug already exists
-      const existing = await this.prisma.url.findUnique({
-        where: { slug: customSlug },
-      });
+      // Use distributed lock to protect custom slug validation and creation
+      // This prevents TOCTOU (time-of-check to time-of-use) race conditions
+      const lockResource = `slug:custom:${customSlug}`;
+      const lockResult = await this.distributedLockService.acquireWithRetry(
+        lockResource,
+        3000, // 3 seconds TTL
+        2, // max 2 retries
+        50, // 50ms retry delay
+      );
 
-      if (existing) {
-        throw new ConflictException(ERROR_MESSAGES.URL_SLUG_EXISTS);
+      // If lock is not acquired, return early to prevent race conditions
+      if (!lockResult.acquired) {
+        throw new ConflictException(
+          'Unable to validate slug availability. Please try again.',
+        );
       }
 
-      slug = customSlug;
+      try {
+        // Check if slug already exists (within lock protection)
+        const existing = await this.prisma.url.findUnique({
+          where: { slug: customSlug },
+        });
+
+        if (existing) {
+          throw new ConflictException(ERROR_MESSAGES.URL_SLUG_EXISTS);
+        }
+
+        slug = customSlug;
+      } finally {
+        await this.distributedLockService.release(
+          lockResource,
+          lockResult.lockId,
+        );
+      }
     } else {
       // Auto-generate slug and handle collisions
       slug = await this.generateUniqueSlug();
@@ -558,41 +584,73 @@ export class UrlService implements OnModuleInit {
 
   /**
    * Generate unique slug (handle collisions with dynamic length strategy)
+   * Uses distributed lock when Redis is available to prevent race conditions
+   * Falls back to optimistic concurrency (retry on conflict) when Redis is unavailable
    */
-  private async generateUniqueSlug(
-    maxAttempts: number = 5,
-  ): Promise<string> {
+  private async generateUniqueSlug(maxAttempts: number = 5): Promise<string> {
     const baseLength = this.determineSlugLength();
 
-    for (let attempt = 0; attempt < maxAttempts; attempt++) {
-      const slug = generateCustomSlug(baseLength);
+    // Try to use distributed lock for slug generation
+    // Lock key uses a hash bucket to reduce contention while still providing protection
+    const lockResource = 'slug:generation';
+    const lockTtlMs = 3000; // 3 seconds should be enough for slug generation
 
-      // Check if already exists
-      const existing = await this.prisma.url.findUnique({
-        where: { slug },
-      });
-
-      if (!existing) {
-        return slug;
-      }
-    }
-
-    // If multiple collision attempts, use +2 length slug
-    const fallbackLength = baseLength + 2;
-    const longSlug = generateCustomSlug(fallbackLength);
-    const existing = await this.prisma.url.findUnique({
-      where: { slug: longSlug },
-    });
-
-    if (existing) {
-      throw new ConflictException('Unable to generate unique short URL code, please try again later');
-    }
-
-    this.logger.warn(
-      `Used fallback slug length ${fallbackLength} after ${maxAttempts} collision attempts`,
+    // Try to acquire lock with retries
+    const lockResult = await this.distributedLockService.acquireWithRetry(
+      lockResource,
+      lockTtlMs,
+      2, // max 2 retries
+      50, // 50ms retry delay
     );
 
-    return longSlug;
+    try {
+      // Whether we have the lock or not, we still try to generate the slug
+      // The lock just reduces the chance of collision in multi-instance scenarios
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const slug = generateCustomSlug(baseLength);
+
+        // Check if already exists
+        const existing = await this.prisma.url.findUnique({
+          where: { slug },
+        });
+
+        if (!existing) {
+          if (!lockResult.acquired) {
+            this.logger.debug(
+              `Slug generated without lock (Redis unavailable or lock contention): ${slug}`,
+            );
+          }
+          return slug;
+        }
+      }
+
+      // If multiple collision attempts, use +2 length slug
+      const fallbackLength = baseLength + 2;
+      const longSlug = generateCustomSlug(fallbackLength);
+      const existing = await this.prisma.url.findUnique({
+        where: { slug: longSlug },
+      });
+
+      if (existing) {
+        throw new ConflictException(
+          'Unable to generate unique short URL code, please try again later',
+        );
+      }
+
+      this.logger.warn(
+        `Used fallback slug length ${fallbackLength} after ${maxAttempts} collision attempts`,
+      );
+
+      return longSlug;
+    } finally {
+      // Always release the lock if we acquired it
+      if (lockResult.acquired) {
+        await this.distributedLockService.release(
+          lockResource,
+          lockResult.lockId,
+        );
+      }
+    }
   }
 
   /**

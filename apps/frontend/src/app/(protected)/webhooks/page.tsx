@@ -45,6 +45,7 @@ import {
   type WebhookLogResponseDto,
 } from '@/hooks/use-webhooks';
 import { WebhookDialog } from '@/components/webhooks/webhook-dialog';
+import { Loading } from '@/components/ui/loading';
 import {
   Webhook,
   Edit,
@@ -57,11 +58,13 @@ import {
   Eye,
   ExternalLink,
 } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { zhTW } from 'date-fns/locale';
+import { formatDistanceToNow } from '@/lib/utils';
 
 export default function WebhooksPage() {
-  const { data, isLoading, error } = useWebhooks();
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  const { data, isLoading, error } = useWebhooks({ page, pageSize });
   const deleteMutation = useDeleteWebhook();
   const testMutation = useTestWebhook();
   const { toast } = useToast();
@@ -142,7 +145,7 @@ export default function WebhooksPage() {
                 </CardTitle>
                 <CardDescription>
                   {hasWebhooks
-                    ? t('webhooks.currentCount', { count: webhooks.length })
+                    ? t('webhooks.currentCount', { count: data?.total || webhooks.length })
                     : t('webhooks.noWebhooks')}
                 </CardDescription>
               </div>
@@ -151,8 +154,8 @@ export default function WebhooksPage() {
           </CardHeader>
           <CardContent>
             {isLoading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <div className="py-12">
+                <Loading />
               </div>
             ) : error ? (
               <div className="flex flex-col items-center justify-center py-12 gap-4">
@@ -250,9 +253,8 @@ export default function WebhooksPage() {
                           </TableCell>
                           <TableCell className="text-center text-sm text-muted-foreground">
                             {webhook.lastSentAt
-                              ? formatDistanceToNow(new Date(webhook.lastSentAt), {
+                              ? formatDistanceToNow(webhook.lastSentAt, {
                                   addSuffix: true,
-                                  locale: zhTW,
                                 })
                               : t('webhooks.neverSent')}
                           </TableCell>
@@ -298,6 +300,33 @@ export default function WebhooksPage() {
                     })}
                   </TableBody>
                 </Table>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {data && data.totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4">
+                <p className="text-sm text-muted-foreground">
+                  {t('common.page')} {page} {t('common.of')} {data.totalPages}（{t('common.total')} {data.total} {t('common.items')}）
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage(page - 1)}
+                    disabled={page === 1}
+                  >
+                    {t('common.previous')}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setPage(page + 1)}
+                    disabled={page === data.totalPages}
+                  >
+                    {t('common.next')}
+                  </Button>
+                </div>
               </div>
             )}
           </CardContent>
@@ -379,9 +408,8 @@ function WebhookLogsDialog({
                         <XCircle className="h-4 w-4 text-destructive" />
                       )}
                       <span className="text-sm text-muted-foreground">
-                        {formatDistanceToNow(new Date(log.createdAt), {
+                        {formatDistanceToNow(log.createdAt, {
                           addSuffix: true,
-                          locale: zhTW,
                         })}
                       </span>
                     </div>

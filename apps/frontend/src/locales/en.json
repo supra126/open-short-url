@@ -1097,7 +1097,9 @@
       "completed": "Completed",
       "error": "Error",
       "executingMessage": "Executing tool...",
-      "parameters": "Parameters:"
+      "parameters": "Parameters:",
+      "unknownTool": "Unknown Tool",
+      "unknownError": "Unknown error"
     },
     "settings": {
       "title": "AI Service Settings",

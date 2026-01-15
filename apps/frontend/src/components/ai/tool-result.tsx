@@ -97,7 +97,7 @@ export function ToolResult({ toolName, args, result, state }: ToolResultProps) {
       if (result.success === false || result.error) {
         return (
           <div className="text-sm text-destructive">
-            {result.error || 'Unknown error'}
+            {result.error || t('ai.tool.unknownError')}
           </div>
         );
       }

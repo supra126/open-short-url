@@ -6,14 +6,14 @@ import { IsArray, IsString, ArrayMinSize, ArrayMaxSize } from 'class-validator';
  */
 export class BulkDeleteUrlDto {
   @ApiProperty({
-    description: 'URL IDs to delete (max 500)',
+    description: 'URL IDs to delete (max 100 for admin, 50 for regular users)',
     type: [String],
     example: ['clxxx1', 'clxxx2', 'clxxx3'],
   })
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1, { message: 'At least 1 URL ID is required' })
-  @ArrayMaxSize(500, { message: 'Maximum 500 URLs per batch' })
+  @ArrayMaxSize(100, { message: 'Maximum 100 URLs per batch' })
   urlIds!: string[];
 }
 

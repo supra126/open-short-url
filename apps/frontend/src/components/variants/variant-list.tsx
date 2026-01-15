@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { t } from '@/lib/i18n';
+import { formatNumber } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -41,6 +42,7 @@ import {
   TestTube2,
   AlertCircle,
 } from 'lucide-react';
+import { Loading } from '@/components/ui/loading';
 import {
   PieChart,
   Pie,
@@ -102,8 +104,8 @@ export function VariantList({ urlId }: VariantListProps) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <div className="py-8">
+            <Loading />
           </div>
         </CardContent>
       </Card>
@@ -212,7 +214,7 @@ export function VariantList({ urlId }: VariantListProps) {
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold">
-                      {data?.totalClicks.toLocaleString()}
+                      {formatNumber(data?.totalClicks || 0)}
                     </div>
                     <p className="text-xs text-muted-foreground">
                       {t('variants.totalClicksDesc')}
@@ -325,7 +327,7 @@ export function VariantList({ urlId }: VariantListProps) {
                           {controlGroup.variant.weight}%
                         </TableCell>
                         <TableCell className="text-center">
-                          {controlGroup.variant.clickCount.toLocaleString()}
+                          {formatNumber(controlGroup.variant.clickCount)}
                         </TableCell>
                         <TableCell className="text-center">
                           {controlGroup.clickThroughRate.toFixed(1)}%
@@ -382,7 +384,7 @@ export function VariantList({ urlId }: VariantListProps) {
                             {variant.weight}%
                           </TableCell>
                           <TableCell className="text-center">
-                            {variant.clickCount.toLocaleString()}
+                            {formatNumber(variant.clickCount)}
                           </TableCell>
                           <TableCell className="text-center">
                             {stat?.clickThroughRate.toFixed(1)}%

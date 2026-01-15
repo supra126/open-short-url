@@ -111,26 +111,26 @@ export class UsersService {
       where.isActive = isActive;
     }
 
-    // Get total count
-    const total = await this.prisma.user.count({ where });
-
-    // Query users list
-    const users = await this.prisma.user.findMany({
-      where,
-      skip,
-      take: pageSize,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        role: true,
-        isActive: true,
-        twoFactorEnabled: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    // Get total count and users list in parallel for better performance
+    const [total, users] = await Promise.all([
+      this.prisma.user.count({ where }),
+      this.prisma.user.findMany({
+        where,
+        skip,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          role: true,
+          isActive: true,
+          twoFactorEnabled: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+    ]);
 
     return {
       data: users.map((user) => this.mapUserResponse(user)),

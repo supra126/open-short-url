@@ -57,9 +57,9 @@ import {
   CheckCircle,
   XCircle,
   UserPlus,
-  Loader2,
 } from 'lucide-react';
 import { t } from '@/lib/i18n';
+import { Loading } from '@/components/ui/loading';
 import { formatDate } from '@/lib/utils';
 
 export default function UsersPage() {
@@ -293,9 +293,7 @@ export default function UsersPage() {
             {isLoading ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12">
-                  <div className="flex items-center justify-center">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                  </div>
+                  <Loading />
                 </TableCell>
               </TableRow>
             ) : data?.data.length === 0 ? (

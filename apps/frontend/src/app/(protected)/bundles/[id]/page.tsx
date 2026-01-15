@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { t } from '@/lib/i18n';
-import { formatDate } from '@/lib/utils';
+import { formatDate, formatNumber, formatShortDate } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -71,6 +71,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loading } from '@/components/ui/loading';
 
 export default function BundleDetailPage() {
   const params = useParams();
@@ -219,8 +220,8 @@ export default function BundleDetailPage() {
   if (isLoading || !bundle) {
     return (
       <div className="container mx-auto py-8">
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="py-12">
+          <Loading />
         </div>
       </div>
     );
@@ -299,7 +300,7 @@ export default function BundleDetailPage() {
           <CardHeader className="pb-2">
             <CardDescription>{t('bundles.totalClicks')}</CardDescription>
             <CardTitle className="text-3xl">
-              {stats?.totalClicks.toLocaleString() || bundle.totalClicks.toLocaleString()}
+              {formatNumber(stats?.totalClicks || bundle.totalClicks)}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -336,7 +337,7 @@ export default function BundleDetailPage() {
             <div className="flex items-center text-xs text-muted-foreground">
               <TrendingUp className="mr-1 h-3 w-3" />
               {stats?.topUrl?.clicks
-                ? `${stats.topUrl.clicks.toLocaleString()} ${t('common.clicks')}`
+                ? `${formatNumber(stats.topUrl.clicks)} ${t('common.clicks')}`
                 : t('bundles.stats.noData')}
             </div>
           </CardContent>
@@ -357,10 +358,7 @@ export default function BundleDetailPage() {
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 12 }}
-                  tickFormatter={(value: string | number) => {
-                    const date = new Date(value);
-                    return `${date.getMonth() + 1}/${date.getDate()}`;
-                  }}
+                  tickFormatter={(value: string | number) => formatShortDate(String(value))}
                 />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
@@ -420,7 +418,7 @@ export default function BundleDetailPage() {
                     </p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                       <span>
-                        {t('bundles.totalClicks')}: {url.clickCount.toLocaleString()}
+                        {t('bundles.totalClicks')}: {formatNumber(url.clickCount)}
                       </span>
                       <span>
                         {t('urls.createdAtCard')}: {formatDate(url.createdAt)}

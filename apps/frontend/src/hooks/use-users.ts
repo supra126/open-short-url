@@ -43,15 +43,15 @@ export enum UserRole {
 export const userKeys = {
   all: ['users'] as const,
   lists: () => [...userKeys.all, 'list'] as const,
-  list: (query: UserQueryParams) => [...userKeys.lists(), query] as const,
+  list: (params: UserQueryParams) => [...userKeys.lists(), params] as const,
   details: () => [...userKeys.all, 'detail'] as const,
   detail: (id: string) => [...userKeys.details(), id] as const,
 };
 
 // ==================== API Functions ====================
 
-async function getUsers(query: UserQueryParams): Promise<UserListResponse> {
-  const queryString = buildQueryParams(query);
+async function getUsers(params: UserQueryParams): Promise<UserListResponse> {
+  const queryString = buildQueryParams(params);
   return apiClient.get<UserListResponse>(
     `/api/users${queryString ? `?${queryString}` : ''}`,
   );
@@ -95,10 +95,10 @@ async function createUser(data: CreateUserDto): Promise<User> {
 /**
  * Get user list
  */
-export function useUsers(query: UserQueryParams = {}) {
+export function useUsers(params: UserQueryParams = {}) {
   return useQuery({
-    queryKey: userKeys.list(query),
-    queryFn: () => getUsers(query),
+    queryKey: userKeys.list(params),
+    queryFn: () => getUsers(params),
     ...QUERY_CONFIG.STANDARD,
   });
 }
