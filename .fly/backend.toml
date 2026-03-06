@@ -1,0 +1,59 @@
+# ============================================================
+# Open Short URL - Fly.io Configuration (Backend)
+# ============================================================
+# Deploy steps:
+#   1. fly launch --no-deploy
+#   2. fly postgres create --name open-short-url-db
+#   3. fly postgres attach open-short-url-db
+#   4. fly secrets set JWT_SECRET=$(openssl rand -base64 32) \
+#        ADMIN_INITIAL_PASSWORD=your-strong-password \
+#        SHORT_URL_DOMAIN=https://your-app.fly.dev \
+#        FRONTEND_URL=https://your-frontend.fly.dev \
+#        CORS_ORIGIN=https://your-frontend.fly.dev
+#   5. fly deploy -c .fly/backend.toml
+#
+# Frontend: deploy as a separate Fly app (see .fly/frontend.toml).
+# ============================================================
+
+app = 'open-short-url-backend'
+primary_region = 'nrt'
+
+[build]
+  image = 'ghcr.io/supra126/open-short-url-backend:latest'
+
+[deploy]
+  release_command = 'sh -c "npx prisma migrate deploy && npx tsx scripts/seed-if-empty.ts"'
+
+[processes]
+  app = 'node dist/main'
+
+[env]
+  HOST = '0.0.0.0'
+  JWT_EXPIRES_IN = '7d'
+  NODE_ENV = 'production'
+  PORT = '4101'
+  TRUSTED_PROXY = 'true'
+
+[http_service]
+  internal_port = 4101
+  force_https = true
+  processes = ['app']
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = 'requests'
+    hard_limit = 250
+    soft_limit = 200
+
+  [[http_service.checks]]
+    interval = '15s'
+    timeout = '5s'
+    grace_period = '30s'
+    method = 'GET'
+    path = '/api'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '1gb'
