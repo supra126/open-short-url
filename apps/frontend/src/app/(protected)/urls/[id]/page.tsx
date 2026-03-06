@@ -455,10 +455,10 @@ export default function UrlDetailPage() {
                 />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
-                  labelFormatter={(value: string | number) => {
+                  labelFormatter={(value) => {
                     return formatDate(String(value));
                   }}
-                  formatter={(value: number | undefined) => [value ?? 0, t('urls.clicksLabel')]}
+                  formatter={(value) => [value ?? 0, t('urls.clicksLabel')]}
                 />
                 <Line
                   type="monotone"
@@ -604,7 +604,7 @@ export default function UrlDetailPage() {
                             rel="noopener noreferrer"
                             className="text-primary hover:underline"
                           >
-                            {new URL(click.referer).hostname}
+                            {(() => { try { return new URL(click.referer).hostname; } catch { return click.referer; } })()}
                           </a>
                         ) : (
                           <span className="text-muted-foreground">

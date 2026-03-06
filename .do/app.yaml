@@ -1,0 +1,99 @@
+# ============================================================
+# Open Short URL - DigitalOcean App Platform Spec
+# ============================================================
+# Deploy with: https://cloud.digitalocean.com/apps/new
+# ============================================================
+
+name: open-short-url
+
+ingress:
+  rules:
+    - match:
+        path:
+          prefix: /api
+      component:
+        name: backend
+        preserve_path_prefix: true
+    - match:
+        path:
+          prefix: /
+      component:
+        name: frontend
+
+databases:
+  - name: db
+    engine: PG
+    version: "17"
+    size: db-s-dev-database
+
+services:
+  - name: backend
+    dockerfile_path: apps/backend/Dockerfile
+    github:
+      repo: supra126/open-short-url
+      branch: main
+      deploy_on_push: true
+    http_port: 4101
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    health_check:
+      http_path: /api
+    envs:
+      - key: DATABASE_URL
+        scope: RUN_TIME
+        value: ${db.DATABASE_URL}
+      - key: NODE_ENV
+        scope: RUN_TIME
+        value: production
+      - key: PORT
+        scope: RUN_TIME
+        value: "4101"
+      - key: HOST
+        scope: RUN_TIME
+        value: 0.0.0.0
+      - key: JWT_SECRET
+        scope: RUN_TIME
+        type: SECRET
+        value: ${JWT_SECRET}
+      - key: JWT_EXPIRES_IN
+        scope: RUN_TIME
+        value: 7d
+      - key: ADMIN_INITIAL_PASSWORD
+        scope: RUN_TIME
+        type: SECRET
+        value: ${ADMIN_INITIAL_PASSWORD}
+      - key: SHORT_URL_DOMAIN
+        scope: RUN_TIME
+        value: ${backend.PUBLIC_URL}
+      - key: FRONTEND_URL
+        scope: RUN_TIME
+        value: ${frontend.PUBLIC_URL}
+      - key: CORS_ORIGIN
+        scope: RUN_TIME
+        value: ${frontend.PUBLIC_URL}
+      - key: TRUSTED_PROXY
+        scope: RUN_TIME
+        value: "true"
+
+  - name: frontend
+    dockerfile_path: apps/frontend/Dockerfile
+    github:
+      repo: supra126/open-short-url
+      branch: main
+      deploy_on_push: true
+    http_port: 4100
+    instance_count: 1
+    instance_size_slug: apps-s-1vcpu-0.5gb
+    envs:
+      - key: NEXT_PUBLIC_API_URL
+        scope: RUN_TIME
+        value: ${backend.PUBLIC_URL}
+      - key: NEXT_PUBLIC_SHORT_URL_DOMAIN
+        scope: RUN_TIME
+        value: ${backend.PUBLIC_URL}
+      - key: NEXT_PUBLIC_LOCALE
+        scope: RUN_TIME
+        value: en
+      - key: NEXT_PUBLIC_BRAND_NAME
+        scope: RUN_TIME
+        value: Open Short URL

@@ -1,0 +1,44 @@
+# ============================================================
+# Open Short URL - Fly.io Configuration (Frontend)
+# ============================================================
+# Deploy steps:
+#   1. fly apps create your-app-fe
+#   2. fly secrets set -a your-app-fe \
+#        NEXT_PUBLIC_API_URL=https://your-backend.fly.dev \
+#        NEXT_PUBLIC_SHORT_URL_DOMAIN=https://your-backend.fly.dev
+#   3. fly deploy -c .fly/frontend.toml
+# ============================================================
+
+app = 'open-short-url-frontend'
+primary_region = 'nrt'
+
+[build]
+  image = 'ghcr.io/supra126/open-short-url-frontend:latest'
+
+[env]
+  NODE_ENV = 'production'
+  PORT = '4100'
+  HOSTNAME = '0.0.0.0'
+
+[http_service]
+  internal_port = 4100
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = 'requests'
+    hard_limit = 250
+    soft_limit = 200
+
+  [[http_service.checks]]
+    interval = '15s'
+    timeout = '5s'
+    grace_period = '30s'
+    method = 'GET'
+    path = '/login'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '512mb'

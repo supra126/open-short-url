@@ -5,7 +5,7 @@ Deploy Open Short URL on your own infrastructure without Docker.
 ## Prerequisites
 
 - Node.js 22+ (LTS recommended)
-- pnpm 9+
+- pnpm 10+
 - PostgreSQL 14+
 - Redis 7+ (optional, recommended for production)
 - Reverse proxy (nginx, Caddy, etc.)
@@ -87,12 +87,8 @@ pnpm install
 # Switch to postgres user
 sudo -u postgres psql
 
-# Create database and user
+# Create database
 CREATE DATABASE open_short_url;
-CREATE USER shorturl WITH ENCRYPTED PASSWORD 'your-secure-password';
-GRANT ALL PRIVILEGES ON DATABASE open_short_url TO shorturl;
-\c open_short_url
-GRANT ALL ON SCHEMA public TO shorturl;
 \q
 ```
 
@@ -108,7 +104,7 @@ Edit `apps/backend/.env`:
 
 ```bash
 # Database
-DATABASE_URL="postgresql://shorturl:your-secure-password@localhost:5432/open_short_url"
+DATABASE_URL="postgresql://postgres:your-secure-password@localhost:5432/open_short_url"
 
 # Redis (optional but recommended)
 REDIS_URL="redis://localhost:6379"
@@ -449,7 +445,7 @@ sudo certbot renew --dry-run
 
 ### Tuning for Production
 
-Edit `/etc/postgresql/16/main/postgresql.conf`:
+Edit `/etc/postgresql/17/main/postgresql.conf`:
 
 ```ini
 # Memory
@@ -520,7 +516,7 @@ sudo ufw status
 #!/bin/bash
 # /opt/scripts/health-check.sh
 
-BACKEND_URL="http://localhost:4101/health"
+BACKEND_URL="http://localhost:4101/api"
 FRONTEND_URL="http://localhost:4100"
 
 # Check backend
@@ -580,7 +576,7 @@ DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p $BACKUP_DIR
 
 # Backup PostgreSQL
-pg_dump -U shorturl -h localhost open_short_url | gzip > $BACKUP_DIR/db_$DATE.sql.gz
+pg_dump -U postgres -h localhost open_short_url | gzip > $BACKUP_DIR/db_$DATE.sql.gz
 
 # Backup Redis
 redis-cli BGSAVE
@@ -655,10 +651,10 @@ sudo nginx -t
 
 ```bash
 # Test connection
-psql -U shorturl -h localhost -d open_short_url -c "SELECT 1"
+psql -U postgres -h localhost -d open_short_url -c "SELECT 1"
 
 # Check logs
-sudo tail -f /var/log/postgresql/postgresql-16-main.log
+sudo tail -f /var/log/postgresql/postgresql-17-main.log
 ```
 
 ## Security Checklist

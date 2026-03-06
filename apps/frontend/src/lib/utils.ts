@@ -33,7 +33,15 @@ function getBrowserLocale(): string {
     'ko': 'ko-KR',
   };
 
-  return localeMap[appLocale] || appLocale || 'en-US';
+  const locale = localeMap[appLocale] || appLocale || 'en-US';
+
+  // Validate locale to prevent RangeError during SSR/prerender with placeholder values
+  try {
+    Intl.NumberFormat.supportedLocalesOf(locale);
+    return locale;
+  } catch {
+    return 'en-US';
+  }
 }
 
 /**

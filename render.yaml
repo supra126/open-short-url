@@ -1,0 +1,73 @@
+# ============================================================
+# Open Short URL - Render Blueprint
+# ============================================================
+# Deploy with: https://render.com/deploy
+# ============================================================
+
+databases:
+  - name: open-short-url-db
+    plan: free
+    databaseName: open_short_url
+    ipAllowList: []
+
+services:
+  - type: redis
+    name: open-short-url-redis
+    plan: free
+    maxmemoryPolicy: allkeys-lru
+    ipAllowList: []
+
+  - type: web
+    name: open-short-url-backend
+    plan: free
+    runtime: docker
+    dockerfilePath: apps/backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: open-short-url-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: open-short-url-redis
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4101
+      - key: HOST
+        value: 0.0.0.0
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: ADMIN_INITIAL_PASSWORD
+        generateValue: true
+      - key: SHORT_URL_DOMAIN
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false
+      - key: TRUSTED_PROXY
+        value: "true"
+
+  - type: web
+    name: open-short-url-frontend
+    plan: free
+    runtime: docker
+    dockerfilePath: apps/frontend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /login
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        sync: false
+      - key: NEXT_PUBLIC_SHORT_URL_DOMAIN
+        sync: false
+      - key: NEXT_PUBLIC_LOCALE
+        value: en
+      - key: NEXT_PUBLIC_BRAND_NAME
+        value: Open Short URL

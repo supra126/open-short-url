@@ -323,48 +323,54 @@ Claude：正在生成...
 
 ## 🛠️ 可用工具列表
 
-### URL 管理 (6 個工具)
+### URL 管理 (10 個工具)
 
 1. `create_short_url` - 創建短網址
 2. `list_short_urls` - 列出所有短網址
 3. `get_short_url` - 查詢短網址詳情
 4. `update_short_url` - 更新短網址設定
 5. `delete_short_url` - 刪除短網址
-6. `generate_qrcode` - 生成 QR Code
+6. `get_url_stats` - 取得 URL 儀表板統計
+7. `generate_qrcode` - 生成 QR Code
+8. `bulk_create_urls` - 批量創建短網址（最多 100 個）
+9. `bulk_update_urls` - 批量更新短網址（狀態、Bundle、過期時間、UTM）
+10. `bulk_delete_urls` - 批量刪除短網址
 
 ### Bundle 管理 (12 個工具)
 
-7. `create_bundle` - 創建新的 Bundle
-8. `list_bundles` - 列出所有 Bundle
-9. `get_bundle` - 查詢 Bundle 詳情
-10. `update_bundle` - 更新 Bundle 資訊
-11. `delete_bundle` - 刪除 Bundle
-12. `add_url_to_bundle` - 添加單個 URL 到 Bundle
-13. `add_multiple_urls_to_bundle` - 批量添加 URL 到 Bundle
-14. `remove_url_from_bundle` - 從 Bundle 移除 URL
-15. `update_url_order_in_bundle` - 更新 URL 在 Bundle 中的順序
-16. `get_bundle_stats` - 獲取 Bundle 統計數據
-17. `archive_bundle` - 歸檔 Bundle
-18. `restore_bundle` - 恢復已歸檔的 Bundle
+11. `create_bundle` - 創建新的 Bundle
+12. `list_bundles` - 列出所有 Bundle
+13. `get_bundle` - 查詢 Bundle 詳情
+14. `update_bundle` - 更新 Bundle 資訊
+15. `delete_bundle` - 刪除 Bundle
+16. `add_url_to_bundle` - 添加單個 URL 到 Bundle
+17. `add_multiple_urls_to_bundle` - 批量添加 URL 到 Bundle
+18. `remove_url_from_bundle` - 從 Bundle 移除 URL
+19. `update_url_order_in_bundle` - 更新 URL 在 Bundle 中的順序
+20. `get_bundle_stats` - 獲取 Bundle 統計數據
+21. `archive_bundle` - 歸檔 Bundle
+22. `restore_bundle` - 恢復已歸檔的 Bundle
 
-### 分析數據 (6 個工具)
+### 分析數據 (8 個工具)
 
-19. `get_url_analytics` - 獲取 URL 分析數據
-20. `get_overview_analytics` - 獲取總覽分析
-21. `get_recent_clicks` - 查看最近點擊
-22. `get_bot_analytics` - 單個 URL 的機器人分析
-23. `get_user_bot_analytics` - 全局機器人分析
-24. `get_ab_test_analytics` - A/B 測試分析
+23. `get_url_analytics` - 獲取 URL 分析數據
+24. `get_overview_analytics` - 獲取總覽分析
+25. `get_top_performing_urls` - 獲取點擊量最高的 URL
+26. `get_recent_clicks` - 查看最近點擊
+27. `get_bot_analytics` - 單個 URL 的機器人分析
+28. `get_user_bot_analytics` - 全局機器人分析
+29. `get_ab_test_analytics` - A/B 測試分析
+30. `get_routing_analytics` - 智慧路由統計
 
 ### A/B 測試 (5 個工具)
 
-25. `create_variant` - 創建測試變體
-26. `list_variants` - 列出所有變體
-27. `get_variant` - 查詢變體詳情
-28. `update_variant` - 更新變體設定
-29. `delete_variant` - 刪除變體
+31. `create_variant` - 創建測試變體
+32. `list_variants` - 列出所有變體
+33. `get_variant` - 查詢變體詳情
+34. `update_variant` - 更新變體設定
+35. `delete_variant` - 刪除變體
 
-**總計: 29 個 MCP 工具**
+**總計: 35 個 MCP 工具**
 
 ---
 

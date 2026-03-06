@@ -369,7 +369,7 @@ AI 預設為停用。至少設定一個供應商 API 金鑰即可啟用。
 
 ```bash
 AI_PROVIDER="anthropic"
-AI_MODEL="claude-3-5-sonnet-20241022"
+AI_MODEL="claude-sonnet-4-6"
 ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
@@ -448,7 +448,7 @@ NEXT_PUBLIC_BRAND_NAME="我的短網址"
 # ============================================================
 NEXT_PUBLIC_LOCALE="zh-TW"
 # AI_PROVIDER="anthropic"
-# AI_MODEL="claude-3-5-sonnet-20241022"
+# AI_MODEL="claude-sonnet-4-6"
 # ANTHROPIC_API_KEY=""
 ```
 

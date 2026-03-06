@@ -5,7 +5,7 @@
 ## 前置需求
 
 - Node.js 22+（建議 LTS）
-- pnpm 9+
+- pnpm 10+
 - PostgreSQL 14+
 - Redis 7+（選用，正式環境建議）
 - 反向代理（nginx、Caddy 等）
@@ -87,12 +87,8 @@ pnpm install
 # 切換到 postgres 使用者
 sudo -u postgres psql
 
-# 建立資料庫和使用者
+# 建立資料庫
 CREATE DATABASE open_short_url;
-CREATE USER shorturl WITH ENCRYPTED PASSWORD 'your-secure-password';
-GRANT ALL PRIVILEGES ON DATABASE open_short_url TO shorturl;
-\c open_short_url
-GRANT ALL ON SCHEMA public TO shorturl;
 \q
 ```
 
@@ -108,7 +104,7 @@ cp apps/backend/.env.example apps/backend/.env
 
 ```bash
 # 資料庫
-DATABASE_URL="postgresql://shorturl:your-secure-password@localhost:5432/open_short_url"
+DATABASE_URL="postgresql://postgres:your-secure-password@localhost:5432/open_short_url"
 
 # Redis（選用但建議）
 REDIS_URL="redis://localhost:6379"
@@ -449,7 +445,7 @@ sudo certbot renew --dry-run
 
 ### 正式環境調校
 
-編輯 `/etc/postgresql/16/main/postgresql.conf`：
+編輯 `/etc/postgresql/17/main/postgresql.conf`：
 
 ```ini
 # 記憶體
@@ -520,7 +516,7 @@ sudo ufw status
 #!/bin/bash
 # /opt/scripts/health-check.sh
 
-BACKEND_URL="http://localhost:4101/health"
+BACKEND_URL="http://localhost:4101/api"
 FRONTEND_URL="http://localhost:4100"
 
 # 檢查後端
@@ -580,7 +576,7 @@ DATE=$(date +%Y%m%d_%H%M%S)
 mkdir -p $BACKUP_DIR
 
 # 備份 PostgreSQL
-pg_dump -U shorturl -h localhost open_short_url | gzip > $BACKUP_DIR/db_$DATE.sql.gz
+pg_dump -U postgres -h localhost open_short_url | gzip > $BACKUP_DIR/db_$DATE.sql.gz
 
 # 備份 Redis
 redis-cli BGSAVE
@@ -655,10 +651,10 @@ sudo nginx -t
 
 ```bash
 # 測試連線
-psql -U shorturl -h localhost -d open_short_url -c "SELECT 1"
+psql -U postgres -h localhost -d open_short_url -c "SELECT 1"
 
 # 檢查日誌
-sudo tail -f /var/log/postgresql/postgresql-16-main.log
+sudo tail -f /var/log/postgresql/postgresql-17-main.log
 ```
 
 ## 安全檢查清單

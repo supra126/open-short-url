@@ -77,10 +77,10 @@ npm install -g @open-short-url/mcp
 }
 ```
 
-**Available Tools (29 total):**
-- URL Management: create, list, update, delete, generate QR codes
-- Bundle Management: create collections, add/remove URLs, get statistics
-- Analytics: click tracking, geographic data, device breakdown
+**Available Tools (35 total):**
+- URL Management: create, list, update, delete, generate QR codes, bulk operations, dashboard stats
+- Bundle Management: create collections, add/remove URLs, get statistics, archive/restore
+- Analytics: click tracking, geographic data, device breakdown, top URLs, smart routing stats
 - A/B Testing: create variants, configure traffic allocation
 
 **Resources:**
@@ -92,11 +92,11 @@ npm install -g @open-short-url/mcp
 Manage URLs through conversational AI directly in the web interface.
 
 **Supported Providers:**
-- Anthropic Claude (claude-3-5-sonnet, claude-3-5-haiku)
-- OpenAI GPT (gpt-4o, gpt-4o-mini, gpt-4-turbo)
-- Google Gemini (gemini-2.0-flash-exp, gemini-1.5-pro)
-- Mistral (mistral-large-latest, mistral-medium)
-- Cohere (command-r-plus, command-r)
+- Anthropic Claude (claude-sonnet-4-6, claude-opus-4-6, claude-haiku-4-5)
+- OpenAI GPT (gpt-5.2, gpt-4o, gpt-4o-mini)
+- Google Gemini (gemini-3.1-pro, gemini-3.1-flash)
+- Mistral (mistral-large-latest, mistral-small-latest)
+- Cohere (command-a)
 
 ---
 

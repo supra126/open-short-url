@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { t } from '@/lib/i18n';
-import { formatDate, formatNumber, formatShortDate } from '@/lib/utils';
+import { copyToClipboard, formatDate, formatNumber, formatShortDate } from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -198,11 +198,13 @@ export default function BundleDetailPage() {
   };
 
   const handleCopyShortUrl = async (shortUrl: string) => {
-    await navigator.clipboard.writeText(shortUrl);
-    toast({
-      title: t('common.copied'),
-      description: t('urls.shortUrlCopied'),
-    });
+    const success = await copyToClipboard(shortUrl);
+    if (success) {
+      toast({
+        title: t('common.copied'),
+        description: t('urls.shortUrlCopied'),
+      });
+    }
   };
 
   if (error) {
@@ -362,7 +364,7 @@ export default function BundleDetailPage() {
                 />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
-                  labelFormatter={(value: string | number) => {
+                  labelFormatter={(value) => {
                     return formatDate(String(value));
                   }}
                 />

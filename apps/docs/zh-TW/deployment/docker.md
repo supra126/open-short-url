@@ -9,7 +9,135 @@
 - 建議 2GB+ RAM
 - 網域名稱（正式環境）
 
-## 快速開始
+## 架構概覽
+
+整個服務由四個容器組成：
+
+| 服務 | 說明 | 連接埠 |
+|------|------|--------|
+| **frontend** | Next.js 前端應用 | 4100 |
+| **backend** | NestJS 後端 API | 4101 |
+| **postgres** | PostgreSQL 17-alpine 資料庫 | 5432 |
+| **redis** | Redis 7-alpine 快取 | 6379 |
+
+後端容器啟動時會自動執行 `prisma migrate deploy` 和 `seed-if-empty`，無需手動執行資料庫遷移或建立管理員帳號。
+
+## 部署方式
+
+有兩種部署方式可選：
+
+1. **從原始碼建置** - 使用專案內建的 `docker-compose.yml`，從原始碼建置映像檔
+2. **使用預建映像檔** - 使用 GHCR 上的預建映像檔，適合快速部署
+
+---
+
+## 方式一：從原始碼建置
+
+### 1. 取得原始碼
+
+```bash
+git clone https://github.com/supra126/open-short-url.git
+cd open-short-url
+```
+
+### 2. 建立環境設定檔
+
+```bash
+cp .env.docker.example .env.docker
+```
+
+編輯 `.env.docker`，至少修改以下必要設定：
+
+```bash
+# ============================
+# 基礎設施
+# ============================
+
+# PostgreSQL
+POSTGRES_DB=open_short_url
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=changeme-strong-password
+POSTGRES_PORT=5432
+
+# Redis（留空表示不設定密碼）
+REDIS_PASSWORD=
+REDIS_PORT=6379
+
+# 連接埠對應
+BACKEND_PORT=4101
+FRONTEND_PORT=4100
+
+# ============================
+# 後端
+# ============================
+
+NODE_ENV=production
+PORT=4101
+HOST=0.0.0.0
+
+# [必填] JWT 密鑰 - 使用以下指令產生: openssl rand -base64 32
+JWT_SECRET=changeme-generate-a-strong-secret
+JWT_EXPIRES_IN=7d
+
+# [必填] 初始管理員密碼
+ADMIN_INITIAL_PASSWORD=changeme-strong-admin-password
+
+# [必填] 短網址網域（使用者看到的短網址網域）
+SHORT_URL_DOMAIN=https://example.com
+
+# [必填] 前端 URL（管理後台的網址）
+FRONTEND_URL=https://app.example.com
+
+# [必填] CORS 允許來源（通常與 FRONTEND_URL 相同）
+CORS_ORIGIN=https://app.example.com
+
+# Cookie 網域（跨子網域認證，例如 .example.com）
+COOKIE_DOMAIN=
+
+# 信任代理（若在 nginx/cloudflare 後方請設為 true）
+TRUSTED_PROXY=true
+
+# ============================
+# 前端
+# ============================
+
+# 從原始碼建置時作為 build args；使用預建映像檔時會在啟動時自動替換
+NEXT_PUBLIC_API_URL=https://example.com
+NEXT_PUBLIC_SHORT_URL_DOMAIN=https://example.com
+NEXT_PUBLIC_LOCALE=en
+NEXT_PUBLIC_BRAND_NAME=Open Short URL
+NEXT_PUBLIC_BRAND_ICON_URL=
+NEXT_PUBLIC_BRAND_DESCRIPTION=
+NEXT_PUBLIC_TURNSTILE_SITE_KEY=
+```
+
+### 3. 啟動服務
+
+```bash
+docker compose up -d
+```
+
+這就完成了。後端會自動執行資料庫遷移並建立初始管理員帳號。
+
+### 4. 驗證服務
+
+```bash
+# 檢查所有服務狀態
+docker compose ps
+
+# 查看後端日誌確認啟動成功
+docker compose logs backend
+```
+
+服務就緒後即可存取：
+- 前端：`http://localhost:4100`
+- 後端 API：`http://localhost:4101`
+
+---
+
+## 方式二：使用預建 GHCR 映像檔
+
+如果不想從原始碼建置，可以直接使用預建映像檔。映像檔支援 `linux/amd64` 和 `linux/arm64` 雙平台。
 
 ### 1. 建立專案目錄
 
@@ -21,128 +149,179 @@ mkdir open-short-url && cd open-short-url
 
 ```yaml
 # docker-compose.yml
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:16-alpine
-    container_name: shorturl-db
+    image: postgres:17-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: shorturl
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-your-secure-password}
-      POSTGRES_DB: open_short_url
+      POSTGRES_DB: ${POSTGRES_DB:-open_short_url}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U shorturl -d open_short_url"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
       timeout: 5s
       retries: 5
 
   redis:
     image: redis:7-alpine
-    container_name: shorturl-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes
+    command: >
+      sh -c '
+        if [ -n "$REDIS_PASSWORD" ]; then
+          redis-server --requirepass "$REDIS_PASSWORD"
+        else
+          redis-server
+        fi
+      '
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
     volumes:
       - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
       retries: 5
 
   backend:
     image: ghcr.io/supra126/open-short-url-backend:latest
-    container_name: shorturl-backend
     restart: unless-stopped
+    env_file:
+      - path: .env.docker
+        required: false
     environment:
-      NODE_ENV: production
-      DATABASE_URL: postgresql://shorturl:${DB_PASSWORD:-your-secure-password}@postgres:5432/open_short_url
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-secure-secret}
-      JWT_EXPIRES_IN: 7d
-      CORS_ORIGIN: ${CORS_ORIGIN:-https://your-domain.com}
-      SHORT_URL_DOMAIN: ${SHORT_URL_DOMAIN:-https://s.your-domain.com}
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 4101
+      HOST: 0.0.0.0
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-open_short_url}?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-}
+      JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD:-admin123}
+      SHORT_URL_DOMAIN: ${SHORT_URL_DOMAIN:-http://localhost:4101}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4100}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4100}
+      TRUSTED_PROXY: ${TRUSTED_PROXY:-true}
     ports:
-      - "4101:4101"
+      - "${BACKEND_PORT:-4101}:4101"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4101/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
 
   frontend:
     image: ghcr.io/supra126/open-short-url-frontend:latest
-    container_name: shorturl-frontend
     restart: unless-stopped
     environment:
-      NEXT_PUBLIC_API_URL: ${API_URL:-http://localhost:4101}
-      NEXT_PUBLIC_SHORT_URL_DOMAIN: ${SHORT_URL_DOMAIN:-https://s.your-domain.com}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4101}
+      NEXT_PUBLIC_SHORT_URL_DOMAIN: ${NEXT_PUBLIC_SHORT_URL_DOMAIN:-http://localhost:4101}
+      NEXT_PUBLIC_LOCALE: ${NEXT_PUBLIC_LOCALE:-en}
+      NEXT_PUBLIC_BRAND_NAME: ${NEXT_PUBLIC_BRAND_NAME:-Open Short URL}
+      NEXT_PUBLIC_BRAND_ICON_URL: ${NEXT_PUBLIC_BRAND_ICON_URL:-}
+      NEXT_PUBLIC_BRAND_DESCRIPTION: ${NEXT_PUBLIC_BRAND_DESCRIPTION:-}
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
     ports:
-      - "4100:4100"
+      - "${FRONTEND_PORT:-4100}:4100"
     depends_on:
       - backend
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:4100"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   postgres_data:
-    driver: local
   redis_data:
-    driver: local
 ```
 
-### 3. 建立環境檔案
+::: tip 執行時期環境變數替換
+預建映像檔支援執行時期環境變數替換。上方列出的 `NEXT_PUBLIC_*` 變數會在容器啟動時自動注入，無需重新建置映像檔。只需在 `.env.docker` 或 `environment` 區塊中設定即可。
+:::
 
-```bash
-# .env
-DB_PASSWORD=your-secure-database-password
-JWT_SECRET=your-32-character-secret-key-here
-CORS_ORIGIN=https://your-domain.com
-SHORT_URL_DOMAIN=https://s.your-domain.com
-API_URL=https://api.your-domain.com
-```
+### 3. 建立環境設定檔
+
+建立 `.env.docker` 檔案，內容參照方式一的環境設定。
 
 ### 4. 啟動服務
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
-### 5. 執行資料庫遷移
+---
+
+## 本地開發模式
+
+專案提供 `docker-compose.dev.yml`，僅啟動 PostgreSQL 和 Redis，讓你在本地用 `pnpm dev` 開發應用程式。
 
 ```bash
-docker-compose exec backend npx prisma migrate deploy
+# 啟動資料庫和快取
+docker compose -f docker-compose.dev.yml up -d
+
+# 安裝依賴並啟動開發伺服器
+pnpm install
+pnpm dev
 ```
 
-### 6. 建立管理員帳號
+`docker-compose.dev.yml` 預設使用以下設定：
+- PostgreSQL：`postgres:postgres@localhost:5432/open_short_url`
+- Redis：`localhost:6379`（無密碼）
 
-```bash
-docker-compose exec backend npx prisma db seed
-```
+---
 
 ## 正式環境設定
 
-### 環境變數
+### 環境變數一覽
+
+#### 基礎設施
+
+| 變數 | 說明 | 預設值 |
+|------|------|--------|
+| `POSTGRES_DB` | 資料庫名稱 | `open_short_url` |
+| `POSTGRES_USER` | 資料庫使用者 | `postgres` |
+| `POSTGRES_PASSWORD` | 資料庫密碼 | `postgres` |
+| `REDIS_PASSWORD` | Redis 密碼（留空表示無密碼） | （空） |
+
+#### 後端（必填）
 
 | 變數 | 說明 | 範例 |
-|-----|------|------|
-| `DB_PASSWORD` | 資料庫密碼 | `secure-password-123` |
-| `JWT_SECRET` | JWT 簽名密鑰（32+ 字元） | `your-secret-key` |
-| `CORS_ORIGIN` | 允許的 CORS 來源 | `https://your-domain.com` |
-| `SHORT_URL_DOMAIN` | 短網址網域 | `https://s.your-domain.com` |
-| `API_URL` | 後端 API URL | `https://api.your-domain.com` |
+|------|------|------|
+| `JWT_SECRET` | JWT 簽名密鑰 | `openssl rand -base64 32` |
+| `ADMIN_INITIAL_PASSWORD` | 初始管理員密碼 | `your-strong-password` |
+| `SHORT_URL_DOMAIN` | 短網址網域 | `https://s.example.com` |
+| `FRONTEND_URL` | 前端 URL | `https://app.example.com` |
+| `CORS_ORIGIN` | CORS 允許來源 | `https://app.example.com` |
+
+#### 後端（選填）
+
+| 變數 | 說明 | 預設值 |
+|------|------|--------|
+| `JWT_EXPIRES_IN` | JWT 過期時間 | `7d` |
+| `COOKIE_DOMAIN` | Cookie 網域 | （空） |
+| `TRUSTED_PROXY` | 是否在反向代理後方 | `true` |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile 密鑰 | （空） |
+| `THROTTLE_TTL` | 速率限制時間窗口（秒） | `60` |
+| `THROTTLE_LIMIT` | 速率限制次數 | `10` |
+
+#### 前端
+
+這些變數用於設定 Next.js 前端。從原始碼建置時，它們作為 Docker build args 傳入。使用預建 GHCR 映像檔時，容器啟動時會透過 entrypoint 腳本自動替換，無需重新建置。
+
+| 變數 | 說明 | 預設值 |
+|------|------|--------|
+| `NEXT_PUBLIC_API_URL` | 後端 API 位址 | `http://localhost:4101` |
+| `NEXT_PUBLIC_SHORT_URL_DOMAIN` | 短網址網域 | `http://localhost:4101` |
+| `NEXT_PUBLIC_LOCALE` | 介面語言 | `en` |
+| `NEXT_PUBLIC_BRAND_NAME` | 品牌名稱 | `Open Short URL` |
+| `NEXT_PUBLIC_BRAND_ICON_URL` | 品牌圖示 URL | （空） |
+| `NEXT_PUBLIC_BRAND_DESCRIPTION` | 品牌描述 | （空） |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile 站點金鑰 | （空） |
 
 ### 產生安全密鑰
 
@@ -211,9 +390,6 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-
-        # CORS 標頭（如後端未處理）
-        # add_header Access-Control-Allow-Origin $http_origin;
     }
 }
 
@@ -246,8 +422,6 @@ server {
 
 ```yaml
 # docker-compose.traefik.yml
-version: '3.8'
-
 services:
   traefik:
     image: traefik:v3.0
@@ -348,35 +522,32 @@ services:
 
 ```bash
 # 擴展後端服務
-docker-compose up -d --scale backend=3
+docker compose up -d --scale backend=3
 ```
 
 ## 監控
 
-### 健康檢查
+### 服務狀態檢查
 
 ```bash
 # 檢查所有服務
-docker-compose ps
-
-# 檢查後端健康
-curl http://localhost:4101/health
+docker compose ps
 
 # 檢查資料庫連線
-docker-compose exec postgres pg_isready -U shorturl
+docker compose exec postgres pg_isready -U postgres
 ```
 
 ### 日誌
 
 ```bash
 # 查看所有日誌
-docker-compose logs -f
+docker compose logs -f
 
 # 查看特定服務日誌
-docker-compose logs -f backend
+docker compose logs -f backend
 
 # 查看最後 100 行
-docker-compose logs --tail=100 backend
+docker compose logs --tail=100 backend
 ```
 
 ### 日誌輪替
@@ -397,13 +568,13 @@ services:
 
 ```bash
 # 建立備份
-docker-compose exec postgres pg_dump -U shorturl open_short_url > backup_$(date +%Y%m%d).sql
+docker compose exec postgres pg_dump -U postgres open_short_url > backup_$(date +%Y%m%d).sql
 
 # 自動備份腳本
 #!/bin/bash
 BACKUP_DIR=/path/to/backups
 DATE=$(date +%Y%m%d_%H%M%S)
-docker-compose exec -T postgres pg_dump -U shorturl open_short_url | gzip > $BACKUP_DIR/backup_$DATE.sql.gz
+docker compose exec -T postgres pg_dump -U postgres open_short_url | gzip > $BACKUP_DIR/backup_$DATE.sql.gz
 
 # 保留最近 7 天
 find $BACKUP_DIR -name "backup_*.sql.gz" -mtime +7 -delete
@@ -413,43 +584,53 @@ find $BACKUP_DIR -name "backup_*.sql.gz" -mtime +7 -delete
 
 ```bash
 # 從備份還原
-cat backup_20250115.sql | docker-compose exec -T postgres psql -U shorturl open_short_url
+cat backup_20250115.sql | docker compose exec -T postgres psql -U postgres open_short_url
 
 # 從壓縮備份還原
-gunzip -c backup_20250115.sql.gz | docker-compose exec -T postgres psql -U shorturl open_short_url
+gunzip -c backup_20250115.sql.gz | docker compose exec -T postgres psql -U postgres open_short_url
 ```
 
 ### Redis 備份
 
 ```bash
 # 建立快照
-docker-compose exec redis redis-cli BGSAVE
+docker compose exec redis redis-cli BGSAVE
 
 # 複製備份檔案
-docker cp shorturl-redis:/data/dump.rdb ./redis_backup.rdb
+docker compose cp redis:/data/dump.rdb ./redis_backup.rdb
 ```
 
 ## 更新
 
-### 更新至最新版本
+### 從原始碼建置方式更新
+
+```bash
+# 拉取最新原始碼
+git pull
+
+# 重新建置並啟動
+docker compose up -d --build
+```
+
+後端啟動時會自動執行資料庫遷移，無需手動操作。
+
+### 使用預建映像檔方式更新
 
 ```bash
 # 拉取最新映像檔
-docker-compose pull
+docker compose pull
 
 # 使用新映像檔重啟
-docker-compose up -d
-
-# 如需要執行遷移
-docker-compose exec backend npx prisma migrate deploy
+docker compose up -d
 ```
 
 ### 回滾
 
 ```bash
-# 使用特定版本
-docker-compose pull ghcr.io/supra126/open-short-url-backend:v1.0.0
-docker-compose up -d
+# 使用特定版本的映像檔
+docker pull ghcr.io/supra126/open-short-url-backend:v1.0.0
+docker pull ghcr.io/supra126/open-short-url-frontend:v1.0.0
+docker compose up -d
 ```
 
 ## 疑難排解
@@ -459,19 +640,19 @@ docker-compose up -d
 **容器無法啟動：**
 ```bash
 # 檢查日誌
-docker-compose logs backend
+docker compose logs backend
 
 # 檢查容器狀態
-docker-compose ps
+docker compose ps
 ```
 
 **資料庫連線失敗：**
 ```bash
 # 檢查 postgres 是否健康
-docker-compose exec postgres pg_isready -U shorturl
+docker compose exec postgres pg_isready -U postgres
 
 # 從後端檢查連線
-docker-compose exec backend nc -zv postgres 5432
+docker compose exec backend nc -zv postgres 5432
 ```
 
 **權限被拒：**
@@ -484,24 +665,24 @@ sudo chown -R 1000:1000 ./data
 
 ```bash
 # 停止所有容器
-docker-compose down
+docker compose down
 
 # 移除 volumes（警告：會刪除所有資料）
-docker-compose down -v
+docker compose down -v
 
 # 重新開始
-docker-compose up -d
+docker compose up -d
 ```
 
 ## 安全檢查清單
 
-- [ ] 變更預設資料庫密碼
-- [ ] 產生強 JWT 密鑰
+- [ ] 變更預設資料庫密碼（`POSTGRES_PASSWORD`）
+- [ ] 產生強 JWT 密鑰（`JWT_SECRET`）
+- [ ] 設定安全的管理員初始密碼（`ADMIN_INITIAL_PASSWORD`）
 - [ ] 啟用 HTTPS 並使用有效憑證
-- [ ] 設定防火牆規則
+- [ ] 設定防火牆規則（僅開放 80/443 連接埠）
 - [ ] 設定定期備份
 - [ ] 啟用日誌輪替
-- [ ] 在容器中使用非 root 使用者
 - [ ] 保持映像檔更新
 
 ## 下一步

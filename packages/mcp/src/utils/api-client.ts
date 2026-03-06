@@ -8,11 +8,23 @@ import type {
   UpdateUrlRequest,
   UrlResponse,
   UrlListResponse,
+  UrlStatsResponse,
+  BulkCreateUrlRequest,
+  BulkCreateResultResponse,
+  BulkUpdateUrlRequest,
+  BulkUpdateResultResponse,
+  BulkDeleteUrlRequest,
+  BulkDeleteResultResponse,
   CreateVariantRequest,
   UpdateVariantRequest,
   VariantResponse,
   AnalyticsResponse,
   RecentClicksResponse,
+  BotAnalyticsResponse,
+  UserBotAnalyticsResponse,
+  AbTestAnalyticsResponse,
+  TopPerformingUrl,
+  RoutingAnalyticsResponse,
   QRCodeResponse,
   CreateBundleRequest,
   UpdateBundleRequest,
@@ -22,6 +34,12 @@ import type {
   AddUrlToBundleRequest,
   AddMultipleUrlsRequest,
 } from '../types/api.js';
+
+interface AnalyticsQueryParams {
+  startDate?: string;
+  endDate?: string;
+  timezone?: string;
+}
 
 export class ApiClient {
   private baseUrl: string;
@@ -89,11 +107,23 @@ export class ApiClient {
     return response.json() as Promise<T>;
   }
 
+  /**
+   * Build query string from params object
+   */
+  private buildQuery(params?: Record<string, unknown> | object): string {
+    if (!params) return '';
+    const queryParams = new URLSearchParams();
+    for (const [key, value] of Object.entries(params as Record<string, unknown>)) {
+      if (value !== undefined && value !== null) {
+        queryParams.set(key, String(value));
+      }
+    }
+    const query = queryParams.toString();
+    return query ? `?${query}` : '';
+  }
+
   // ==================== URL Management ====================
 
-  /**
-   * Create a short URL
-   */
   async createUrl(data: CreateUrlRequest): Promise<UrlResponse> {
     return this.request<UrlResponse>('/api/urls', {
       method: 'POST',
@@ -101,9 +131,6 @@ export class ApiClient {
     });
   }
 
-  /**
-   * List all short URLs
-   */
   async listUrls(params?: {
     page?: number;
     pageSize?: number;
@@ -112,31 +139,13 @@ export class ApiClient {
     sortBy?: string;
     sortOrder?: 'asc' | 'desc';
   }): Promise<UrlListResponse> {
-    const queryParams = new URLSearchParams();
-
-    if (params?.page) queryParams.set('page', params.page.toString());
-    if (params?.pageSize) queryParams.set('pageSize', params.pageSize.toString());
-    if (params?.search) queryParams.set('search', params.search);
-    if (params?.status) queryParams.set('status', params.status);
-    if (params?.sortBy) queryParams.set('sortBy', params.sortBy);
-    if (params?.sortOrder) queryParams.set('sortOrder', params.sortOrder);
-
-    const query = queryParams.toString();
-    return this.request<UrlListResponse>(
-      `/api/urls${query ? '?' + query : ''}`
-    );
+    return this.request<UrlListResponse>(`/api/urls${this.buildQuery(params)}`);
   }
 
-  /**
-   * Get a single short URL
-   */
   async getUrl(id: string): Promise<UrlResponse> {
     return this.request<UrlResponse>(`/api/urls/${id}`);
   }
 
-  /**
-   * Update a short URL
-   */
   async updateUrl(id: string, data: UpdateUrlRequest): Promise<UrlResponse> {
     return this.request<UrlResponse>(`/api/urls/${id}`, {
       method: 'PUT',
@@ -144,37 +153,50 @@ export class ApiClient {
     });
   }
 
-  /**
-   * Delete a short URL
-   */
   async deleteUrl(id: string): Promise<void> {
     return this.request<void>(`/api/urls/${id}`, {
       method: 'DELETE',
     });
   }
 
-  /**
-   * Generate QR code
-   */
+  async getUrlStats(): Promise<UrlStatsResponse> {
+    return this.request<UrlStatsResponse>('/api/urls/stats');
+  }
+
   async generateQRCode(
     id: string,
     options?: { width?: number; color?: string }
   ): Promise<QRCodeResponse> {
-    const queryParams = new URLSearchParams();
-    if (options?.width) queryParams.set('width', options.width.toString());
-    if (options?.color) queryParams.set('color', options.color);
-
-    const query = queryParams.toString();
     return this.request<QRCodeResponse>(
-      `/api/urls/${id}/qrcode${query ? '?' + query : ''}`
+      `/api/urls/${id}/qrcode${this.buildQuery(options)}`
     );
+  }
+
+  // ==================== Bulk Operations ====================
+
+  async bulkCreateUrls(data: BulkCreateUrlRequest): Promise<BulkCreateResultResponse> {
+    return this.request<BulkCreateResultResponse>('/api/urls/bulk', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async bulkUpdateUrls(data: BulkUpdateUrlRequest): Promise<BulkUpdateResultResponse> {
+    return this.request<BulkUpdateResultResponse>('/api/urls/bulk', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async bulkDeleteUrls(data: BulkDeleteUrlRequest): Promise<BulkDeleteResultResponse> {
+    return this.request<BulkDeleteResultResponse>('/api/urls/bulk', {
+      method: 'DELETE',
+      body: JSON.stringify(data),
+    });
   }
 
   // ==================== A/B Testing Variant Management ====================
 
-  /**
-   * Create a variant
-   */
   async createVariant(
     urlId: string,
     data: CreateVariantRequest
@@ -185,27 +207,18 @@ export class ApiClient {
     });
   }
 
-  /**
-   * List all variants
-   */
   async listVariants(urlId: string): Promise<{ data: VariantResponse[] }> {
     return this.request<{ data: VariantResponse[] }>(
       `/api/urls/${urlId}/variants`
     );
   }
 
-  /**
-   * Get a single variant
-   */
   async getVariant(urlId: string, variantId: string): Promise<VariantResponse> {
     return this.request<VariantResponse>(
       `/api/urls/${urlId}/variants/${variantId}`
     );
   }
 
-  /**
-   * Update a variant
-   */
   async updateVariant(
     urlId: string,
     variantId: string,
@@ -220,9 +233,6 @@ export class ApiClient {
     );
   }
 
-  /**
-   * Delete a variant
-   */
   async deleteVariant(urlId: string, variantId: string): Promise<void> {
     return this.request<void>(`/api/urls/${urlId}/variants/${variantId}`, {
       method: 'DELETE',
@@ -231,131 +241,76 @@ export class ApiClient {
 
   // ==================== Analytics ====================
 
-  /**
-   * Get URL analytics
-   */
   async getUrlAnalytics(
     urlId: string,
-    params?: {
-      startDate?: string;
-      endDate?: string;
-      timezone?: string;
-    }
+    params?: AnalyticsQueryParams
   ): Promise<AnalyticsResponse> {
-    const queryParams = new URLSearchParams();
-    if (params?.startDate) queryParams.set('startDate', params.startDate);
-    if (params?.endDate) queryParams.set('endDate', params.endDate);
-    if (params?.timezone) queryParams.set('timezone', params.timezone);
-
-    const query = queryParams.toString();
     return this.request<AnalyticsResponse>(
-      `/api/analytics/urls/${urlId}${query ? '?' + query : ''}`
+      `/api/analytics/urls/${urlId}${this.buildQuery(params)}`
     );
   }
 
-  /**
-   * Get overview analytics for all URLs
-   */
-  async getOverviewAnalytics(params?: {
-    startDate?: string;
-    endDate?: string;
-    timezone?: string;
-  }): Promise<AnalyticsResponse> {
-    const queryParams = new URLSearchParams();
-    if (params?.startDate) queryParams.set('startDate', params.startDate);
-    if (params?.endDate) queryParams.set('endDate', params.endDate);
-    if (params?.timezone) queryParams.set('timezone', params.timezone);
-
-    const query = queryParams.toString();
+  async getOverviewAnalytics(
+    params?: AnalyticsQueryParams
+  ): Promise<AnalyticsResponse> {
     return this.request<AnalyticsResponse>(
-      `/api/analytics/overview${query ? '?' + query : ''}`
+      `/api/analytics/overview${this.buildQuery(params)}`
     );
   }
 
-  /**
-   * Get recent clicks
-   */
+  async getTopPerformingUrls(
+    params?: AnalyticsQueryParams & { limit?: number }
+  ): Promise<TopPerformingUrl[]> {
+    return this.request<TopPerformingUrl[]>(
+      `/api/analytics/top-urls${this.buildQuery(params)}`
+    );
+  }
+
   async getRecentClicks(
     urlId: string,
     params?: { limit?: number; includeBots?: boolean }
   ): Promise<RecentClicksResponse> {
-    const queryParams = new URLSearchParams();
-    if (params?.limit) queryParams.set('limit', params.limit.toString());
-    if (params?.includeBots !== undefined) {
-      queryParams.set('includeBots', params.includeBots.toString());
-    }
-
-    const query = queryParams.toString();
     return this.request<RecentClicksResponse>(
-      `/api/analytics/urls/${urlId}/recent-clicks${query ? '?' + query : ''}`
+      `/api/analytics/urls/${urlId}/recent-clicks${this.buildQuery(params)}`
     );
   }
 
-  /**
-   * Get bot analytics
-   */
   async getBotAnalytics(
     urlId: string,
-    params?: {
-      startDate?: string;
-      endDate?: string;
-      timezone?: string;
-    }
-  ): Promise<any> {
-    const queryParams = new URLSearchParams();
-    if (params?.startDate) queryParams.set('startDate', params.startDate);
-    if (params?.endDate) queryParams.set('endDate', params.endDate);
-    if (params?.timezone) queryParams.set('timezone', params.timezone);
-
-    const query = queryParams.toString();
-    return this.request<any>(
-      `/api/analytics/urls/${urlId}/bots${query ? '?' + query : ''}`
+    params?: AnalyticsQueryParams
+  ): Promise<BotAnalyticsResponse> {
+    return this.request<BotAnalyticsResponse>(
+      `/api/analytics/urls/${urlId}/bots${this.buildQuery(params)}`
     );
   }
 
-  /**
-   * Get bot analytics for all URLs
-   */
-  async getUserBotAnalytics(params?: {
-    startDate?: string;
-    endDate?: string;
-    timezone?: string;
-  }): Promise<any> {
-    const queryParams = new URLSearchParams();
-    if (params?.startDate) queryParams.set('startDate', params.startDate);
-    if (params?.endDate) queryParams.set('endDate', params.endDate);
-    if (params?.timezone) queryParams.set('timezone', params.timezone);
-
-    const query = queryParams.toString();
-    return this.request<any>(
-      `/api/analytics/bots${query ? '?' + query : ''}`
+  async getUserBotAnalytics(
+    params?: AnalyticsQueryParams
+  ): Promise<UserBotAnalyticsResponse> {
+    return this.request<UserBotAnalyticsResponse>(
+      `/api/analytics/bots${this.buildQuery(params)}`
     );
   }
 
-  /**
-   * Get A/B test analytics
-   */
-  async getAbTestAnalytics(params?: {
-    startDate?: string;
-    endDate?: string;
-    timezone?: string;
-  }): Promise<any> {
-    const queryParams = new URLSearchParams();
-    if (params?.startDate) queryParams.set('startDate', params.startDate);
-    if (params?.endDate) queryParams.set('endDate', params.endDate);
-    if (params?.timezone) queryParams.set('timezone', params.timezone);
+  async getAbTestAnalytics(
+    params?: AnalyticsQueryParams
+  ): Promise<AbTestAnalyticsResponse> {
+    return this.request<AbTestAnalyticsResponse>(
+      `/api/analytics/ab-tests${this.buildQuery(params)}`
+    );
+  }
 
-    const query = queryParams.toString();
-    return this.request<any>(
-      `/api/analytics/ab-tests${query ? '?' + query : ''}`
+  async getRoutingAnalytics(
+    urlId: string,
+    params?: AnalyticsQueryParams
+  ): Promise<RoutingAnalyticsResponse> {
+    return this.request<RoutingAnalyticsResponse>(
+      `/api/analytics/urls/${urlId}/routing${this.buildQuery(params)}`
     );
   }
 
   // ==================== Bundle Management ====================
 
-  /**
-   * Create a bundle
-   */
   async createBundle(data: CreateBundleRequest): Promise<BundleResponse> {
     return this.request<BundleResponse>('/api/bundles', {
       method: 'POST',
@@ -363,38 +318,21 @@ export class ApiClient {
     });
   }
 
-  /**
-   * List all bundles
-   */
   async listBundles(params?: {
     page?: number;
     pageSize?: number;
     status?: string;
     search?: string;
   }): Promise<BundleListResponse> {
-    const queryParams = new URLSearchParams();
-
-    if (params?.page) queryParams.set('page', params.page.toString());
-    if (params?.pageSize) queryParams.set('pageSize', params.pageSize.toString());
-    if (params?.status) queryParams.set('status', params.status);
-    if (params?.search) queryParams.set('search', params.search);
-
-    const query = queryParams.toString();
     return this.request<BundleListResponse>(
-      `/api/bundles${query ? '?' + query : ''}`
+      `/api/bundles${this.buildQuery(params)}`
     );
   }
 
-  /**
-   * Get a single bundle
-   */
   async getBundle(id: string): Promise<BundleResponse> {
     return this.request<BundleResponse>(`/api/bundles/${id}`);
   }
 
-  /**
-   * Update a bundle
-   */
   async updateBundle(id: string, data: UpdateBundleRequest): Promise<BundleResponse> {
     return this.request<BundleResponse>(`/api/bundles/${id}`, {
       method: 'PUT',
@@ -402,18 +340,12 @@ export class ApiClient {
     });
   }
 
-  /**
-   * Delete a bundle
-   */
   async deleteBundle(id: string): Promise<void> {
     return this.request<void>(`/api/bundles/${id}`, {
       method: 'DELETE',
     });
   }
 
-  /**
-   * Add a URL to bundle
-   */
   async addUrlToBundle(
     bundleId: string,
     data: AddUrlToBundleRequest
@@ -424,9 +356,6 @@ export class ApiClient {
     });
   }
 
-  /**
-   * Add multiple URLs to bundle
-   */
   async addMultipleUrlsToBundle(
     bundleId: string,
     data: AddMultipleUrlsRequest
@@ -437,18 +366,12 @@ export class ApiClient {
     });
   }
 
-  /**
-   * Remove URL from bundle
-   */
   async removeUrlFromBundle(bundleId: string, urlId: string): Promise<BundleResponse> {
     return this.request<BundleResponse>(`/api/bundles/${bundleId}/urls/${urlId}`, {
       method: 'DELETE',
     });
   }
 
-  /**
-   * Update URL order in bundle
-   */
   async updateUrlOrder(
     bundleId: string,
     urlId: string,
@@ -463,28 +386,19 @@ export class ApiClient {
     );
   }
 
-  /**
-   * Get bundle statistics
-   */
   async getBundleStats(bundleId: string): Promise<BundleStatsResponse> {
     return this.request<BundleStatsResponse>(`/api/bundles/${bundleId}/stats`);
   }
 
-  /**
-   * Archive a bundle
-   */
   async archiveBundle(bundleId: string): Promise<BundleResponse> {
     return this.request<BundleResponse>(`/api/bundles/${bundleId}/archive`, {
-      method: 'PATCH',
+      method: 'POST',
     });
   }
 
-  /**
-   * Restore a bundle
-   */
   async restoreBundle(bundleId: string): Promise<BundleResponse> {
     return this.request<BundleResponse>(`/api/bundles/${bundleId}/restore`, {
-      method: 'PATCH',
+      method: 'POST',
     });
   }
 }

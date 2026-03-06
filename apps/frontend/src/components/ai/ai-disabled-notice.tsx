@@ -92,7 +92,7 @@ export function AIDisabledNotice() {
           <div className="bg-muted p-4 rounded-lg font-mono text-sm">
             <div className="mb-2 text-muted-foreground"># .env</div>
             <div>AI_PROVIDER=anthropic</div>
-            <div>AI_MODEL=claude-3-5-sonnet-20241022</div>
+            <div>AI_MODEL=claude-sonnet-4-6</div>
             <div>ANTHROPIC_API_KEY=sk-ant-your-api-key-here</div>
           </div>
         </div>

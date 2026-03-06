@@ -32,12 +32,13 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     private configService: ConfigService,
     private loggerService: LoggerService,
   ) {
-    // Check if Redis is configured
+    // Check if Redis is configured (REDIS_URL or REDIS_HOST)
+    const redisUrl = this.configService.get<string>('REDIS_URL');
     const redisHost = this.configService.get<string>('REDIS_HOST');
 
-    if (!redisHost) {
+    if (!redisUrl && !redisHost) {
       this.loggerService.log(
-        '📝 Redis not configured (REDIS_HOST not set) - caching disabled',
+        '📝 Redis not configured (REDIS_URL/REDIS_HOST not set) - caching disabled',
         'CacheService',
       );
       this.redisConfigured = false;
@@ -46,21 +47,28 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     }
 
     this.redisConfigured = true;
-    this.redis = new Redis({
-      host: redisHost,
-      port: this.configService.get<number>('REDIS_PORT', 6379),
-      password: this.configService.get<string>('REDIS_PASSWORD'),
-      db: this.configService.get<number>('REDIS_DB', 0),
+
+    const commonOptions = {
       maxRetriesPerRequest: 3,
-      retryStrategy: (times) => {
+      retryStrategy: (times: number) => {
         const delay = Math.min(times * 50, 2000);
         return delay;
       },
       lazyConnect: true,
-      keepAlive: 45000, // 45 seconds - offset from health check (65s) to avoid timing collision
-      connectTimeout: 5000, // Add connection timeout
-      commandTimeout: 5000, // Add command timeout
-    });
+      keepAlive: 45000,
+      connectTimeout: 5000,
+      commandTimeout: 5000,
+    };
+
+    this.redis = redisUrl
+      ? new Redis(redisUrl, commonOptions)
+      : new Redis({
+          host: redisHost,
+          port: this.configService.get<number>('REDIS_PORT', 6379),
+          password: this.configService.get<string>('REDIS_PASSWORD'),
+          db: this.configService.get<number>('REDIS_DB', 0),
+          ...commonOptions,
+        });
   }
 
   async onModuleInit() {
@@ -82,10 +90,14 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
       clearInterval(this.healthCheckInterval);
     }
 
-    // Disconnect from Redis
-    if (this.redisAvailable && this.redis) {
-      await this.redis.quit();
-      this.loggerService.log('Redis disconnected', 'CacheService');
+    // Disconnect from Redis (regardless of availability to prevent hanging timers)
+    if (this.redis) {
+      try {
+        this.redis.disconnect();
+        this.loggerService.log('Redis disconnected', 'CacheService');
+      } catch {
+        // Ignore disconnect errors during shutdown
+      }
     }
   }
 
@@ -98,8 +110,8 @@ export class CacheService implements OnModuleInit, OnModuleDestroy {
     }
 
     try {
-      // Try to connect if not connected
-      if (this.redis.status !== 'ready') {
+      // Try to connect only when fully disconnected
+      if (this.redis.status === 'end' || this.redis.status === 'close' || this.redis.status === 'wait') {
         await this.redis.connect();
       }
 
