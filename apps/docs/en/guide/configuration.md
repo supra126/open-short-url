@@ -369,7 +369,7 @@ AI is disabled by default. Configure at least one provider API key to enable.
 
 ```bash
 AI_PROVIDER="anthropic"
-AI_MODEL="claude-3-5-sonnet-20241022"
+AI_MODEL="claude-sonnet-4-6"
 ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
@@ -448,7 +448,7 @@ NEXT_PUBLIC_BRAND_NAME="My Short URLs"
 # ============================================================
 NEXT_PUBLIC_LOCALE="en"
 # AI_PROVIDER="anthropic"
-# AI_MODEL="claude-3-5-sonnet-20241022"
+# AI_MODEL="claude-sonnet-4-6"
 # ANTHROPIC_API_KEY=""
 ```
 

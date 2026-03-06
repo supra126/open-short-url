@@ -12,7 +12,7 @@ Open Short URL 正式環境的完整安裝指南。
 | **記憶體** | 1 GB | 2+ GB |
 | **儲存空間** | 5 GB | 20+ GB |
 | **Node.js** | 22.x | 最新 LTS |
-| **PostgreSQL** | 15.x | 16.x |
+| **PostgreSQL** | 16.x | 17.x |
 | **Redis** | 7.x | 最新穩定版 |
 
 ### 支援平台
@@ -88,12 +88,11 @@ pnpm start
 最適合快速部署與隔離。詳見 [Docker 部署](/zh-TW/deployment/docker)。
 
 ```bash
-# 複製儲存庫
 git clone https://github.com/supra126/open-short-url.git
 cd open-short-url
-
-# 使用 Docker Compose 啟動
-docker-compose up -d
+cp .env.docker.example .env.docker
+# 編輯 .env.docker 填入您的設定
+docker compose up -d
 ```
 
 ### 方式三：Railway（一鍵部署）
@@ -127,20 +126,17 @@ sudo -u postgres psql
 ```
 
 ```sql
-CREATE USER shorturl WITH PASSWORD 'your-secure-password';
-CREATE DATABASE open_short_url OWNER shorturl;
-GRANT ALL PRIVILEGES ON DATABASE open_short_url TO shorturl;
+CREATE DATABASE open_short_url;
 \q
 ```
 
 #### macOS (Homebrew)
 
 ```bash
-brew install postgresql@16
-brew services start postgresql@16
+brew install postgresql@17
+brew services start postgresql@17
 
-createuser -s shorturl
-createdb open_short_url -O shorturl
+createdb -U postgres open_short_url
 ```
 
 ### Redis 安裝
@@ -164,7 +160,7 @@ brew services start redis
 
 ```bash
 # 測試 PostgreSQL
-psql -U shorturl -d open_short_url -c "SELECT 1"
+psql -U postgres -d open_short_url -c "SELECT 1"
 
 # 測試 Redis
 redis-cli ping
@@ -354,11 +350,11 @@ sudo certbot --nginx -d app.yourdomain.com -d s.yourdomain.com
 ### 健康檢查
 
 ```bash
-# 後端健康
-curl https://s.yourdomain.com/health
-
 # 前端可訪問性
 curl -I https://app.yourdomain.com
+
+# 後端 API
+curl https://s.yourdomain.com/api
 ```
 
 ### 測試短網址建立
@@ -401,10 +397,10 @@ sudo systemctl restart shorturl-backend shorturl-frontend
 
 ```bash
 # 建立備份
-pg_dump -U shorturl -d open_short_url > backup_$(date +%Y%m%d).sql
+pg_dump -U postgres -d open_short_url > backup_$(date +%Y%m%d).sql
 
 # 還原備份
-psql -U shorturl -d open_short_url < backup_20250101.sql
+psql -U postgres -d open_short_url < backup_20250101.sql
 ```
 
 ### 自動備份
@@ -416,7 +412,7 @@ crontab -e
 
 ```
 # 每日凌晨 2 點備份
-0 2 * * * pg_dump -U shorturl -d open_short_url > /backups/shorturl_$(date +\%Y\%m\%d).sql
+0 2 * * * pg_dump -U postgres -d open_short_url > /backups/shorturl_$(date +\%Y\%m\%d).sql
 ```
 
 ## 下一步

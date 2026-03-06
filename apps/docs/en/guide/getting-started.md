@@ -10,7 +10,7 @@ Before you begin, ensure you have:
 |-------------|---------|-------|
 | Node.js | 22+ | LTS recommended |
 | pnpm | 9+ | Package manager |
-| PostgreSQL | 15+ | Primary database |
+| PostgreSQL | 16+ | Primary database |
 | Redis | 7+ | Caching layer (optional for dev, recommended for prod) |
 
 ## Quick Start
@@ -140,20 +140,6 @@ open-short-url/
 | `pnpm type-check` | Run TypeScript type checking |
 
 ## Verifying Installation
-
-### Check Backend Health
-
-```bash
-curl http://localhost:4101/health
-```
-
-Expected response:
-```json
-{
-  "status": "ok",
-  "timestamp": "2025-01-01T00:00:00.000Z"
-}
-```
 
 ### Access Swagger Documentation
 

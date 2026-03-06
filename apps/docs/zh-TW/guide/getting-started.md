@@ -10,7 +10,7 @@
 |------|------|------|
 | Node.js | 22+ | 建議使用 LTS 版本 |
 | pnpm | 9+ | 套件管理器 |
-| PostgreSQL | 15+ | 主要資料庫 |
+| PostgreSQL | 16+ | 主要資料庫 |
 | Redis | 7+ | 快取層（開發可選，正式環境建議） |
 
 ## 快速入門
@@ -140,20 +140,6 @@ open-short-url/
 | `pnpm type-check` | 執行 TypeScript 類型檢查 |
 
 ## 驗證安裝
-
-### 檢查後端健康狀態
-
-```bash
-curl http://localhost:4101/health
-```
-
-預期回應：
-```json
-{
-  "status": "ok",
-  "timestamp": "2025-01-01T00:00:00.000Z"
-}
-```
 
 ### 存取 Swagger 文檔
 

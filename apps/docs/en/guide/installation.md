@@ -12,7 +12,7 @@ Comprehensive installation guide for Open Short URL in production environments.
 | **Memory** | 1 GB | 2+ GB |
 | **Storage** | 5 GB | 20+ GB |
 | **Node.js** | 22.x | Latest LTS |
-| **PostgreSQL** | 15.x | 16.x |
+| **PostgreSQL** | 16.x | 17.x |
 | **Redis** | 7.x | Latest stable |
 
 ### Supported Platforms
@@ -88,12 +88,11 @@ pnpm start
 Best for quick deployment and isolation. See [Docker Deployment](/en/deployment/docker) for detailed instructions.
 
 ```bash
-# Clone repository
 git clone https://github.com/supra126/open-short-url.git
 cd open-short-url
-
-# Start with Docker Compose
-docker-compose up -d
+cp .env.docker.example .env.docker
+# Edit .env.docker with your settings
+docker compose up -d
 ```
 
 ### Method 3: Railway (One-Click)
@@ -127,20 +126,17 @@ sudo -u postgres psql
 ```
 
 ```sql
-CREATE USER shorturl WITH PASSWORD 'your-secure-password';
-CREATE DATABASE open_short_url OWNER shorturl;
-GRANT ALL PRIVILEGES ON DATABASE open_short_url TO shorturl;
+CREATE DATABASE open_short_url;
 \q
 ```
 
 #### macOS (Homebrew)
 
 ```bash
-brew install postgresql@16
-brew services start postgresql@16
+brew install postgresql@17
+brew services start postgresql@17
 
-createuser -s shorturl
-createdb open_short_url -O shorturl
+createdb -U postgres open_short_url
 ```
 
 ### Redis Installation
@@ -164,7 +160,7 @@ brew services start redis
 
 ```bash
 # Test PostgreSQL
-psql -U shorturl -d open_short_url -c "SELECT 1"
+psql -U postgres -d open_short_url -c "SELECT 1"
 
 # Test Redis
 redis-cli ping
@@ -354,11 +350,11 @@ sudo certbot --nginx -d app.yourdomain.com -d s.yourdomain.com
 ### Health Checks
 
 ```bash
-# Backend health
-curl https://s.yourdomain.com/health
-
 # Frontend accessibility
 curl -I https://app.yourdomain.com
+
+# Backend API
+curl https://s.yourdomain.com/api
 ```
 
 ### Test Short URL Creation
@@ -401,10 +397,10 @@ sudo systemctl restart shorturl-backend shorturl-frontend
 
 ```bash
 # Create backup
-pg_dump -U shorturl -d open_short_url > backup_$(date +%Y%m%d).sql
+pg_dump -U postgres -d open_short_url > backup_$(date +%Y%m%d).sql
 
 # Restore backup
-psql -U shorturl -d open_short_url < backup_20250101.sql
+psql -U postgres -d open_short_url < backup_20250101.sql
 ```
 
 ### Automated Backups
@@ -416,7 +412,7 @@ crontab -e
 
 ```
 # Daily backup at 2 AM
-0 2 * * * pg_dump -U shorturl -d open_short_url > /backups/shorturl_$(date +\%Y\%m\%d).sql
+0 2 * * * pg_dump -U postgres -d open_short_url > /backups/shorturl_$(date +\%Y\%m\%d).sql
 ```
 
 ## Next Steps
