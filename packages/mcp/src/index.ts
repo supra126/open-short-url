@@ -21,6 +21,8 @@ import { registerBundleTools } from './tools/bundle-tools.js';
 // Export tool registration functions for use in other packages
 export { registerUrlTools, registerAnalyticsTools, registerVariantTools, registerBundleTools };
 export { ApiClient } from './utils/api-client.js';
+export { handleTool } from './utils/tool-handler.js';
+export type * from './types/api.js';
 
 /**
  * Get configuration from environment variables

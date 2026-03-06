@@ -323,48 +323,54 @@ QR Code generated:
 
 ## 🛠️ Available Tools
 
-### URL Management (6 tools)
+### URL Management (10 tools)
 
 1. `create_short_url` - Create short URL
 2. `list_short_urls` - List all short URLs
 3. `get_short_url` - Query short URL details
 4. `update_short_url` - Update short URL settings
 5. `delete_short_url` - Delete short URL
-6. `generate_qrcode` - Generate QR Code
+6. `get_url_stats` - Get URL dashboard statistics
+7. `generate_qrcode` - Generate QR Code
+8. `bulk_create_urls` - Bulk create short URLs (max 100)
+9. `bulk_update_urls` - Bulk update short URLs (status, bundle, expiration, UTM)
+10. `bulk_delete_urls` - Bulk delete short URLs
 
 ### Bundle Management (12 tools)
 
-7. `create_bundle` - Create new bundle
-8. `list_bundles` - List all bundles
-9. `get_bundle` - Query bundle details
-10. `update_bundle` - Update bundle information
-11. `delete_bundle` - Delete bundle
-12. `add_url_to_bundle` - Add single URL to bundle
-13. `add_multiple_urls_to_bundle` - Batch add URLs to bundle
-14. `remove_url_from_bundle` - Remove URL from bundle
-15. `update_url_order_in_bundle` - Update URL order in bundle
-16. `get_bundle_stats` - Get bundle statistics
-17. `archive_bundle` - Archive bundle
-18. `restore_bundle` - Restore archived bundle
+11. `create_bundle` - Create new bundle
+12. `list_bundles` - List all bundles
+13. `get_bundle` - Query bundle details
+14. `update_bundle` - Update bundle information
+15. `delete_bundle` - Delete bundle
+16. `add_url_to_bundle` - Add single URL to bundle
+17. `add_multiple_urls_to_bundle` - Batch add URLs to bundle
+18. `remove_url_from_bundle` - Remove URL from bundle
+19. `update_url_order_in_bundle` - Update URL order in bundle
+20. `get_bundle_stats` - Get bundle statistics
+21. `archive_bundle` - Archive bundle
+22. `restore_bundle` - Restore archived bundle
 
-### Analytics (6 tools)
+### Analytics (8 tools)
 
-19. `get_url_analytics` - Get URL analytics
-20. `get_overview_analytics` - Get overview analytics
-21. `get_recent_clicks` - View recent clicks
-22. `get_bot_analytics` - Bot analysis for single URL
-23. `get_user_bot_analytics` - Global bot analysis
-24. `get_ab_test_analytics` - A/B test analytics
+23. `get_url_analytics` - Get URL analytics
+24. `get_overview_analytics` - Get overview analytics
+25. `get_top_performing_urls` - Get top performing URLs by clicks
+26. `get_recent_clicks` - View recent clicks
+27. `get_bot_analytics` - Bot analysis for single URL
+28. `get_user_bot_analytics` - Global bot analysis
+29. `get_ab_test_analytics` - A/B test analytics
+30. `get_routing_analytics` - Smart routing statistics
 
 ### A/B Testing (5 tools)
 
-25. `create_variant` - Create test variant
-26. `list_variants` - List all variants
-27. `get_variant` - Query variant details
-28. `update_variant` - Update variant settings
-29. `delete_variant` - Delete variant
+31. `create_variant` - Create test variant
+32. `list_variants` - List all variants
+33. `get_variant` - Query variant details
+34. `update_variant` - Update variant settings
+35. `delete_variant` - Delete variant
 
-**Total: 29 MCP Tools**
+**Total: 35 MCP Tools**
 
 ---
 

@@ -1,6 +1,6 @@
 {
   "name": "@open-short-url/mcp",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Model Context Protocol (MCP) Server for Open Short URL",
   "type": "module",
   "main": "dist/index.js",

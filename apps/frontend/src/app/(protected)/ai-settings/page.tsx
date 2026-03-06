@@ -168,7 +168,7 @@ export default function AISettingsPage() {
               <div className="bg-muted p-4 rounded-lg font-mono text-sm">
                 <div className="text-muted-foreground mb-2"># .env</div>
                 <div>AI_PROVIDER=anthropic</div>
-                <div>AI_MODEL=claude-3-5-sonnet-20241022</div>
+                <div>AI_MODEL=claude-sonnet-4-6</div>
                 <div>ANTHROPIC_API_KEY=sk-ant-your-api-key-here</div>
               </div>
             </div>
@@ -190,7 +190,7 @@ export default function AISettingsPage() {
               <div className="bg-muted p-4 rounded-lg font-mono text-sm">
                 <div className="text-muted-foreground mb-2"># .env</div>
                 <div>AI_PROVIDER=google</div>
-                <div>AI_MODEL=gemini-1.5-pro</div>
+                <div>AI_MODEL=gemini-3.1-pro</div>
                 <div>GOOGLE_GENERATIVE_AI_API_KEY=your-api-key-here</div>
               </div>
             </div>

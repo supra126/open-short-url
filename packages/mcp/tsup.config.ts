@@ -4,6 +4,7 @@ export default defineConfig({
   entry: [
     'src/index.ts',
     'src/utils/api-client.ts',
+    'src/utils/tool-handler.ts',
     'src/types/api.ts',
     'src/tools/url-tools.ts',
     'src/tools/bundle-tools.ts',
