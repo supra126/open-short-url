@@ -130,7 +130,7 @@ export const RecentUrls = memo<RecentUrlsProps>(
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-base">
+              <CardTitle className="text-base font-display">
                 {t('dashboard.recentUrls')}
               </CardTitle>
               <CardDescription>{t('dashboard.recentUrlsDesc')}</CardDescription>

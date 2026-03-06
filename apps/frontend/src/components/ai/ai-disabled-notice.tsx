@@ -1,8 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { BotOff, ExternalLink, Settings } from 'lucide-react';
-import Link from 'next/link';
+import { BotOff, ExternalLink } from 'lucide-react';
 import { t } from '@/lib/i18n';
 
 /**
@@ -99,12 +98,6 @@ export function AIDisabledNotice() {
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button asChild>
-            <Link href="/ai-settings">
-              <Settings className="mr-2 h-4 w-4" />
-              {t('ai.disabled.viewDetailedGuide')}
-            </Link>
-          </Button>
           <Button variant="outline" asChild>
             <a
               href="https://docs.anthropic.com/"

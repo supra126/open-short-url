@@ -27,6 +27,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useUserAnalytics, type TimeRange } from '@/hooks/use-analytics';
 import { useRecentUrls } from '@/hooks/use-dashboard';
 import { useUrls, type UrlResponseDto } from '@/hooks/use-url';
+import { useCurrentUser } from '@/hooks/use-auth';
 import {
   ClickTrendChart,
   RecentUrls,
@@ -41,85 +42,109 @@ import {
   Plus,
   AlertCircle,
   Sparkles,
+  MousePointerClick,
+  Activity,
+  CheckCircle2,
 } from 'lucide-react';
 import { t } from '@/lib/i18n';
 import { useToast } from '@/hooks/use-toast';
 import { formatNumber } from '@/lib/utils';
 
-// Memoized stat card with skeleton support
+// Color variants for stat cards
+const statColors = [
+  { icon: 'text-primary', bg: 'bg-primary/10', border: 'border-l-primary' },
+  { icon: 'text-info', bg: 'bg-info/10', border: 'border-l-info' },
+  { icon: 'text-warning', bg: 'bg-warning/10', border: 'border-l-warning' },
+  { icon: 'text-success', bg: 'bg-success/10', border: 'border-l-success' },
+];
+
 const StatCard = memo<{
   title: string;
   value: string | number;
   description: string;
   isLoading?: boolean;
   trend?: number;
-}>(({ title, value, description, isLoading, trend }) => (
-  <Card>
-    <CardHeader className="pb-2">
-      <CardDescription>{title}</CardDescription>
-      {isLoading ? (
-        <Skeleton className="h-9 w-24" />
-      ) : (
-        <CardTitle className="text-3xl">{value}</CardTitle>
-      )}
-    </CardHeader>
-    <CardContent>
-      {isLoading ? (
-        <Skeleton className="h-4 w-32" />
-      ) : trend !== undefined ? (
-        <div className="flex items-center text-xs text-muted-foreground">
-          {trend > 0 ? (
-            <>
-              <TrendingUp className="mr-1 h-3 w-3 text-success" />
-              <span className="text-success">+{trend.toFixed(1)}%</span>
-              <span className="ml-1">{t('dashboard.growthRate')}</span>
-            </>
-          ) : trend < 0 ? (
-            <>
-              <TrendingDown className="mr-1 h-3 w-3 text-destructive" />
-              <span className="text-destructive">{trend.toFixed(1)}%</span>
-              <span className="ml-1">{t('dashboard.growthRate')}</span>
-            </>
-          ) : (
-            t('dashboard.noChange')
-          )}
+  icon: React.ReactNode;
+  colorIndex: number;
+  delay: number;
+}>(({ title, value, description, isLoading, trend, icon, colorIndex, delay }) => {
+  const color = statColors[colorIndex % statColors.length];
+  return (
+    <Card
+      className={`border-l-4 ${color.border} opacity-0 animate-slide-up`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between">
+          <CardDescription className="font-medium">{title}</CardDescription>
+          <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${color.bg}`}>
+            <span className={color.icon}>{icon}</span>
+          </div>
         </div>
-      ) : (
-        <p className="text-xs text-muted-foreground">{description}</p>
-      )}
-    </CardContent>
-  </Card>
-));
+        {isLoading ? (
+          <Skeleton className="h-9 w-24" />
+        ) : (
+          <CardTitle className="text-3xl font-display">{value}</CardTitle>
+        )}
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Skeleton className="h-4 w-32" />
+        ) : trend !== undefined ? (
+          <div className="flex items-center text-xs text-muted-foreground">
+            {trend > 0 ? (
+              <>
+                <TrendingUp className="mr-1 h-3 w-3 text-success" />
+                <span className="text-success font-medium">+{trend.toFixed(1)}%</span>
+                <span className="ml-1">{t('dashboard.growthRate')}</span>
+              </>
+            ) : trend < 0 ? (
+              <>
+                <TrendingDown className="mr-1 h-3 w-3 text-destructive" />
+                <span className="text-destructive font-medium">{trend.toFixed(1)}%</span>
+                <span className="ml-1">{t('dashboard.growthRate')}</span>
+              </>
+            ) : (
+              t('dashboard.noChange')
+            )}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">{description}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+});
 StatCard.displayName = 'StatCard';
 
 // Onboarding card for new users
 const OnboardingCard = memo(() => (
-  <Card className="border-dashed border-2 bg-muted/30">
+  <Card className="border-dashed border-2 bg-muted/30 opacity-0 animate-scale-in" style={{ animationDelay: '100ms' }}>
     <CardContent className="flex flex-col items-center justify-center py-12 text-center">
       <div className="mb-4 rounded-full bg-primary/10 p-4">
         <Sparkles className="h-8 w-8 text-primary" />
       </div>
-      <h3 className="text-xl font-semibold mb-2">
+      <h3 className="text-xl font-display font-semibold mb-2">
         {t('dashboard.onboarding.title')}
       </h3>
       <p className="text-muted-foreground mb-6 max-w-md">
         {t('dashboard.onboarding.description')}
       </p>
-      <div className="flex gap-4 mb-6 text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row gap-4 mb-6 text-sm text-muted-foreground">
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
             1
           </span>
           {t('dashboard.onboarding.step1')}
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
             2
           </span>
           {t('dashboard.onboarding.step2')}
         </div>
         <div className="flex items-center gap-2">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs">
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
             3
           </span>
           {t('dashboard.onboarding.step3')}
@@ -136,25 +161,38 @@ const OnboardingCard = memo(() => (
 ));
 OnboardingCard.displayName = 'OnboardingCard';
 
-// Quick action button
-const QuickActionButton = memo<{
+// Quick action card
+const QuickActionCard = memo<{
   href: string;
   icon: React.ReactNode;
   label: string;
-}>(({ href, icon, label }) => (
+  description: string;
+  delay: number;
+}>(({ href, icon, label, description, delay }) => (
   <Link href={href}>
-    <Button variant="outline" className="w-full h-16 flex flex-row gap-3 justify-start px-4">
-      <span className="text-xl">{icon}</span>
-      <span className="text-sm">{label}</span>
-    </Button>
+    <Card
+      className="group cursor-pointer hover:shadow-md hover:border-primary/30 opacity-0 animate-slide-up"
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <CardContent className="flex items-center gap-4 p-5">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors duration-200">
+          {icon}
+        </div>
+        <div>
+          <p className="text-sm font-medium">{label}</p>
+          <p className="text-xs text-muted-foreground">{description}</p>
+        </div>
+      </CardContent>
+    </Card>
   </Link>
 ));
-QuickActionButton.displayName = 'QuickActionButton';
+QuickActionCard.displayName = 'QuickActionCard';
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = useState<TimeRange>('last_7_days');
   const [isRefetching, setIsRefetching] = useState(false);
   const { toast } = useToast();
+  const { data: user } = useCurrentUser();
 
   // Fetch analytics data
   const {
@@ -241,6 +279,16 @@ export default function DashboardPage() {
   const isLoading = isLoadingAnalytics || isLoadingUrls;
   const isNewUser = !isLoading && stats.totalUrls === 0;
 
+  // Greeting based on time of day
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    const name = user?.name || user?.email?.split('@')[0] || '';
+    const nameStr = name ? `, ${name}` : '';
+    if (hour < 12) return `${t('dashboard.greetingMorning')}${nameStr}`;
+    if (hour < 18) return `${t('dashboard.greetingAfternoon')}${nameStr}`;
+    return `${t('dashboard.greetingEvening')}${nameStr}`;
+  }, [user]);
+
   // Time range options
   const timeRangeOptions = [
     { value: 'last_7_days', label: t('analytics.timeRange.last7Days') },
@@ -251,9 +299,9 @@ export default function DashboardPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
+      <div className="flex items-center justify-between flex-wrap gap-4 opacity-0 animate-fade-in">
         <div>
-          <h1 className="text-3xl font-bold">{t('dashboard.title')}</h1>
+          <h1 className="text-3xl font-display font-bold">{greeting}</h1>
           <p className="text-muted-foreground mt-1">{t('dashboard.welcome')}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -309,6 +357,9 @@ export default function DashboardPage() {
               value={formatNumber(stats.totalUrls)}
               description={`${stats.activeUrls} ${t('dashboard.activeCount')}`}
               isLoading={isLoadingUrls}
+              icon={<LinkIcon className="h-4 w-4" />}
+              colorIndex={0}
+              delay={50}
             />
             <StatCard
               title={t('dashboard.totalClicks')}
@@ -316,6 +367,9 @@ export default function DashboardPage() {
               description=""
               isLoading={isLoadingAnalytics}
               trend={stats.growthRate}
+              icon={<MousePointerClick className="h-4 w-4" />}
+              colorIndex={1}
+              delay={100}
             />
             <StatCard
               title={t('dashboard.averageClicksPerDay')}
@@ -326,6 +380,9 @@ export default function DashboardPage() {
                   : t('dashboard.last30Days')
               }
               isLoading={isLoadingAnalytics}
+              icon={<Activity className="h-4 w-4" />}
+              colorIndex={2}
+              delay={150}
             />
             <StatCard
               title={t('dashboard.activeUrls')}
@@ -336,6 +393,9 @@ export default function DashboardPage() {
                   : t('dashboard.noUrls')
               }
               isLoading={isLoadingUrls}
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              colorIndex={3}
+              delay={200}
             />
           </div>
 
@@ -343,13 +403,10 @@ export default function DashboardPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Left Column */}
             <div className="space-y-6">
-              {/* Click Trend Chart */}
               <ClickTrendChart
                 data={timeSeriesData}
                 isLoading={isLoadingAnalytics}
               />
-
-              {/* Top Performing URLs */}
               <TopPerformingUrls
                 urls={topPerformingUrls}
                 isLoading={isLoadingUrls}
@@ -358,13 +415,10 @@ export default function DashboardPage() {
 
             {/* Right Column */}
             <div className="space-y-6">
-              {/* Recent URLs */}
               <RecentUrls
                 urls={recentUrls || []}
                 isLoading={isLoadingRecentUrls}
               />
-
-              {/* Geographic Distribution */}
               <GeoDistribution
                 data={topCountries}
                 isLoading={isLoadingAnalytics}
@@ -373,29 +427,32 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">{t('dashboard.quickActions')}</CardTitle>
-              <CardDescription>{t('dashboard.quickActionsDesc')}</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-3">
-              <QuickActionButton
+          <div>
+            <h2 className="text-base font-display font-semibold mb-3">{t('dashboard.quickActions')}</h2>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <QuickActionCard
                 href="/urls/new"
                 icon={<LinkIcon className="h-5 w-5" />}
                 label={t('dashboard.createUrl')}
+                description={t('dashboard.quickActionCreateDesc')}
+                delay={300}
               />
-              <QuickActionButton
+              <QuickActionCard
                 href="/urls"
-                icon="📋"
+                icon={<CheckCircle2 className="h-5 w-5" />}
                 label={t('dashboard.manageUrls')}
+                description={t('dashboard.quickActionManageDesc')}
+                delay={350}
               />
-              <QuickActionButton
+              <QuickActionCard
                 href="/analytics"
                 icon={<BarChart3 className="h-5 w-5" />}
                 label={t('dashboard.viewAnalytics')}
+                description={t('dashboard.quickActionAnalyticsDesc')}
+                delay={400}
               />
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </>
       )}
     </div>

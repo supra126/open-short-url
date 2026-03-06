@@ -22,7 +22,7 @@ export default function AIChatPage() {
     <div className="p-6 space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold">{t('ai.chat.title')}</h1>
+        <h1 className="text-3xl font-display font-bold">{t('ai.chat.title')}</h1>
         <p className="text-muted-foreground mt-1">
           {t('ai.chat.description')}
         </p>

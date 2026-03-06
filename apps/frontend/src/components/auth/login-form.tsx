@@ -76,9 +76,9 @@ export function LoginForm() {
   };
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md shadow-lg border-0 sm:border sm:shadow-sm">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">{t('auth.loginTitle')}</CardTitle>
+        <CardTitle className="text-2xl font-display">{t('auth.loginTitle')}</CardTitle>
         <CardDescription>{t('auth.loginDescription')}</CardDescription>
       </CardHeader>
       <CardContent>

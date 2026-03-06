@@ -124,7 +124,7 @@ export const TopPerformingUrls = memo<TopPerformingUrlsProps>(
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-primary" />
             <div>
-              <CardTitle className="text-base">
+              <CardTitle className="text-base font-display">
                 {t('dashboard.topPerforming')}
               </CardTitle>
               <CardDescription>

@@ -6,7 +6,7 @@ export default function NewUrlPage() {
     <div className="p-6 space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold">{t('urls.createTitle')}</h1>
+        <h1 className="text-3xl font-display font-bold">{t('urls.createTitle')}</h1>
         <p className="text-muted-foreground mt-1">{t('urls.createDesc')}</p>
       </div>
 

@@ -14,25 +14,25 @@ export const PROVIDER_CONFIGS: Record<AIProvider, ProviderConfig> = {
   openai: {
     id: 'openai',
     name: 'OpenAI',
-    description: 'GPT-5.2, GPT-4o',
+    description: 'GPT-5.4, GPT-5.3 Instant',
     apiKeyEnvVar: 'OPENAI_API_KEY',
     enabled: true,
     models: [
       {
-        id: 'gpt-5.2',
-        name: 'GPT-5.2',
-        description: 'Most capable model for reasoning, coding, and analysis',
+        id: 'gpt-5.4',
+        name: 'GPT-5.4',
+        description: 'Flagship reasoning model for complex tasks',
+        maxTokens: 128000,
+        supportsFunctions: true,
+        costPer1MTokens: { input: 10, output: 30 },
+      },
+      {
+        id: 'gpt-5.3-instant',
+        name: 'GPT-5.3 Instant',
+        description: 'Fast and capable, default for everyday work',
         maxTokens: 128000,
         supportsFunctions: true,
         costPer1MTokens: { input: 5, output: 15 },
-      },
-      {
-        id: 'gpt-4o',
-        name: 'GPT-4o',
-        description: 'Fast multimodal model, great balance of cost and performance',
-        maxTokens: 128000,
-        supportsFunctions: true,
-        costPer1MTokens: { input: 2.5, output: 10 },
       },
       {
         id: 'gpt-4o-mini',
@@ -221,6 +221,7 @@ export function getAvailableProviders(): ProviderConfig[] {
  * @returns true if at least one provider is configured
  */
 export function isAIEnabled(): boolean {
+  if (!process.env.AI_PROVIDER) return false;
   return getAvailableProviders().length > 0;
 }
 

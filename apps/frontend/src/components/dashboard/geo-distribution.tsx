@@ -87,7 +87,7 @@ export const GeoDistribution = memo<GeoDistributionProps>(
           <div className="flex items-center gap-2">
             <Globe className="h-4 w-4 text-primary" />
             <div>
-              <CardTitle className="text-base">
+              <CardTitle className="text-base font-display">
                 {t('dashboard.geoDistribution')}
               </CardTitle>
               <CardDescription>

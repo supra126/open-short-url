@@ -73,7 +73,7 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://challenges.cloudflare.com https://static.cloudflareinsights.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
-              "font-src 'self' data:",
+              "font-src 'self' data: https://fonts.gstatic.com",
               `connect-src 'self' https://challenges.cloudflare.com ${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4101'}`,
               'frame-src https://challenges.cloudflare.com',
               "base-uri 'self'",

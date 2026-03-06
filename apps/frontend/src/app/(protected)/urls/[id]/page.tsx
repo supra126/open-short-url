@@ -169,7 +169,7 @@ export default function UrlDetailPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">{t('urls.detail')}</h1>
+            <h1 className="text-3xl font-display font-bold">{t('urls.detail')}</h1>
             <p className="text-muted-foreground mt-1">{t('urls.detailDesc')}</p>
           </div>
         </div>

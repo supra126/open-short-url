@@ -138,7 +138,7 @@ export default function EditUrlPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold">{t('urls.editTitle')}</h1>
+          <h1 className="text-3xl font-display font-bold">{t('urls.editTitle')}</h1>
           <p className="text-muted-foreground mt-1">{t('urls.editDesc')}</p>
         </div>
       </div>

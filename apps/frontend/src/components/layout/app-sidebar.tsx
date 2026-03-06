@@ -12,6 +12,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -24,12 +25,12 @@ import {
   Users,
   Webhook,
   Bot,
-  Settings,
   ClipboardList,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-auth';
+import { useAIEnabled } from '@/hooks/use-ai-enabled';
 import { t } from '@/lib/i18n';
 import type { LucideIcon } from 'lucide-react';
 
@@ -45,6 +46,7 @@ interface NavItem {
 interface NavGroup {
   title: string;
   items: NavItem[];
+  aiOnly?: boolean;
 }
 
 // Menu data
@@ -119,25 +121,40 @@ const data = {
     },
     {
       title: t('sidebar.ai'),
+      aiOnly: true,
       items: [
         {
           title: t('sidebar.aiAssistant'),
           url: '/ai-chat',
           icon: Bot,
         },
-        {
-          title: t('sidebar.aiSettings'),
-          url: '/ai-settings',
-          icon: Settings,
-        },
       ],
     },
   ],
 };
 
+// Avatar with initials
+function UserAvatar({ name, email }: { name?: string | null; email: string }) {
+  const displayName = name || email.split('@')[0];
+  const initials = displayName
+    .split(/[\s._-]/)
+    .map((part) => part[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+
+  return (
+    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
+      {initials}
+    </div>
+  );
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { data: user, isLoading } = useCurrentUser();
+  const { isEnabled: isAIEnabled } = useAIEnabled();
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -157,7 +174,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </div>
           )}
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">
+            <span className="truncate font-display font-semibold">
               {process.env.NEXT_PUBLIC_BRAND_NAME || t('sidebar.appName')}
             </span>
             <span className="truncate text-xs text-muted-foreground">
@@ -169,39 +186,44 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        {data.navMain.map((group: NavGroup) => (
-          <SidebarGroup key={group.title}>
-            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items
-                  .filter((item: NavItem) => {
-                    // If admin-only option, check user role
-                    if (item.adminOnly && user?.role !== 'ADMIN') {
-                      return false;
-                    }
-                    return true;
-                  })
-                  .map((item: NavItem) => {
-                    const isActive = pathname === item.url;
-                    return (
-                      <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={isActive}
-                          tooltip={item.title}
-                        >
-                          <Link href={item.url}>
-                            <item.icon />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
+        {data.navMain.filter((group: NavGroup) => !group.aiOnly || isAIEnabled).map((group: NavGroup, groupIndex: number) => (
+          <React.Fragment key={group.title}>
+            {groupIndex > 0 && <SidebarSeparator className="mx-3" />}
+            <SidebarGroup>
+              <SidebarGroupLabel className="text-xs uppercase tracking-wider text-muted-foreground/70">
+                {group.title}
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.items
+                    .filter((item: NavItem) => {
+                      if (item.adminOnly && user?.role !== 'ADMIN') {
+                        return false;
+                      }
+                      return true;
+                    })
+                    .map((item: NavItem) => {
+                      const isActive = pathname === item.url;
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive}
+                            tooltip={item.title}
+                            className={isActive ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium border-l-[3px] border-l-primary rounded-l-none' : ''}
+                          >
+                            <Link href={item.url}>
+                              <item.icon className={isActive ? 'text-primary' : ''} />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </React.Fragment>
         ))}
       </SidebarContent>
 
@@ -215,9 +237,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               {user ? (
                 <Link href="/profile">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                    <User className="size-4" />
-                  </div>
+                  <UserAvatar name={user.name} email={user.email} />
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">
                       {user.name || user.email.split('@')[0]}

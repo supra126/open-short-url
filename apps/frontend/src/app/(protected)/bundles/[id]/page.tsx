@@ -246,7 +246,7 @@ export default function BundleDetailPage() {
           <div className="flex items-center gap-3">
             <span className="text-4xl">{bundle.icon}</span>
             <div>
-              <h1 className="text-3xl font-bold">{bundle.name}</h1>
+              <h1 className="text-3xl font-display font-bold">{bundle.name}</h1>
               {bundle.description && (
                 <p className="text-muted-foreground mt-1">{bundle.description}</p>
               )}

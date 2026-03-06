@@ -190,7 +190,7 @@ export default function BundlesPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold">{t('bundles.title')}</h1>
+          <h1 className="text-3xl font-display font-bold">{t('bundles.title')}</h1>
           <p className="text-muted-foreground mt-1">
             {t('bundles.description')}
           </p>

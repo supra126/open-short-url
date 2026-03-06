@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { User, LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useRouter } from 'next/navigation';
 import { t } from '@/lib/i18n';
@@ -52,7 +52,9 @@ export function AppHeader() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="gap-2">
-                  <User className="h-4 w-4" />
+                  <span className="flex h-5 w-5 items-center justify-center rounded bg-primary text-primary-foreground text-[10px] font-semibold">
+                    {(user.name || user.email.split('@')[0]).slice(0, 2).toUpperCase()}
+                  </span>
                   <span className="hidden sm:inline">{user.name || user.email.split('@')[0]}</span>
                 </Button>
               </DropdownMenuTrigger>

@@ -10,7 +10,7 @@ export default function UrlsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-bold">{t('urls.management')}</h1>
+          <h1 className="text-3xl font-display font-bold">{t('urls.management')}</h1>
           <p className="text-muted-foreground mt-1">
             {t('urls.managementDesc')}
           </p>
