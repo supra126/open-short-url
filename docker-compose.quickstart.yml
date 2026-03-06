@@ -1,0 +1,87 @@
+# ============================================================
+# Open Short URL - Zero-Config Quickstart
+# ============================================================
+# Try the full platform with just two commands:
+#
+#   curl -O https://raw.githubusercontent.com/supra126/open-short-url/main/docker-compose.quickstart.yml
+#   docker compose -f docker-compose.quickstart.yml up -d
+#
+# Then visit: http://localhost:4100
+# Login: admin@example.com / admin123
+#
+# ⚠️  FOR LOCAL TESTING ONLY - DO NOT USE IN PRODUCTION
+# ⚠️  All secrets are hardcoded. For production, use setup.sh
+#     or docker-compose.yml with a proper .env file.
+# ============================================================
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: open_short_url
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: quickstart-not-for-production
+    volumes:
+      - quickstart_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - quickstart_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: ghcr.io/supra126/open-short-url-backend:latest
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://postgres:quickstart-not-for-production@postgres:5432/open_short_url?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      NODE_ENV: production
+      PORT: 4101
+      HOST: 0.0.0.0
+      JWT_SECRET: quickstart-insecure-jwt-secret-do-not-use-in-production
+      JWT_EXPIRES_IN: 7d
+      ADMIN_INITIAL_PASSWORD: admin123
+      SHORT_URL_DOMAIN: http://localhost:4101
+      FRONTEND_URL: http://localhost:4100
+      CORS_ORIGIN: http://localhost:4100
+      TRUSTED_PROXY: "true"
+    ports:
+      - "4101:4101"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    image: ghcr.io/supra126/open-short-url-frontend:latest
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:4101
+      NEXT_PUBLIC_SHORT_URL_DOMAIN: http://localhost:4101
+      NEXT_PUBLIC_LOCALE: en
+      NEXT_PUBLIC_BRAND_NAME: Open Short URL
+      NEXT_PUBLIC_BRAND_ICON_URL: ""
+      NEXT_PUBLIC_BRAND_DESCRIPTION: ""
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ""
+    ports:
+      - "4100:4100"
+    depends_on:
+      - backend
+
+volumes:
+  quickstart_postgres:
+  quickstart_redis:

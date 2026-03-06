@@ -75,3 +75,14 @@ temp/
 
 # Railway
 .railway/
+
+# Turbo
+.turbo/
+
+# VitePress
+.vitepress/dist
+.vitepress/cache
+
+# Docker
+.env.docker*
+!.env.docker.example
