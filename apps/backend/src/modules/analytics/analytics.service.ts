@@ -409,10 +409,15 @@ export class AnalyticsService {
     // Calculate date range
     const { startDate, endDate } = this.calculateDateRange(queryDto);
 
+    // ADMIN sees all users' data, regular users only see their own
+    const isAdmin = user.role === UserRole.ADMIN;
+    const urlFilter = isAdmin ? {} : { userId: user.id };
+    const userIdForAggregation = isAdmin ? null : user.id;
+
     // Check click count to decide processing strategy
     const clickCount = await this.prisma.click.count({
       where: {
-        url: { userId: user.id },
+        url: urlFilter,
         isBot: false,
         createdAt: {
           gte: startDate,
@@ -423,13 +428,13 @@ export class AnalyticsService {
 
     // Use database aggregation for large datasets to prevent memory exhaustion
     if (clickCount > ANALYTICS_CONFIG.AGGREGATION_THRESHOLD) {
-      return this.getUserAnalyticsWithAggregation(user.id, startDate, endDate);
+      return this.getUserAnalyticsWithAggregation(userIdForAggregation, startDate, endDate);
     }
 
     // Use in-memory processing for small datasets (faster)
     const allClicks = await this.prisma.click.findMany({
       where: {
-        url: { userId: user.id },
+        url: urlFilter,
         isBot: false,
         createdAt: {
           gte: startDate,
@@ -461,7 +466,7 @@ export class AnalyticsService {
     const clicks = allClicks;
 
     // Calculate statistics (same logic as single URL)
-    const overview = await this.calculateUserOverview(user.id, clicks, startDate, endDate);
+    const overview = await this.calculateUserOverview(userIdForAggregation, clicks, startDate, endDate);
     const timeSeries = this.calculateTimeSeries(clicks, startDate, endDate);
     const countries = this.calculateGeoStats(clicks, 'country');
     const regions = this.calculateGeoStats(clicks, 'region');
@@ -494,7 +499,7 @@ export class AnalyticsService {
    * Get user analytics using database aggregation (for large datasets)
    */
   private async getUserAnalyticsWithAggregation(
-    userId: string,
+    userId: string | null,
     startDate: Date,
     endDate: Date,
   ): Promise<AnalyticsResponseDto> {
@@ -547,31 +552,35 @@ export class AnalyticsService {
    * Get user overview statistics using database aggregation
    */
   private async getUserOverviewWithAggregation(
-    userId: string,
+    userId: string | null,
     startDate: Date,
     endDate: Date,
   ): Promise<OverviewStats> {
     const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
     const previousStartDate = new Date(startDate.getTime() - (endDate.getTime() - startDate.getTime()));
 
+    const userFilter = userId
+      ? Prisma.sql`AND u."userId" = ${userId}`
+      : Prisma.empty;
+
     const [currentStats, previousStats] = await Promise.all([
       this.prisma.$queryRaw<[{ total: bigint; unique_ips: bigint }]>`
         SELECT COUNT(*)::bigint as total, COUNT(DISTINCT c.ip)::bigint as unique_ips
         FROM "clicks" c
         INNER JOIN "urls" u ON c."urlId" = u."id"
-        WHERE u."userId" = ${userId}
-          AND c."isBot" = false
+        WHERE c."isBot" = false
           AND c."createdAt" >= ${startDate}
           AND c."createdAt" <= ${endDate}
+          ${userFilter}
       `,
       this.prisma.$queryRaw<[{ count: bigint }]>`
         SELECT COUNT(*)::bigint as count
         FROM "clicks" c
         INNER JOIN "urls" u ON c."urlId" = u."id"
-        WHERE u."userId" = ${userId}
-          AND c."isBot" = false
+        WHERE c."isBot" = false
           AND c."createdAt" >= ${previousStartDate}
           AND c."createdAt" < ${startDate}
+          ${userFilter}
       `,
     ]);
 
@@ -590,18 +599,22 @@ export class AnalyticsService {
    * Get user time series data using database aggregation
    */
   private async getUserTimeSeriesWithAggregation(
-    userId: string,
+    userId: string | null,
     startDate: Date,
     endDate: Date,
   ): Promise<TimeSeriesDataPoint[]> {
+    const userFilter = userId
+      ? Prisma.sql`AND u."userId" = ${userId}`
+      : Prisma.empty;
+
     const rawData = await this.prisma.$queryRaw<{ date: Date; count: bigint }[]>`
       SELECT DATE(c."createdAt") as date, COUNT(*)::bigint as count
       FROM "clicks" c
       INNER JOIN "urls" u ON c."urlId" = u."id"
-      WHERE u."userId" = ${userId}
-        AND c."isBot" = false
+      WHERE c."isBot" = false
         AND c."createdAt" >= ${startDate}
         AND c."createdAt" <= ${endDate}
+        ${userFilter}
       GROUP BY DATE(c."createdAt")
       ORDER BY date
     `;
@@ -629,7 +642,7 @@ export class AnalyticsService {
    * Get user grouped statistics using database aggregation
    */
   private async getUserGroupedStats(
-    userId: string,
+    userId: string | null,
     startDate: Date,
     endDate: Date,
     field: string,
@@ -650,29 +663,36 @@ export class AnalyticsService {
     const column = columnMap[field];
     if (!column) return [];
 
-    const totalResult = await this.prisma.$queryRaw<[{ count: bigint }]>`
+    const userFilterSql = userId ? `AND u."userId" = $1` : '';
+    const params = userId
+      ? [userId, startDate, endDate]
+      : [startDate, endDate];
+    const startIdx = userId ? '$2' : '$1';
+    const endIdx = userId ? '$3' : '$2';
+
+    const totalResult = await this.prisma.$queryRawUnsafe<[{ count: bigint }]>(`
       SELECT COUNT(*)::bigint as count
       FROM "clicks" c
       INNER JOIN "urls" u ON c."urlId" = u."id"
-      WHERE u."userId" = ${userId}
-        AND c."isBot" = false
-        AND c."createdAt" >= ${startDate}
-        AND c."createdAt" <= ${endDate}
-    `;
+      WHERE c."isBot" = false
+        AND c."createdAt" >= ${startIdx}
+        AND c."createdAt" <= ${endIdx}
+        ${userFilterSql}
+    `, ...params);
     const total = Number(totalResult[0]?.count || 0);
 
     const rawStats = await this.prisma.$queryRawUnsafe<{ name: string; count: bigint }[]>(`
       SELECT COALESCE(c.${column}, 'Unknown') as name, COUNT(*)::bigint as count
       FROM "clicks" c
       INNER JOIN "urls" u ON c."urlId" = u."id"
-      WHERE u."userId" = $1
-        AND c."isBot" = false
-        AND c."createdAt" >= $2
-        AND c."createdAt" <= $3
+      WHERE c."isBot" = false
+        AND c."createdAt" >= ${startIdx}
+        AND c."createdAt" <= ${endIdx}
+        ${userFilterSql}
       GROUP BY c.${column}
       ORDER BY count DESC
       LIMIT 10
-    `, userId, startDate, endDate);
+    `, ...params);
 
     return rawStats.map((row) => ({
       name: row.name || 'Unknown',
@@ -789,7 +809,7 @@ export class AnalyticsService {
    * Optimized: Use aggregation query to get current and previous period counts in one query
    */
   private async calculateUserOverview(
-    userId: string,
+    userId: string | null,
     clicks: ClickDataForAnalytics[],
     startDate: Date,
     endDate: Date,
@@ -808,14 +828,18 @@ export class AnalyticsService {
       startDate.getTime() - (endDate.getTime() - startDate.getTime()),
     );
 
+    const userFilter = userId
+      ? Prisma.sql`AND u."userId" = ${userId}`
+      : Prisma.empty;
+
     const [previousResult] = await this.prisma.$queryRaw<[{ count: bigint }]>`
       SELECT COUNT(*)::bigint as count
       FROM "clicks" c
       INNER JOIN "urls" u ON c."urlId" = u."id"
-      WHERE u."userId" = ${userId}
-        AND c."isBot" = false
+      WHERE c."isBot" = false
         AND c."createdAt" >= ${previousStartDate}
         AND c."createdAt" < ${startDate}
+        ${userFilter}
     `;
 
     const previousClicks = Number(previousResult?.count || 0);
@@ -1132,9 +1156,13 @@ export class AnalyticsService {
     // Calculate date range
     const { startDate, endDate } = this.calculateDateRange(queryDto);
 
-    // Get all URLs for the user
+    // ADMIN sees all users' data, regular users only see their own
+    const isAdmin = user.role === UserRole.ADMIN;
+    const urlWhereFilter = isAdmin ? {} : { userId: user.id };
+
+    // Get URLs
     const userUrls = await this.prisma.url.findMany({
-      where: { userId: user.id },
+      where: urlWhereFilter,
       select: { id: true },
     });
 
@@ -1233,10 +1261,11 @@ export class AnalyticsService {
     // Calculate date range
     const { startDate, endDate } = this.calculateDateRange(queryDto);
 
-    // Get all URLs with A/B Testing enabled for the user
+    // ADMIN sees all users' data, regular users only see their own
+    const isAdmin = user.role === UserRole.ADMIN;
     const abTestUrls = await this.prisma.url.findMany({
       where: {
-        userId: user.id,
+        ...(isAdmin ? {} : { userId: user.id }),
         isAbTest: true,
       },
       select: {
