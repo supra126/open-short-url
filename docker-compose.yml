@@ -2,9 +2,13 @@
 # Open Short URL - Docker Compose (VPS 一鍵部署)
 # ============================================================
 # Usage:
-#   1. cp .env.docker.example .env.docker
-#   2. Edit .env.docker with your settings
-#   3. docker compose up -d
+#   1. Download this file and .env.docker.example
+#   2. cp .env.docker.example .env.docker
+#   3. Edit .env.docker with your settings
+#   4. docker compose up -d
+#
+# Images are pulled from GHCR. Pin a version with:
+#   IMAGE_TAG=v1.0.0 docker compose up -d
 # ============================================================
 
 services:
@@ -52,9 +56,7 @@ services:
 
   # --- Backend (NestJS) ---
   backend:
-    build:
-      context: .
-      dockerfile: apps/backend/Dockerfile
+    image: ghcr.io/supra126/open-short-url-backend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     env_file:
       - path: .env.docker
@@ -84,19 +86,10 @@ services:
 
   # --- Frontend (Next.js) ---
   frontend:
-    build:
-      context: .
-      dockerfile: apps/frontend/Dockerfile
-      args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4101}
-        NEXT_PUBLIC_SHORT_URL_DOMAIN: ${NEXT_PUBLIC_SHORT_URL_DOMAIN:-http://localhost:4101}
-        NEXT_PUBLIC_LOCALE: ${NEXT_PUBLIC_LOCALE:-en}
-        NEXT_PUBLIC_BRAND_NAME: ${NEXT_PUBLIC_BRAND_NAME:-Open Short URL}
-        NEXT_PUBLIC_BRAND_ICON_URL: ${NEXT_PUBLIC_BRAND_ICON_URL:-}
-        NEXT_PUBLIC_BRAND_DESCRIPTION: ${NEXT_PUBLIC_BRAND_DESCRIPTION:-}
-        NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+    image: ghcr.io/supra126/open-short-url-frontend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
+      HOSTNAME: 0.0.0.0
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4101}
       NEXT_PUBLIC_SHORT_URL_DOMAIN: ${NEXT_PUBLIC_SHORT_URL_DOMAIN:-http://localhost:4101}
       NEXT_PUBLIC_LOCALE: ${NEXT_PUBLIC_LOCALE:-en}

@@ -42,7 +42,7 @@ services:
       retries: 5
 
   backend:
-    image: ghcr.io/supra126/open-short-url-backend:latest
+    image: ghcr.io/supra126/open-short-url-backend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://postgres:quickstart-not-for-production@postgres:5432/open_short_url?schema=public
@@ -67,9 +67,10 @@ services:
         condition: service_healthy
 
   frontend:
-    image: ghcr.io/supra126/open-short-url-frontend:latest
+    image: ghcr.io/supra126/open-short-url-frontend:${IMAGE_TAG:-latest}
     restart: unless-stopped
     environment:
+      HOSTNAME: 0.0.0.0
       NEXT_PUBLIC_API_URL: http://localhost:4101
       NEXT_PUBLIC_SHORT_URL_DOMAIN: http://localhost:4101
       NEXT_PUBLIC_LOCALE: en
