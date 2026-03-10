@@ -7,6 +7,8 @@ import { ThemeProvider } from '@/providers/theme-provider';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { t } from '@/lib/i18n';
 
+export const dynamic = 'force-dynamic';
+
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-display',

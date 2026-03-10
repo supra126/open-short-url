@@ -1,6 +1,6 @@
 {
   "name": "open-short-url",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "開源、白標化、可自部署的短網址平台",
   "private": true,
   "packageManager": "pnpm@10.30.3",

@@ -39,7 +39,9 @@ const localeMap: Record<string, Translations> = {
  * Falls back to English if locale not found
  */
 function loadTranslations(): Translations {
-  const locale = process.env.NEXT_PUBLIC_LOCALE || 'en';
+  const rawLocale = process.env.NEXT_PUBLIC_LOCALE || 'en';
+  // If locale is a build-time placeholder, fall back to 'en'
+  const locale = rawLocale.startsWith('__') ? 'en' : rawLocale;
   const translations = localeMap[locale];
 
   if (translations) {
