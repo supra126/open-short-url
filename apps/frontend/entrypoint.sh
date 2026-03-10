@@ -28,9 +28,7 @@ add_replacement "__NEXT_PUBLIC_BRAND_DESCRIPTION__" "$NEXT_PUBLIC_BRAND_DESCRIPT
 add_replacement "__NEXT_PUBLIC_TURNSTILE_SITE_KEY__" "$NEXT_PUBLIC_TURNSTILE_SITE_KEY"
 
 if [ -n "$REPLACEMENTS" ]; then
-  find /app/apps/frontend/.next -type f -name "*.js" -exec sed -i "$REPLACEMENTS" {} +
-  find /app/apps/frontend/.next -type f -name "*.html" -exec sed -i "$REPLACEMENTS" {} +
-  find /app/apps/frontend/.next -type f -name "*.json" -exec sed -i "$REPLACEMENTS" {} +
+  find /app/apps/frontend/.next -type f \( -name "*.js" -o -name "*.html" -o -name "*.json" -o -name "*.rsc" \) -exec sed -i "$REPLACEMENTS" {} +
 fi
 
 exec node apps/frontend/server.js

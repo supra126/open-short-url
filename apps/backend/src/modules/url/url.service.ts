@@ -164,15 +164,8 @@ export class UrlService implements OnModuleInit {
         50, // 50ms retry delay
       );
 
-      // If lock is not acquired, return early to prevent race conditions
-      if (!lockResult.acquired) {
-        throw new ConflictException(
-          'Unable to validate slug availability. Please try again.',
-        );
-      }
-
       try {
-        // Check if slug already exists (within lock protection)
+        // Check if slug already exists (with or without lock protection)
         const existing = await this.prisma.url.findUnique({
           where: { slug: customSlug },
         });
@@ -183,10 +176,12 @@ export class UrlService implements OnModuleInit {
 
         slug = customSlug;
       } finally {
-        await this.distributedLockService.release(
-          lockResource,
-          lockResult.lockId,
-        );
+        if (lockResult.acquired) {
+          await this.distributedLockService.release(
+            lockResource,
+            lockResult.lockId,
+          );
+        }
       }
     } else {
       // Auto-generate slug and handle collisions
