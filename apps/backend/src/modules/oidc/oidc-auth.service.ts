@@ -7,7 +7,6 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@/common/database/prisma.service';
 import { AuditLogService } from '@/modules/audit-log/audit-log.service';
 import { RequestMeta } from '@/common/decorators/request-meta.decorator';
-import { hashPassword } from '@/common/utils';
 import { OidcClientFactory, getOpenidClient } from './oidc-client.factory';
 import { OidcProviderService } from './oidc-provider.service';
 

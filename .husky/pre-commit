@@ -1,1 +1,12 @@
 pnpm lint
+
+# Env sync check
+./scripts/check-env-sync.sh
+
+# Prevent committing sensitive files
+SENSITIVE_FILES=$(git diff --cached --name-only | grep -E '\.env$|\.env\.local$|\.env\.production$|credentials\.json|\.pem$|\.key$' || true)
+if [ -n "$SENSITIVE_FILES" ]; then
+  echo "❌ Blocked: sensitive files staged for commit:"
+  echo "$SENSITIVE_FILES"
+  exit 1
+fi
