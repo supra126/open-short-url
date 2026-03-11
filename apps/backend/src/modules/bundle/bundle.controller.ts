@@ -31,6 +31,7 @@ import {
   BundleStatsDto,
 } from './dto/bundle-response.dto';
 import { AddUrlToBundleDto, AddMultipleUrlsDto } from './dto/add-url-to-bundle.dto';
+import { UpdateUrlOrderDto } from './dto/update-url-order.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
@@ -357,9 +358,9 @@ export class BundleController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('urlId') urlId: string,
-    @Body('order') order: number,
+    @Body() body: UpdateUrlOrderDto,
   ): Promise<BundleResponseDto> {
-    return this.bundleService.updateUrlOrder(user.id, id, urlId, order, user.role);
+    return this.bundleService.updateUrlOrder(user.id, id, urlId, body.order, user.role);
   }
 
   /**

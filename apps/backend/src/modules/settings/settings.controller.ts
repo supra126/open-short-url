@@ -19,9 +19,11 @@ import {
 } from '@nestjs/swagger';
 import { SettingsService } from './settings.service';
 import { SystemSettingsResponseDto } from './dto/system-settings.dto';
+import { UpdateSystemSettingDto } from './dto/update-system-setting.dto';
 import { JwtAuthGuard } from '@/modules/auth/guards/jwt-auth.guard';
 import { RolesGuard } from '@/modules/auth/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 import { User, UserRole } from '@prisma/client';
@@ -132,12 +134,16 @@ export class SettingsController {
   })
   async updateSystemSetting(
     @Param('key') key: string,
-    @Body() body: { value: unknown; description?: string },
+    @Body() body: UpdateSystemSettingDto,
+    @CurrentUser() user: User,
+    @RequestMeta() meta: RequestMetaType,
   ): Promise<SystemSettingsResponseDto> {
     return this.settingsService.updateSystemSetting(
       key,
       body.value as Prisma.InputJsonValue,
       body.description,
+      user.id,
+      meta,
     );
   }
 
@@ -169,7 +175,11 @@ export class SettingsController {
     description: 'Insufficient permissions (admin role required)',
     type: ErrorResponseDto,
   })
-  async deleteSystemSetting(@Param('key') key: string): Promise<void> {
-    return this.settingsService.deleteSystemSetting(key);
+  async deleteSystemSetting(
+    @Param('key') key: string,
+    @CurrentUser() user: User,
+    @RequestMeta() meta: RequestMetaType,
+  ): Promise<void> {
+    return this.settingsService.deleteSystemSetting(key, user.id, meta);
   }
 }

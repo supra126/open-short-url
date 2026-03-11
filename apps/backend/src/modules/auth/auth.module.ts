@@ -67,6 +67,6 @@ import { CacheModule } from '@/common/cache/cache.module';
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, TokenBlacklistService],
-  exports: [AuthService, TokenBlacklistService],
+  exports: [AuthService, TokenBlacklistService, JwtModule],
 })
 export class AuthModule {}

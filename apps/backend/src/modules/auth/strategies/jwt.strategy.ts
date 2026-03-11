@@ -46,7 +46,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         ExtractJwt.fromAuthHeaderAsBearerToken(),
       ]),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'default-secret',
+      // Safe to use non-null assertion: AuthModule validates JWT_SECRET at startup
+      secretOrKey: configService.get<string>('JWT_SECRET')!,
       passReqToCallback: true, // Enable this option to receive request object in validate method
     });
   }

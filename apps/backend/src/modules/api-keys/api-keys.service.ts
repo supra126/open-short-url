@@ -14,6 +14,7 @@ import {
   ApiKeyListResponseDto,
 } from './dto/api-key-response.dto';
 import { ApiKeyQueryDto } from './dto/api-key-query.dto';
+import { buildPaginatedResponse } from '@/common/dto';
 import { ERROR_MESSAGES } from '@/common/constants/errors';
 import * as crypto from 'crypto';
 import * as bcrypt from 'bcryptjs';
@@ -209,8 +210,8 @@ export class ApiKeysService {
       this.prisma.apiKey.count({ where: { userId } }),
     ]);
 
-    return {
-      data: apiKeys.map((apiKey) => ({
+    return buildPaginatedResponse(
+      apiKeys.map((apiKey) => ({
         id: apiKey.id,
         name: apiKey.name,
         prefix: apiKey.prefix,
@@ -222,8 +223,7 @@ export class ApiKeysService {
       total,
       page,
       pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    };
+    );
   }
 
   /**

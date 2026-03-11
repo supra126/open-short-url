@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEnum } from 'class-validator';
+import { UrlStatus } from '@prisma/client';
 import { PaginationDto } from '@/common/dto';
 
 export class UrlQueryDto extends PaginationDto {
@@ -16,9 +17,9 @@ export class UrlQueryDto extends PaginationDto {
     enum: ['ACTIVE', 'INACTIVE', 'EXPIRED'],
     example: 'ACTIVE',
   })
-  @IsEnum(['ACTIVE', 'INACTIVE', 'EXPIRED'])
+  @IsEnum(UrlStatus)
   @IsOptional()
-  status?: 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
+  status?: UrlStatus;
 
   @ApiPropertyOptional({
     description: 'Sort field (createdAt: Creation time, clickCount: Click count, title: Title)',

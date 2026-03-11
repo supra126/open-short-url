@@ -19,6 +19,7 @@ import {
   BundleStatsDto,
 } from './dto/bundle-response.dto';
 import { AddUrlToBundleDto, AddMultipleUrlsDto } from './dto/add-url-to-bundle.dto';
+import { buildPaginatedResponse } from '@/common/dto';
 
 /**
  * Internal type for Prisma bundle query result with URL relations
@@ -185,13 +186,7 @@ export class BundleService {
 
     const data = bundles.map((bundle) => this.mapToResponseDto(bundle));
 
-    return {
-      data,
-      total,
-      page,
-      pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    };
+    return buildPaginatedResponse(data, total, page, pageSize);
   }
 
   /**
@@ -555,14 +550,17 @@ export class BundleService {
       throw new NotFoundException('Bundle not found');
     }
 
+    // Filter out bundle URLs with missing URL (defensive null guard)
+    const validBundleUrls = bundle.urls.filter((bundleUrl) => bundleUrl.url != null);
+
     // Calculate total clicks
-    const totalClicks = bundle.urls.reduce(
+    const totalClicks = validBundleUrls.reduce(
       (sum, bundleUrl) => sum + bundleUrl.url.clickCount,
       0,
     );
 
     // Find top performing URL
-    const topUrl = bundle.urls
+    const topUrl = validBundleUrls
       .map((bundleUrl) => ({
         slug: bundleUrl.url.slug,
         clicks: bundleUrl.url.clickCount,
@@ -581,7 +579,7 @@ export class BundleService {
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
 
-      const clicksOnDate = bundle.urls.reduce((sum, bundleUrl) => {
+      const clicksOnDate = validBundleUrls.reduce((sum, bundleUrl) => {
         const urlClicksOnDate = bundleUrl.url.clicks.filter((click) => {
           const clickDate = new Date(click.createdAt);
           return clickDate >= date && clickDate < nextDate;
@@ -598,7 +596,7 @@ export class BundleService {
     return {
       bundleId,
       totalClicks,
-      urlCount: bundle.urls.length,
+      urlCount: validBundleUrls.length,
       topUrl,
       clickTrend,
     };

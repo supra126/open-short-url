@@ -8,6 +8,7 @@ import {
   Body,
   Param,
   UseGuards,
+  HttpCode,
   HttpStatus,
 } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
@@ -36,7 +37,7 @@ import {
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 
 interface AuthUser {
-  userId: string;
+  id: string;
   email: string;
   role: 'ADMIN' | 'USER';
 }
@@ -112,7 +113,7 @@ Redirect iOS users to App Store:
     @CurrentUser() user: AuthUser,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<RoutingRuleResponseDto> {
-    return this.routingService.create(urlId, user.userId, dto, user.role, meta);
+    return this.routingService.create(urlId, user.id, dto, user.role, meta);
   }
 
   @Post('from-template')
@@ -158,7 +159,7 @@ Use GET /api/routing-templates to see all available templates.`,
     @CurrentUser() user: AuthUser,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<RoutingRuleResponseDto> {
-    return this.routingService.createFromTemplate(urlId, user.userId, dto, user.role, meta);
+    return this.routingService.createFromTemplate(urlId, user.id, dto, user.role, meta);
   }
 
   @Get()
@@ -186,7 +187,7 @@ Use GET /api/routing-templates to see all available templates.`,
     @Param('urlId') urlId: string,
     @CurrentUser() user: AuthUser,
   ): Promise<RoutingRulesListResponseDto> {
-    return this.routingService.findAll(urlId, user.userId, user.role);
+    return this.routingService.findAll(urlId, user.id, user.role);
   }
 
   @Get(':ruleId')
@@ -216,7 +217,7 @@ Use GET /api/routing-templates to see all available templates.`,
     @Param('ruleId') ruleId: string,
     @CurrentUser() user: AuthUser,
   ): Promise<RoutingRuleResponseDto> {
-    return this.routingService.findOne(urlId, ruleId, user.userId, user.role);
+    return this.routingService.findOne(urlId, ruleId, user.id, user.role);
   }
 
   @Put(':ruleId')
@@ -253,10 +254,11 @@ Use GET /api/routing-templates to see all available templates.`,
     @CurrentUser() user: AuthUser,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<RoutingRuleResponseDto> {
-    return this.routingService.update(urlId, ruleId, user.userId, dto, user.role, meta);
+    return this.routingService.update(urlId, ruleId, user.id, dto, user.role, meta);
   }
 
   @Delete(':ruleId')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete a routing rule',
     description: 'Delete a routing rule permanently. If this is the last rule and smart routing is enabled, consider disabling smart routing first.',
@@ -283,7 +285,7 @@ Use GET /api/routing-templates to see all available templates.`,
     @CurrentUser() user: AuthUser,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<void> {
-    return this.routingService.delete(urlId, ruleId, user.userId, user.role, meta);
+    return this.routingService.delete(urlId, ruleId, user.id, user.role, meta);
   }
 
   @Patch('settings')
@@ -321,7 +323,7 @@ Use GET /api/routing-templates to see all available templates.`,
     @CurrentUser() user: AuthUser,
     @RequestMeta() meta: RequestMetaType,
   ): Promise<SmartRoutingSettingsResponseDto> {
-    return this.routingService.updateSettings(urlId, user.userId, dto, user.role, meta);
+    return this.routingService.updateSettings(urlId, user.id, dto, user.role, meta);
   }
 }
 

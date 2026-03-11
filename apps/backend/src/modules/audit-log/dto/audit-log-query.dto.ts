@@ -15,7 +15,7 @@ export class AuditLogQueryDto extends PaginationDto {
   action?: AuditAction;
 
   @ApiPropertyOptional({
-    description: 'Filter by entity type (url, user, api_key, bundle, webhook, variant)',
+    description: 'Filter by entity type (url, user, api_key, bundle, webhook, variant, oidc_provider, oidc_account, system_setting)',
     example: 'url',
   })
   @IsString()

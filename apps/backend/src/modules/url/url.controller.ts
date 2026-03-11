@@ -42,6 +42,7 @@ import { BulkDeleteUrlDto, BulkDeleteResultDto } from './dto/bulk-delete-url.dto
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
+import { QrCodeResponseDto } from './dto/qrcode-response.dto';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 
 // Maximum items per bulk request to prevent resource exhaustion
@@ -341,16 +342,7 @@ export class UrlController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'QR Code generated successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        qrCode: {
-          type: 'string',
-          description: 'Base64 encoded QR Code Data URL (can be directly used in img src)',
-          example: 'data:image/png;base64,iVBORw0KGgoAAAANS...',
-        },
-      },
-    },
+    type: QrCodeResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.NOT_FOUND,
@@ -367,7 +359,7 @@ export class UrlController {
     @Param('id') id: string,
     @Query('width') width?: number,
     @Query('color') color?: string,
-  ): Promise<{ qrCode: string }> {
+  ): Promise<QrCodeResponseDto> {
     const qrCode = await this.urlService.generateQRCode(
       id,
       user.id,

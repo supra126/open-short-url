@@ -65,6 +65,17 @@ enum AuditAction {
   ROUTING_RULE_CREATED
   ROUTING_RULE_UPDATED
   ROUTING_RULE_DELETED
+  // OIDC SSO actions
+  SSO_LOGIN
+  SSO_LOGIN_FAILED
+  OIDC_PROVIDER_CREATED
+  OIDC_PROVIDER_UPDATED
+  OIDC_PROVIDER_DELETED
+  OIDC_ACCOUNT_LINKED
+  OIDC_ACCOUNT_UNLINKED
+  // System settings actions
+  SYSTEM_SETTING_UPDATED
+  SYSTEM_SETTING_DELETED
 }
 
 // ==================== Models ====================
@@ -82,11 +93,12 @@ model User {
   twoFactorEnabled Boolean @default(false)
 
   // Relations
-  urls      Url[]
-  apiKeys   ApiKey[]
-  webhooks  Webhook[]
-  bundles   Bundle[]
-  auditLogs AuditLog[]
+  urls         Url[]
+  apiKeys      ApiKey[]
+  webhooks     Webhook[]
+  bundles      Bundle[]
+  auditLogs    AuditLog[]
+  oidcAccounts OidcAccount[]
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -469,4 +481,49 @@ model RoutingRule {
   @@index([urlId, priority(sort: Desc), isActive]) // Rule evaluation order
   @@index([urlId, matchCount(sort: Desc)]) // Statistics sorting
   @@map("routing_rules")
+}
+
+// ==================== OIDC SSO ====================
+
+model OidcProvider {
+  id       String  @id @default(cuid())
+  name     String // Display name: "Google", "Azure AD"
+  slug     String  @unique // URL-safe identifier: "google", "azure-ad"
+  isActive Boolean @default(true)
+
+  // OIDC Configuration
+  discoveryUrl          String // https://accounts.google.com/.well-known/openid-configuration
+  clientId              String
+  clientSecret          String
+  scopes                String   @default("openid email profile")
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  oidcAccounts OidcAccount[]
+
+  @@map("oidc_providers")
+}
+
+model OidcAccount {
+  id String @id @default(cuid())
+
+  // Provider identity
+  providerId String
+  provider   OidcProvider @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  sub        String // Subject claim from provider
+
+  // Linked local user
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([providerId, sub]) // One account per provider per subject
+  @@index([userId])
+  @@map("oidc_accounts")
 }

@@ -6,8 +6,10 @@ import {
   IsEnum,
   IsDateString,
   MinLength,
+  MaxLength,
 } from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
+import { UrlStatus } from '@prisma/client';
 import { IsSafeUrl } from '@/common/validators/safe-url.validator';
 
 /**
@@ -41,11 +43,11 @@ export class UpdateUrlDto {
     example: 'ACTIVE',
   })
   @Transform(emptyToUndefined)
-  @IsEnum(['ACTIVE', 'INACTIVE', 'EXPIRED'], {
+  @IsEnum(UrlStatus, {
     message: 'Status must be ACTIVE, INACTIVE, or EXPIRED',
   })
   @IsOptional()
-  status?: 'ACTIVE' | 'INACTIVE' | 'EXPIRED';
+  status?: UrlStatus;
 
   @ApiPropertyOptional({
     description: 'Password protection (set to null to remove password)',
@@ -55,6 +57,7 @@ export class UpdateUrlDto {
   })
   @IsString()
   @MinLength(4, { message: 'Password must be at least 4 characters' })
+  @MaxLength(128, { message: 'Password must not exceed 128 characters' })
   @IsOptional()
   password?: string | null;
 

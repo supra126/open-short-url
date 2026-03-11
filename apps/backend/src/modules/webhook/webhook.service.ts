@@ -19,6 +19,7 @@ import {
   WebhookTestResponseDto,
 } from './dto/webhook.dto';
 import { WebhookQueryDto, WebhookLogsQueryDto } from './dto/webhook-query.dto';
+import { buildPaginatedResponse } from '@/common/dto';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -134,13 +135,12 @@ export class WebhookService implements OnModuleInit {
       this.prisma.webhook.count({ where }),
     ]);
 
-    return {
-      data: webhooks.map((w) => this.mapToResponse(w)),
+    return buildPaginatedResponse(
+      webhooks.map((w) => this.mapToResponse(w)),
       total,
       page,
       pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    };
+    );
   }
 
   /**
@@ -288,15 +288,12 @@ export class WebhookService implements OnModuleInit {
       }),
     ]);
 
-    const totalPages = Math.ceil(total / pageSize);
-
-    return {
-      data: logs.map((log) => this.mapLogToResponse(log)),
+    return buildPaginatedResponse(
+      logs.map((log) => this.mapLogToResponse(log)),
       total,
       page,
       pageSize,
-      totalPages,
-    };
+    );
   }
 
   /**

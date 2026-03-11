@@ -9,6 +9,7 @@ import { AuditLogService } from '@/modules/audit-log/audit-log.service';
 import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import { Prisma, UserRole } from '@prisma/client';
 import { hashPassword } from '@/common/utils';
+import { buildPaginatedResponse } from '@/common/dto';
 import {
   UserListQueryDto,
   UserResponseDto,
@@ -16,7 +17,9 @@ import {
   CreateUserDto,
   UpdateUserRoleDto,
   UpdateUserStatusDto,
+  UpdateUserNameDto,
   ResetPasswordDto,
+  OidcAccountResponseDto,
 } from './dto';
 
 @Injectable()
@@ -132,13 +135,12 @@ export class UsersService {
       }),
     ]);
 
-    return {
-      data: users.map((user) => this.mapUserResponse(user)),
+    return buildPaginatedResponse(
+      users.map((user) => this.mapUserResponse(user)),
       total,
       page,
       pageSize,
-      totalPages: Math.ceil(total / pageSize),
-    };
+    );
   }
 
   /**
@@ -351,6 +353,184 @@ export class UsersService {
       entityType: 'user',
       entityId: userId,
       newValue: { password: '[REDACTED]' },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+  }
+
+  /**
+   * Update user name
+   */
+  async updateUserName(
+    userId: string,
+    updateNameDto: UpdateUserNameDto,
+    adminUserId: string,
+    meta?: RequestMeta,
+  ): Promise<UserResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const oldName = user.name;
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { name: updateNameDto.name || null },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        twoFactorEnabled: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await this.auditLogService.create({
+      userId: adminUserId,
+      action: 'USER_UPDATED',
+      entityType: 'user',
+      entityId: userId,
+      oldValue: { name: oldName },
+      newValue: { name: updateNameDto.name },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
+    return this.mapUserResponse(updatedUser);
+  }
+
+  /**
+   * Admin disable 2FA for a user
+   */
+  async adminDisable2FA(
+    userId: string,
+    adminUserId: string,
+    meta?: RequestMeta,
+  ): Promise<UserResponseDto> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.twoFactorEnabled) {
+      throw new BadRequestException('Two-factor authentication is not enabled for this user');
+    }
+
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        twoFactorEnabled: false,
+        twoFactorSecret: null,
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        isActive: true,
+        twoFactorEnabled: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await this.auditLogService.create({
+      userId: adminUserId,
+      action: 'USER_UPDATED',
+      entityType: 'user',
+      entityId: userId,
+      oldValue: { twoFactorEnabled: true },
+      newValue: { twoFactorEnabled: false, disabledBy: 'admin' },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
+    return this.mapUserResponse(updatedUser);
+  }
+
+  /**
+   * Get user's OIDC accounts (SSO links)
+   */
+  async getUserOidcAccounts(userId: string): Promise<OidcAccountResponseDto[]> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const accounts = await this.prisma.oidcAccount.findMany({
+      where: { userId },
+      include: {
+        provider: {
+          select: {
+            name: true,
+            slug: true,
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return accounts.map((account) => ({
+      id: account.id,
+      providerId: account.providerId,
+      sub: account.sub,
+      userId: account.userId,
+      createdAt: account.createdAt,
+      updatedAt: account.updatedAt,
+      provider: {
+        name: account.provider.name,
+        slug: account.provider.slug,
+      },
+    }));
+  }
+
+  /**
+   * Delete user's OIDC account link
+   */
+  async deleteUserOidcAccount(
+    userId: string,
+    accountId: string,
+    adminUserId: string,
+    meta?: RequestMeta,
+  ): Promise<void> {
+    const account = await this.prisma.oidcAccount.findFirst({
+      where: { id: accountId, userId },
+      include: {
+        provider: { select: { name: true, slug: true } },
+      },
+    });
+
+    if (!account) {
+      throw new NotFoundException('OIDC account link not found');
+    }
+
+    await this.prisma.oidcAccount.delete({
+      where: { id: accountId },
+    });
+
+    await this.auditLogService.create({
+      userId: adminUserId,
+      action: 'OIDC_ACCOUNT_UNLINKED',
+      entityType: 'oidc_account',
+      entityId: accountId,
+      oldValue: {
+        providerId: account.provider.slug,
+        sub: account.sub,
+        userId,
+      },
       ipAddress: meta?.ipAddress,
       userAgent: meta?.userAgent,
     });

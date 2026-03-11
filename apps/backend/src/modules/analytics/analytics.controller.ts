@@ -14,6 +14,7 @@ import {
   ApiBearerAuth,
   ApiSecurity,
   ApiParam,
+  ApiQuery,
   ApiProduces,
 } from '@nestjs/swagger';
 import { User } from '@prisma/client';
@@ -30,6 +31,7 @@ import {
   AbTestAnalyticsResponseDto,
   RoutingAnalyticsResponseDto,
 } from './dto/analytics-response.dto';
+import { TopPerformingUrlDto } from '@/modules/url/dto/url-response.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
@@ -117,28 +119,24 @@ export class AnalyticsController {
   @ApiResponse({
     status: HttpStatus.OK,
     description: 'Query successful',
-    schema: {
-      type: 'array',
-      items: {
-        $ref: '#/components/schemas/TopPerformingUrlDto',
-      },
-    },
+    type: [TopPerformingUrlDto],
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
     type: ErrorResponseDto,
   })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of top URLs to return (default: 5)' })
   async getTopPerformingUrls(
     @CurrentUser() user: User,
     @Query() queryDto: AnalyticsQueryDto,
     @Query('limit') limit?: number,
-  ) {
+  ): Promise<TopPerformingUrlDto[]> {
     return this.analyticsService.getTopPerformingUrls(
       user,
       queryDto,
       limit ? Number(limit) : 5,
-    );
+    ) as Promise<TopPerformingUrlDto[]>;
   }
 
   /**
@@ -169,6 +167,8 @@ export class AnalyticsController {
     description: 'Unauthorized',
     type: ErrorResponseDto,
   })
+  @ApiQuery({ name: 'limit', required: false, type: Number, description: 'Number of recent clicks to return (default: 20)' })
+  @ApiQuery({ name: 'includeBots', required: false, type: String, description: 'Include bot clicks (true/false)' })
   async getRecentClicks(
     @Param('id') id: string,
     @CurrentUser() user: User,

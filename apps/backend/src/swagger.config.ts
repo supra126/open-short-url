@@ -18,6 +18,19 @@ import { BundleQueryDto } from './modules/bundle/dto/bundle-query.dto';
 import { UserListQueryDto } from './modules/users/dto/user-list-query.dto';
 import { AuditLogQueryDto } from './modules/audit-log/dto/audit-log-query.dto';
 import { PaginationDto } from './common/dto';
+import { UserListResponseDto } from './modules/users/dto/user-response.dto';
+import { OidcAccountResponseDto } from './modules/users/dto/oidc-account-response.dto';
+import {
+  OidcProviderResponseDto,
+  OidcProviderPublicDto,
+} from './modules/oidc/dto/oidc-provider.dto';
+import {
+  BundleStatsDto,
+  TopUrlDto,
+  ClickTrendDataPoint,
+} from './modules/bundle/dto/bundle-response.dto';
+import { SystemSettingsResponseDto } from './modules/settings/dto/system-settings.dto';
+import { UpdateSystemSettingDto } from './modules/settings/dto/update-system-setting.dto';
 
 // Import Routing DTOs for OpenAPI schema export
 import {
@@ -150,6 +163,8 @@ const SWAGGER_TAGS: [string, string][] = [
   ['Audit Logs', 'System audit logging and security tracking (Admin only)'],
   ['Routing Rules', 'Smart routing rules for A/B testing and conditional redirects'],
   ['Routing Templates', 'Pre-defined routing rule templates'],
+  ['OIDC Providers (Admin)', 'OIDC SSO provider management (Admin only)'],
+  ['SSO Authentication', 'SSO login via OIDC providers'],
 ];
 
 const EXTRA_MODELS = [
@@ -206,6 +221,19 @@ const EXTRA_MODELS = [
   TopPerformingUrlDto,
   // Export Format Enum DTO
   ExportFormatDto,
+  // User Management DTOs
+  UserListResponseDto,
+  OidcAccountResponseDto,
+  // OIDC Provider DTOs
+  OidcProviderResponseDto,
+  OidcProviderPublicDto,
+  // Bundle Stats DTOs
+  BundleStatsDto,
+  TopUrlDto,
+  ClickTrendDataPoint,
+  // Settings DTOs
+  SystemSettingsResponseDto,
+  UpdateSystemSettingDto,
 ];
 
 /**

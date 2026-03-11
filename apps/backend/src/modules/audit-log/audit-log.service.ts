@@ -3,6 +3,7 @@ import { AuditAction, Prisma } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { AuditLogQueryDto } from './dto/audit-log-query.dto';
 import { AuditLogDto, AuditLogListResponseDto } from './dto/audit-log-response.dto';
+import { buildPaginatedResponse } from '@/common/dto';
 
 export interface CreateAuditLogParams {
   userId?: string | null;
@@ -157,15 +158,12 @@ export class AuditLogService {
       }),
     ]);
 
-    const totalPages = Math.ceil(total / pageSize);
-
-    return {
-      data: items.map((item) => this.toDto(item)),
+    return buildPaginatedResponse(
+      items.map((item) => this.toDto(item)),
       total,
       page,
       pageSize,
-      totalPages,
-    };
+    );
   }
 
   /**

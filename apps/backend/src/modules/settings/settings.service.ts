@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { CacheService } from '@/common/cache/cache.service';
+import { AuditLogService } from '@/modules/audit-log/audit-log.service';
+import { RequestMeta } from '@/common/decorators/request-meta.decorator';
 import { SystemSettingsResponseDto } from './dto/system-settings.dto';
 
 @Injectable()
@@ -12,6 +14,7 @@ export class SettingsService {
   constructor(
     private prisma: PrismaService,
     private cacheService: CacheService,
+    private auditLogService: AuditLogService,
   ) {}
 
   /**
@@ -71,7 +74,14 @@ export class SettingsService {
     key: string,
     value: Prisma.InputJsonValue,
     description?: string,
+    userId?: string,
+    meta?: RequestMeta,
   ): Promise<SystemSettingsResponseDto> {
+    // Get old value for audit trail
+    const oldSetting = await this.prisma.systemSettings.findUnique({
+      where: { key },
+    });
+
     const setting = await this.prisma.systemSettings.upsert({
       where: { key },
       update: {
@@ -89,6 +99,18 @@ export class SettingsService {
     const cacheKey = `${this.CACHE_PREFIX}system:${key}`;
     await this.cacheService.del(cacheKey);
 
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'SYSTEM_SETTING_UPDATED',
+      entityType: 'system_setting',
+      entityId: setting.id,
+      oldValue: oldSetting ? { key, value: oldSetting.value as Record<string, unknown> } : null,
+      newValue: { key, value: value as Record<string, unknown> },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
     // Convert null to undefined to match DTO type
     return {
       ...setting,
@@ -99,7 +121,15 @@ export class SettingsService {
   /**
    * Delete system setting
    */
-  async deleteSystemSetting(key: string): Promise<void> {
+  async deleteSystemSetting(
+    key: string,
+    userId?: string,
+    meta?: RequestMeta,
+  ): Promise<void> {
+    const oldSetting = await this.prisma.systemSettings.findUnique({
+      where: { key },
+    });
+
     await this.prisma.systemSettings.delete({
       where: { key },
     });
@@ -107,5 +137,16 @@ export class SettingsService {
     // Clear cache
     const cacheKey = `${this.CACHE_PREFIX}system:${key}`;
     await this.cacheService.del(cacheKey);
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'SYSTEM_SETTING_DELETED',
+      entityType: 'system_setting',
+      entityId: oldSetting?.id,
+      oldValue: oldSetting ? { key, value: oldSetting.value as Record<string, unknown> } : null,
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
   }
 }

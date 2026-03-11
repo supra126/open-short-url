@@ -18,6 +18,7 @@ import { CreateUrlDto } from './dto/create-url.dto';
 import { UpdateUrlDto } from './dto/update-url.dto';
 import { UrlQueryDto } from './dto/url-query.dto';
 import { UrlResponseDto, UrlListResponseDto } from './dto/url-response.dto';
+import { buildPaginatedResponse } from '@/common/dto';
 import {
   generateCustomSlug,
   validateSlug,
@@ -280,15 +281,12 @@ export class UrlService implements OnModuleInit {
       this.prisma.url.count({ where }),
     ]);
 
-    const totalPages = Math.ceil(total / pageSize);
-
-    return {
-      data: urls.map((url) => this.mapToResponse(url)),
+    return buildPaginatedResponse(
+      urls.map((url) => this.mapToResponse(url)),
       total,
       page,
       pageSize,
-      totalPages,
-    };
+    );
   }
 
   /**

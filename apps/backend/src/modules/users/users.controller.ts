@@ -26,6 +26,7 @@ import { CurrentUser } from '@/common/decorators';
 import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { User, UserRole } from '@prisma/client';
 import { SuccessResponseDto } from '@/common/dto/success-response.dto';
+import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 import {
   UserListQueryDto,
   UserResponseDto,
@@ -33,7 +34,9 @@ import {
   CreateUserDto,
   UpdateUserRoleDto,
   UpdateUserStatusDto,
+  UpdateUserNameDto,
   ResetPasswordDto,
+  OidcAccountResponseDto,
 } from './dto';
 
 @ApiTags('User Management')
@@ -57,18 +60,22 @@ export class UsersController {
   @ApiResponse({
     status: HttpStatus.CONFLICT,
     description: 'User with this email already exists',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid request parameters',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: HttpStatus.FORBIDDEN,
     description: 'Forbidden - Requires admin privileges',
+    type: ErrorResponseDto,
   })
   async createUser(
     @CurrentUser() currentUser: User,
@@ -92,10 +99,12 @@ export class UsersController {
   @ApiResponse({
     status: 401,
     description: 'Unauthorized',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Requires admin privileges',
+    type: ErrorResponseDto,
   })
   async getUsers(@Query() query: UserListQueryDto): Promise<UserListResponseDto> {
     return this.usersService.getUsers(query);
@@ -120,14 +129,17 @@ export class UsersController {
   @ApiResponse({
     status: 404,
     description: 'User not found',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Requires admin privileges',
+    type: ErrorResponseDto,
   })
   async getUserById(@Param('id') id: string): Promise<UserResponseDto> {
     return this.usersService.getUserById(id);
@@ -152,18 +164,22 @@ export class UsersController {
   @ApiResponse({
     status: 400,
     description: 'Cannot modify your own role',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 404,
     description: 'User not found',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Requires admin privileges',
+    type: ErrorResponseDto,
   })
   async updateUserRole(
     @Param('id') id: string,
@@ -193,18 +209,22 @@ export class UsersController {
   @ApiResponse({
     status: 400,
     description: 'Cannot deactivate your own account',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 404,
     description: 'User not found',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Requires admin privileges',
+    type: ErrorResponseDto,
   })
   async updateUserStatus(
     @Param('id') id: string,
@@ -235,18 +255,22 @@ export class UsersController {
   @ApiResponse({
     status: 400,
     description: 'Cannot delete your own account',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 404,
     description: 'User not found',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Requires admin privileges',
+    type: ErrorResponseDto,
   })
   async deleteUser(
     @Param('id') id: string,
@@ -280,14 +304,17 @@ export class UsersController {
   @ApiResponse({
     status: 404,
     description: 'User not found',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 403,
     description: 'Forbidden - Requires admin privileges',
+    type: ErrorResponseDto,
   })
   async resetUserPassword(
     @Param('id') id: string,
@@ -298,6 +325,80 @@ export class UsersController {
     await this.usersService.resetUserPassword(id, resetPasswordDto, currentUser.id, meta);
     return {
       message: 'Password reset successfully',
+      statusCode: 200,
+    };
+  }
+
+  @Patch(':id/name')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Update user name',
+    description: 'Update the display name of a specific user. Admin access only.',
+  })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'Name updated successfully', type: UserResponseDto })
+  @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
+  async updateUserName(
+    @Param('id') id: string,
+    @Body() updateNameDto: UpdateUserNameDto,
+    @CurrentUser() currentUser: User,
+    @RequestMeta() meta: RequestMetaType,
+  ): Promise<UserResponseDto> {
+    return this.usersService.updateUserName(id, updateNameDto, currentUser.id, meta);
+  }
+
+  @Patch(':id/2fa')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Admin disable 2FA',
+    description: 'Force-disable two-factor authentication for a user. Admin access only.',
+  })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, description: '2FA disabled successfully', type: UserResponseDto })
+  @ApiResponse({ status: 400, description: '2FA is not enabled for this user', type: ErrorResponseDto })
+  @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
+  async adminDisable2FA(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: User,
+    @RequestMeta() meta: RequestMetaType,
+  ): Promise<UserResponseDto> {
+    return this.usersService.adminDisable2FA(id, currentUser.id, meta);
+  }
+
+  @Get(':id/oidc-accounts')
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({
+    summary: 'Get user OIDC accounts',
+    description: 'Retrieve all SSO accounts linked to a specific user. Admin access only.',
+  })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiResponse({ status: 200, description: 'Successfully retrieved OIDC accounts', type: [OidcAccountResponseDto] })
+  @ApiResponse({ status: 404, description: 'User not found', type: ErrorResponseDto })
+  async getUserOidcAccounts(@Param('id') id: string): Promise<OidcAccountResponseDto[]> {
+    return this.usersService.getUserOidcAccounts(id);
+  }
+
+  @Delete(':id/oidc-accounts/:accountId')
+  @Roles(UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Unlink user OIDC account',
+    description: 'Remove a specific SSO account link from a user. Admin access only.',
+  })
+  @ApiParam({ name: 'id', description: 'User ID' })
+  @ApiParam({ name: 'accountId', description: 'OIDC Account ID' })
+  @ApiResponse({ status: 200, description: 'OIDC account unlinked successfully', type: SuccessResponseDto })
+  @ApiResponse({ status: 404, description: 'OIDC account link not found', type: ErrorResponseDto })
+  async deleteUserOidcAccount(
+    @Param('id') id: string,
+    @Param('accountId') accountId: string,
+    @CurrentUser() currentUser: User,
+    @RequestMeta() meta: RequestMetaType,
+  ): Promise<SuccessResponseDto> {
+    await this.usersService.deleteUserOidcAccount(id, accountId, currentUser.id, meta);
+    return {
+      message: 'OIDC account unlinked successfully',
       statusCode: 200,
     };
   }

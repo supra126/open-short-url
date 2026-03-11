@@ -29,6 +29,7 @@ import { AuthResponseDto } from './dto/auth-response.dto';
 import { UserResponseDto } from '@/modules/users/dto/user-response.dto';
 import { Setup2FAResponseDto } from './dto/setup-2fa-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { EnforceSsoGuard } from '@/modules/oidc/guards/enforce-sso.guard';
 import { CurrentUser } from '@/common/decorators';
 import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
 import { SuccessResponseDto } from '@/common/dto/success-response.dto';
@@ -116,6 +117,7 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseGuards(EnforceSsoGuard)
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
     summary: 'User Login',
@@ -165,7 +167,7 @@ export class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 24 * 60 * 60 * 1000, // 1 day
+        maxAge: 24 * 60 * 60, // 1 day (in seconds, per @fastify/cookie spec)
         path: '/',
       };
 

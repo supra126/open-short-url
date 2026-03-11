@@ -19,6 +19,7 @@ import { WebhookModule } from './modules/webhook/webhook.module';
 import { BundleModule } from './modules/bundle/bundle.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { RoutingModule } from './modules/routing/routing.module';
+import { OidcModule } from './modules/oidc/oidc.module';
 
 @Module({
   imports: [
@@ -81,6 +82,7 @@ import { RoutingModule } from './modules/routing/routing.module';
     WebhookModule,
     AuditLogModule,
     RoutingModule,
+    OidcModule,
     // RedirectModule must be last to match /:slug after specific routes
     RedirectModule,
   ],

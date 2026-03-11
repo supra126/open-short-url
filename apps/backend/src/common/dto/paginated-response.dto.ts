@@ -18,32 +18,21 @@ export class PaginationMetaDto {
   totalPages!: number;
 }
 
-export class PaginatedResponseDto<T> {
-  @ApiProperty({ description: 'Data list', type: 'array' })
-  data!: T[];
-
-  @ApiProperty({ description: 'Total number of records' })
-  total!: number;
-
-  @ApiProperty({ description: 'Current page number' })
-  page!: number;
-
-  @ApiProperty({ description: 'Number of records per page' })
-  pageSize!: number;
-
-  @ApiProperty({ description: 'Total number of pages' })
-  totalPages!: number;
-
-  constructor(
-    data: T[],
-    total: number,
-    page: number,
-    pageSize: number
-  ) {
-    this.data = data;
-    this.total = total;
-    this.page = page;
-    this.pageSize = pageSize;
-    this.totalPages = Math.ceil(total / pageSize);
-  }
+/**
+ * Helper to build a paginated response object.
+ * Use this in services to avoid duplicating Math.ceil(total / pageSize).
+ */
+export function buildPaginatedResponse<T>(
+  data: T[],
+  total: number,
+  page: number,
+  pageSize: number,
+) {
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
