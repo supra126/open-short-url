@@ -71,7 +71,7 @@ const StatCard = memo<{
   const color = statColors[colorIndex % statColors.length];
   return (
     <Card
-      className={`border-l-4 ${color.border} opacity-0 animate-slide-up`}
+      className={`border-l-4 ${color.border} opacity-0 animate-slide-up hover:shadow-md hover:-translate-y-0.5`}
       style={{ animationDelay: `${delay}ms` }}
     >
       <CardHeader className="pb-2">

@@ -38,7 +38,7 @@ const StatCard = memo<{
   description: string;
   isPositive?: boolean;
 }>(({ title, value, description, isPositive }) => (
-  <Card>
+  <Card className="hover:shadow-md hover:-translate-y-0.5">
     <CardHeader className="pb-2">
       <CardDescription>{title}</CardDescription>
       <CardTitle className={`text-3xl ${isPositive !== undefined ? (isPositive ? 'text-success' : 'text-destructive') : ''}`}>

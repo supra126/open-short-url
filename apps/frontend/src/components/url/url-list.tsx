@@ -408,10 +408,12 @@ export function UrlList() {
                       </Link>
                       <Button
                         size="sm"
-                        variant="destructive"
+                        variant="ghost"
+                        className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         onClick={() => handleDeleteClick(url.id)}
                         disabled={deleteUrl.isPending}
                       >
+                        <Trash2 className="h-3.5 w-3.5 mr-1" />
                         {t('common.delete')}
                       </Button>
                     </div>
@@ -481,8 +483,8 @@ export function UrlList() {
                     </Link>
                     <Button
                       size="sm"
-                      variant="destructive"
-                      className="h-8 px-2"
+                      variant="ghost"
+                      className="h-8 px-2 text-destructive hover:text-destructive hover:bg-destructive/10"
                       onClick={() => handleDeleteClick(url.id)}
                       disabled={deleteUrl.isPending}
                       aria-label={t('common.delete')}

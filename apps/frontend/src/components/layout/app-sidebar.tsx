@@ -13,6 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   LayoutDashboard,
@@ -155,6 +156,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { data: user, isLoading } = useCurrentUser();
   const { isEnabled: isAIEnabled } = useAIEnabled();
+  const { isMobile, setOpenMobile } = useSidebar();
+
+  // Close mobile sidebar on route change
+  React.useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [pathname, isMobile, setOpenMobile]);
 
   return (
     <Sidebar collapsible="icon" {...props}>

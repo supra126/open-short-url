@@ -318,13 +318,19 @@ export default function ApiKeysPage() {
             </div>
           ) : !apiKeys?.data.length ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Key className="h-12 w-12 text-muted-foreground mb-4" />
+              <div className="mb-4 rounded-full bg-primary/10 p-4">
+                <Key className="h-8 w-8 text-primary" />
+              </div>
               <h3 className="text-lg font-semibold mb-2">
                 {t('apiKeys.noKeys')}
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 {t('apiKeys.noKeysDesc')}
               </p>
+              <Button onClick={() => setIsCreateDialogOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" />
+                {t('apiKeys.create')}
+              </Button>
             </div>
           ) : (
             <Table>
