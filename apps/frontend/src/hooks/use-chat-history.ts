@@ -7,6 +7,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import type { Message, ChatHistory } from '@/types/ai';
 import { getMessageText } from '@/types/ai';
+
+// Re-export types for consumers of this hook
+export type { Message, ChatHistory };
 import { ErrorHandler } from '@/lib/error-handler';
 
 /**
@@ -62,7 +65,7 @@ export function useChatHistory() {
    */
   const generateTitle = useCallback((messages: Message[]): string => {
     const firstUserMessage = messages.find((m) => m.role === 'user');
-    if (!firstUserMessage) return '新對話';
+    if (!firstUserMessage) return 'New Chat';
 
     const content = getMessageText(firstUserMessage).trim();
     // Truncate to 50 characters

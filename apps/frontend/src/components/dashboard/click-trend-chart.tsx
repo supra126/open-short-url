@@ -16,7 +16,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { t } from '@/lib/i18n';
 import { formatShortDate } from '@/lib/utils';
-import type { TimeSeriesDataPoint } from '@/hooks/use-dashboard';
+import type { TimeSeriesDataPoint } from '@/hooks/use-analytics';
 import {
   AreaChart,
   Area,

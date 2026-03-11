@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useLogin } from '@/hooks/use-auth';
 import { Button } from '@/components/ui/button';
@@ -23,7 +23,18 @@ import {
 } from '@/components/ui/input-otp';
 import { REGEXP_ONLY_DIGITS } from 'input-otp';
 import { TurnstileWidget, isTurnstileEnabled } from '@/components/turnstile/turnstile-widget';
-import { t } from '@/lib/i18n';
+import { SsoButtons } from '@/components/auth/sso-buttons';
+import { t, tDynamic } from '@/lib/i18n';
+
+const KNOWN_SSO_ERRORS = [
+  'sso_user_not_found',
+  'sso_account_inactive',
+  'sso_email_not_verified',
+  'sso_state_invalid',
+  'sso_provider_disabled',
+  'sso_provider_not_found',
+  'sso_failed',
+];
 
 export function LoginForm() {
   const router = useRouter();
@@ -35,6 +46,7 @@ export function LoginForm() {
   const [showTwoFactor, setShowTwoFactor] = useState(false);
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [ssoErrorMessage, setSsoErrorMessage] = useState('');
 
   // Check if Turnstile is enabled
   const turnstileEnabled = isTurnstileEnabled();
@@ -42,9 +54,21 @@ export function LoginForm() {
   // Get redirect URL from query params (set by middleware)
   const redirectUrl = searchParams.get('redirect') || '/';
 
+  // Handle SSO error from query params
+  const ssoError = searchParams.get('error');
+
+  useEffect(() => {
+    if (ssoError) {
+      const safeError = KNOWN_SSO_ERRORS.includes(ssoError) ? ssoError : 'sso_failed';
+      const msg = tDynamic(`auth.ssoErrors.${safeError}`, t('auth.ssoErrorGeneric'));
+      setSsoErrorMessage(msg);
+    }
+  }, [ssoError]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setSsoErrorMessage('');
 
     // Check Turnstile token only if Turnstile is enabled
     if (turnstileEnabled && !turnstileToken) {
@@ -83,9 +107,9 @@ export function LoginForm() {
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
+          {(error || ssoErrorMessage) && (
             <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-              {error}
+              {error || ssoErrorMessage}
             </div>
           )}
 
@@ -190,6 +214,8 @@ export function LoginForm() {
           >
             {showTwoFactor ? t('auth.verifyButton') : t('auth.loginButton')}
           </Button>
+
+          {!showTwoFactor && <SsoButtons redirectAfter={redirectUrl} />}
         </form>
       </CardContent>
     </Card>

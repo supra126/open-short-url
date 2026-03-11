@@ -15,6 +15,7 @@ import type {
   UrlListResponseDto,
   UrlQueryParams,
   UrlStatus,
+  QrCodeResponseDto,
 } from '@/lib/api/schemas';
 
 // Re-export types for consumers of this hook
@@ -63,8 +64,8 @@ async function deleteUrl(id: string): Promise<void> {
 
 async function generateQRCode(
   id: string,
-): Promise<{ qrCode: string }> {
-  return apiClient.get<{ qrCode: string }>(`/api/urls/${id}/qrcode`);
+): Promise<QrCodeResponseDto> {
+  return apiClient.get<QrCodeResponseDto>(`/api/urls/${id}/qrcode`);
 }
 
 // ==================== Hooks ====================

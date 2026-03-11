@@ -27,6 +27,9 @@ export type UserListResponseDto = components['schemas']['UserListResponseDto'];
 export type UpdateUserRoleDto = components['schemas']['UpdateUserRoleDto'];
 export type UpdateUserStatusDto = components['schemas']['UpdateUserStatusDto'];
 export type ResetPasswordDto = components['schemas']['ResetPasswordDto'];
+export type UpdateUserNameDto = components['schemas']['UpdateUserNameDto'];
+export type OidcAccountProviderDto = components['schemas']['OidcAccountProviderDto'];
+export type OidcAccountResponseDto = components['schemas']['OidcAccountResponseDto'];
 
 // ==================== URL Types ====================
 export type CreateUrlDto = components['schemas']['CreateUrlDto'];
@@ -34,6 +37,7 @@ export type UpdateUrlDto = components['schemas']['UpdateUrlDto'];
 export type UrlResponseDto = components['schemas']['UrlResponseDto'];
 export type UrlListResponseDto = components['schemas']['UrlListResponseDto'];
 export type UrlStatus = components['schemas']['UrlStatus'];
+export type QrCodeResponseDto = components['schemas']['QrCodeResponseDto'];
 export type DashboardStatsResponseDto = components['schemas']['DashboardStatsResponseDto'];
 export type TopPerformingUrlDto = components['schemas']['TopPerformingUrlDto'];
 
@@ -76,10 +80,6 @@ export type LogicalOperator = RoutingConditionsDto['operator'];
 export type DeviceType = components['schemas']['DeviceType'];
 export type DayOfWeek = components['schemas']['DayOfWeek'];
 
-// Legacy alias for backwards compatibility
-export type RoutingRuleAnalyticsStat = RoutingRuleStat;
-export type RoutingTimeRange = TimeRangeDto;
-
 // ==================== Bulk Operation Types ====================
 // Bulk Create types from OpenAPI
 export type BulkCreateUrlDto = components['schemas']['BulkCreateUrlDto'];
@@ -107,12 +107,6 @@ export type BulkUpdateOperation =
   | BulkUpdateExpirationDto
   | BulkUpdateUtmDto;
 export type BulkUpdateOperationType = BulkUpdateOperation['type'];
-
-// Legacy type aliases for backwards compatibility
-export type BulkUpdateStatusOperation = BulkUpdateStatusDto;
-export type BulkAddToBundleOperation = BulkAddToBundleDto;
-export type BulkUpdateExpirationOperation = BulkUpdateExpirationDto;
-export type BulkUpdateUtmOperation = BulkUpdateUtmDto;
 
 // ==================== Analytics Types ====================
 export type AnalyticsResponseDto = components['schemas']['AnalyticsResponseDto'];
@@ -147,6 +141,7 @@ export type ClickTrendDataPoint = components['schemas']['ClickTrendDataPoint'];
 export type BundleStatsDto = components['schemas']['BundleStatsDto'];
 export type AddUrlToBundleDto = components['schemas']['AddUrlToBundleDto'];
 export type AddMultipleUrlsDto = components['schemas']['AddMultipleUrlsDto'];
+export type UpdateUrlOrderDto = components['schemas']['UpdateUrlOrderDto'];
 
 // ==================== Webhook Types ====================
 export type CreateWebhookDto = components['schemas']['CreateWebhookDto'];
@@ -161,6 +156,15 @@ export type WebhookTestResponseDto = components['schemas']['WebhookTestResponseD
 export type VerifyPasswordDto = components['schemas']['VerifyPasswordDto'];
 export type RedirectInfoResponseDto = components['schemas']['RedirectInfoResponseDto'];
 export type VerifyPasswordResponseDto = components['schemas']['VerifyPasswordResponseDto'];
+
+// ==================== OIDC / SSO Types ====================
+export type OidcProviderPublicDto = components['schemas']['OidcProviderPublicDto'];
+export type OidcProviderResponseDto = components['schemas']['OidcProviderResponseDto'];
+export type CreateOidcProviderDto = components['schemas']['CreateOidcProviderDto'];
+export type UpdateOidcProviderDto = components['schemas']['UpdateOidcProviderDto'];
+
+// ==================== Settings Types ====================
+export type UpdateSystemSettingDto = components['schemas']['UpdateSystemSettingDto'];
 
 // ==================== Common Types ====================
 export type SuccessResponseDto = components['schemas']['SuccessResponseDto'];

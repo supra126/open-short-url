@@ -6,29 +6,33 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
+import { buildQueryParams } from '@/lib/utils';
 import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
   ApiKeyResponseDto,
   ApiKeyListResponseDto,
   CreateApiKeyDto,
   CreateApiKeyResponseDto,
+  PaginationParams,
 } from '@/lib/api/schemas';
 
 // Re-export types for consumers of this hook
-export type { ApiKeyResponseDto, ApiKeyListResponseDto, CreateApiKeyDto, CreateApiKeyResponseDto };
+export type { ApiKeyResponseDto, ApiKeyListResponseDto, CreateApiKeyDto, CreateApiKeyResponseDto, PaginationParams };
 
 // Query Keys (exported for external cache management)
-export const apiKeysKeys = {
+export const apiKeyKeys = {
   all: ['api-keys'] as const,
-  lists: () => [...apiKeysKeys.all, 'list'] as const,
-  details: () => [...apiKeysKeys.all, 'detail'] as const,
-  detail: (id: string) => [...apiKeysKeys.details(), id] as const,
+  lists: () => [...apiKeyKeys.all, 'list'] as const,
+  list: (params?: PaginationParams) => [...apiKeyKeys.lists(), params] as const,
+  details: () => [...apiKeyKeys.all, 'detail'] as const,
+  detail: (id: string) => [...apiKeyKeys.details(), id] as const,
 };
 
 // ==================== API Functions ====================
 
-async function getApiKeys(): Promise<ApiKeyListResponseDto> {
-  return apiClient.get<ApiKeyListResponseDto>('/api/api-keys');
+async function getApiKeys(params?: PaginationParams): Promise<ApiKeyListResponseDto> {
+  const query = params ? buildQueryParams(params) : '';
+  return apiClient.get<ApiKeyListResponseDto>(`/api/api-keys${query ? `?${query}` : ''}`);
 }
 
 async function getApiKey(id: string): Promise<ApiKeyResponseDto> {
@@ -50,10 +54,10 @@ async function deleteApiKey(id: string): Promise<void> {
 /**
  * Get all API Keys
  */
-export function useApiKeys() {
+export function useApiKeys(params?: PaginationParams) {
   return useQuery({
-    queryKey: apiKeysKeys.lists(),
-    queryFn: getApiKeys,
+    queryKey: apiKeyKeys.list(params),
+    queryFn: () => getApiKeys(params),
     ...QUERY_CONFIG.STATIC,
   });
 }
@@ -63,7 +67,7 @@ export function useApiKeys() {
  */
 export function useApiKey(id: string) {
   return useQuery({
-    queryKey: apiKeysKeys.detail(id),
+    queryKey: apiKeyKeys.detail(id),
     queryFn: () => getApiKey(id),
     enabled: !!id,
     ...QUERY_CONFIG.STATIC,
@@ -81,7 +85,7 @@ export function useCreateApiKey() {
     onSuccess: () => {
       // Invalidate list cache to ensure fresh data
       queryClient.invalidateQueries({
-        queryKey: apiKeysKeys.lists(),
+        queryKey: apiKeyKeys.lists(),
       });
     },
   });
@@ -98,7 +102,7 @@ export function useDeleteApiKey() {
     onSuccess: () => {
       // Invalidate list cache to ensure fresh data
       queryClient.invalidateQueries({
-        queryKey: apiKeysKeys.lists(),
+        queryKey: apiKeyKeys.lists(),
       });
     },
   });

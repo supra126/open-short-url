@@ -38,6 +38,5 @@ export function useAuditLogs(params: AuditLogQueryParams = {}) {
     queryKey: auditLogKeys.list(params),
     queryFn: () => getAuditLogs(params),
     ...QUERY_CONFIG.LIVE,
-    refetchOnWindowFocus: true,
   });
 }

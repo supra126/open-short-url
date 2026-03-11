@@ -81,7 +81,7 @@ async function createRoutingRule(
 ): Promise<RoutingRuleResponseDto> {
   return apiClient.post<RoutingRuleResponseDto>(
     `/api/urls/${urlId}/routing-rules`,
-    data as unknown as Record<string, unknown>,
+    data,
   );
 }
 
@@ -91,7 +91,7 @@ async function createRoutingRuleFromTemplate(
 ): Promise<RoutingRuleResponseDto> {
   return apiClient.post<RoutingRuleResponseDto>(
     `/api/urls/${urlId}/routing-rules/from-template`,
-    data as unknown as Record<string, unknown>,
+    data,
   );
 }
 
@@ -102,7 +102,7 @@ async function updateRoutingRule(
 ): Promise<RoutingRuleResponseDto> {
   return apiClient.put<RoutingRuleResponseDto>(
     `/api/urls/${urlId}/routing-rules/${ruleId}`,
-    data as unknown as Record<string, unknown>,
+    data,
   );
 }
 
@@ -119,7 +119,7 @@ async function updateSmartRoutingSettings(
 ): Promise<SmartRoutingSettingsResponseDto> {
   return apiClient.patch<SmartRoutingSettingsResponseDto>(
     `/api/urls/${urlId}/routing-rules/settings`,
-    data as unknown as Record<string, unknown>,
+    data,
   );
 }
 
@@ -298,6 +298,6 @@ export function useRoutingAnalytics(urlId: string, params?: AnalyticsQueryParams
     queryKey: routingRuleKeys.analytics(urlId, params),
     queryFn: () => getRoutingAnalytics(urlId, params),
     enabled: !!urlId,
-    ...QUERY_CONFIG.STANDARD,
+    ...QUERY_CONFIG.LIVE,
   });
 }

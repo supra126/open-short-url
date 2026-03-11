@@ -19,10 +19,6 @@ import type {
   PaginationParams,
 } from '@/lib/api/schemas';
 
-// Query params type for webhooks list
-// Using PaginationParams as backend WebhookQueryDto only supports pagination
-export type WebhookQueryParams = PaginationParams;
-
 // Re-export types for consumers of this hook
 export type {
   CreateWebhookDto,
@@ -39,7 +35,7 @@ export type {
 export const webhookKeys = {
   all: ['webhooks'] as const,
   lists: () => [...webhookKeys.all, 'list'] as const,
-  list: (params?: WebhookQueryParams) => [...webhookKeys.lists(), params] as const,
+  list: (params?: PaginationParams) => [...webhookKeys.lists(), params] as const,
   details: () => [...webhookKeys.all, 'detail'] as const,
   detail: (id: string) => [...webhookKeys.details(), id] as const,
   logs: (id: string, params?: PaginationParams) =>
@@ -48,7 +44,7 @@ export const webhookKeys = {
 
 // ==================== API Functions ====================
 
-async function getWebhooks(params?: WebhookQueryParams): Promise<WebhookListResponseDto> {
+async function getWebhooks(params?: PaginationParams): Promise<WebhookListResponseDto> {
   const query = params ? buildQueryParams(params) : '';
   return apiClient.get<WebhookListResponseDto>(`/api/webhooks${query ? `?${query}` : ''}`);
 }
@@ -93,7 +89,7 @@ async function testWebhook(id: string): Promise<WebhookTestResponseDto> {
 /**
  * Get all webhooks with pagination
  */
-export function useWebhooks(params?: WebhookQueryParams) {
+export function useWebhooks(params?: PaginationParams) {
   return useQuery({
     queryKey: webhookKeys.list(params),
     queryFn: () => getWebhooks(params),

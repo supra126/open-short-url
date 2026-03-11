@@ -256,6 +256,86 @@ export interface paths {
         patch: operations["UsersController_resetUserPassword"];
         trace?: never;
     };
+    "/api/users/{id}/name": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Update user name
+         * @description Update the display name of a specific user. Admin access only.
+         */
+        patch: operations["UsersController_updateUserName"];
+        trace?: never;
+    };
+    "/api/users/{id}/2fa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /**
+         * Admin disable 2FA
+         * @description Force-disable two-factor authentication for a user. Admin access only.
+         */
+        patch: operations["UsersController_adminDisable2FA"];
+        trace?: never;
+    };
+    "/api/users/{id}/oidc-accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get user OIDC accounts
+         * @description Retrieve all SSO accounts linked to a specific user. Admin access only.
+         */
+        get: operations["UsersController_getUserOidcAccounts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/users/{id}/oidc-accounts/{accountId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Unlink user OIDC account
+         * @description Remove a specific SSO account link from a user. Admin access only.
+         */
+        delete: operations["UsersController_deleteUserOidcAccount"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/urls": {
         parameters: {
             query?: never;
@@ -1255,6 +1335,94 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/auth/sso": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active SSO providers */
+        get: operations["OidcAuthController_getProviders"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/sso/{slug}/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Initiate SSO login */
+        get: operations["OidcAuthController_initiateLogin"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/auth/sso/{slug}/callback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** OIDC callback handler */
+        get: operations["OidcAuthController_handleCallback"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/oidc-providers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List all OIDC providers */
+        get: operations["OidcProvidersController_findAll"];
+        put?: never;
+        /** Create an OIDC provider */
+        post: operations["OidcProvidersController_create"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/admin/oidc-providers/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get an OIDC provider by slug */
+        get: operations["OidcProvidersController_findOne"];
+        /** Update an OIDC provider */
+        put: operations["OidcProvidersController_update"];
+        post?: never;
+        /** Delete an OIDC provider */
+        delete: operations["OidcProvidersController_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/favicon.ico": {
         parameters: {
             query?: never;
@@ -1581,6 +1749,28 @@ export interface components {
              */
             role: "ADMIN" | "USER";
         };
+        ErrorResponseDto: {
+            /**
+             * @description Error message
+             * @example Validation failed
+             */
+            message: string;
+            /**
+             * @description HTTP status code
+             * @example 400
+             */
+            statusCode: number;
+            /**
+             * @description Timestamp (ISO 8601 format)
+             * @example 2025-10-17T09:08:52.000Z
+             */
+            timestamp: string;
+            /**
+             * @description Request path
+             * @example /api/urls
+             */
+            path?: string;
+        };
         UserListResponseDto: {
             /**
              * @description Total number of records
@@ -1626,6 +1816,47 @@ export interface components {
              * @example NewSecurePassword123!
              */
             newPassword: string;
+        };
+        UpdateUserNameDto: {
+            /**
+             * @description New user name
+             * @example John Doe
+             */
+            name?: string;
+        };
+        OidcAccountProviderDto: {
+            /**
+             * @description Provider display name
+             * @example Google
+             */
+            name: string;
+            /**
+             * @description Provider slug
+             * @example google
+             */
+            slug: string;
+        };
+        OidcAccountResponseDto: {
+            /** @description OIDC account link ID */
+            id: string;
+            /** @description OIDC provider ID */
+            providerId: string;
+            /** @description OIDC subject identifier */
+            sub: string;
+            /** @description User ID */
+            userId: string;
+            /**
+             * Format: date-time
+             * @description Creation timestamp
+             */
+            createdAt: string;
+            /**
+             * Format: date-time
+             * @description Last update timestamp
+             */
+            updatedAt: string;
+            /** @description Provider information */
+            provider: components["schemas"]["OidcAccountProviderDto"];
         };
         CreateUrlDto: {
             /**
@@ -1786,28 +2017,6 @@ export interface components {
              */
             updatedAt: string;
         };
-        ErrorResponseDto: {
-            /**
-             * @description Error message
-             * @example Validation failed
-             */
-            message: string;
-            /**
-             * @description HTTP status code
-             * @example 400
-             */
-            statusCode: number;
-            /**
-             * @description Timestamp (ISO 8601 format)
-             * @example 2025-10-17T09:08:52.000Z
-             */
-            timestamp: string;
-            /**
-             * @description Request path
-             * @example /api/urls
-             */
-            path?: string;
-        };
         BulkCreateUrlDto: {
             /** @description URL list (max 100 for admin, 50 for regular users) */
             urls: components["schemas"]["CreateUrlDto"][];
@@ -1920,6 +2129,13 @@ export interface components {
              * @example 10
              */
             expiredUrls: number;
+        };
+        QrCodeResponseDto: {
+            /**
+             * @description Base64 encoded QR Code Data URL
+             * @example data:image/png;base64,...
+             */
+            qrCode: string;
         };
         UpdateUrlDto: {
             /**
@@ -2365,6 +2581,13 @@ export interface components {
              */
             urlIds: string[];
         };
+        UpdateUrlOrderDto: {
+            /**
+             * @description New display order for the URL within the bundle
+             * @example 1
+             */
+            order: number;
+        };
         OverviewStats: {
             /**
              * @description Total number of clicks
@@ -2492,6 +2715,44 @@ export interface components {
             utmMediums: components["schemas"]["UtmStat"][];
             /** @description UTM Campaign statistics */
             utmCampaigns: components["schemas"]["UtmStat"][];
+        };
+        TopPerformingUrlDto: {
+            /**
+             * @description URL ID
+             * @example clxxx123456789
+             */
+            id: string;
+            /**
+             * @description Short URL slug
+             * @example abc123
+             */
+            slug: string;
+            /**
+             * @description Title
+             * @example My Important Link
+             */
+            title?: string | null;
+            /**
+             * @description Original URL
+             * @example https://example.com/very-long-url
+             */
+            originalUrl: string;
+            /**
+             * @description Click count
+             * @example 142
+             */
+            clickCount: number;
+            /**
+             * @description Status
+             * @example ACTIVE
+             */
+            status: components["schemas"]["UrlStatus"];
+            /**
+             * Format: date-time
+             * @description Creation timestamp (ISO 8601 format)
+             * @example 2025-10-01T10:30:00.000Z
+             */
+            createdAt: string;
         };
         RecentClickDto: {
             /**
@@ -2873,6 +3134,18 @@ export interface components {
              */
             updatedAt: string;
         };
+        UpdateSystemSettingDto: {
+            /**
+             * @description Setting value (can be any type: string, number, boolean, object)
+             * @example true
+             */
+            value: Record<string, never>;
+            /**
+             * @description Setting description
+             * @example Whether to allow new user registration
+             */
+            description?: string;
+        };
         CreateWebhookDto: {
             /**
              * @description Webhook name
@@ -3133,7 +3406,7 @@ export interface components {
              * @description Action type
              * @enum {string}
              */
-            action: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "URL_BULK_CREATED" | "URL_BULK_UPDATED" | "URL_BULK_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED" | "ROUTING_RULE_CREATED" | "ROUTING_RULE_UPDATED" | "ROUTING_RULE_DELETED";
+            action: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "URL_BULK_CREATED" | "URL_BULK_UPDATED" | "URL_BULK_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED" | "ROUTING_RULE_CREATED" | "ROUTING_RULE_UPDATED" | "ROUTING_RULE_DELETED" | "SSO_LOGIN" | "SSO_LOGIN_FAILED" | "OIDC_PROVIDER_CREATED" | "OIDC_PROVIDER_UPDATED" | "OIDC_PROVIDER_DELETED" | "OIDC_ACCOUNT_LINKED" | "OIDC_ACCOUNT_UNLINKED" | "SYSTEM_SETTING_UPDATED" | "SYSTEM_SETTING_DELETED";
             /** @description Entity type */
             entityType: string;
             /** @description Entity ID */
@@ -3396,6 +3669,77 @@ export interface components {
             /** @description Available routing rule templates */
             templates: components["schemas"]["RoutingTemplateDto"][];
         };
+        OidcProviderPublicDto: {
+            slug: string;
+            name: string;
+        };
+        OidcProviderResponseDto: {
+            id: string;
+            name: string;
+            slug: string;
+            isActive: boolean;
+            discoveryUrl: string;
+            clientId: string;
+            /** @description Whether a client secret is configured */
+            hasClientSecret: boolean;
+            scopes: string;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CreateOidcProviderDto: {
+            /**
+             * @description Display name
+             * @example Google
+             */
+            name: string;
+            /**
+             * @description URL-safe identifier
+             * @example google
+             */
+            slug: string;
+            /**
+             * @description OIDC Discovery URL
+             * @example https://accounts.google.com/.well-known/openid-configuration
+             */
+            discoveryUrl: string;
+            /**
+             * @description Client ID
+             * @example your-client-id
+             */
+            clientId: string;
+            /**
+             * @description Client Secret
+             * @example your-client-secret
+             */
+            clientSecret: string;
+            /**
+             * @description Scopes
+             * @default openid email profile
+             * @example openid email profile
+             */
+            scopes: string;
+            /**
+             * @description Whether the provider is active
+             * @default true
+             */
+            isActive: boolean;
+        };
+        UpdateOidcProviderDto: {
+            /** @description Display name */
+            name?: string;
+            /** @description OIDC Discovery URL */
+            discoveryUrl?: string;
+            /** @description Client ID */
+            clientId?: string;
+            /** @description Client Secret */
+            clientSecret?: string;
+            /** @description Scopes */
+            scopes?: string;
+            /** @description Whether the provider is active */
+            isActive?: boolean;
+        };
         RedirectInfoResponseDto: {
             /**
              * @description Whether the short URL requires password verification
@@ -3599,9 +3943,9 @@ export interface components {
              * @example URL_CREATED
              * @enum {string}
              */
-            action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "URL_BULK_CREATED" | "URL_BULK_UPDATED" | "URL_BULK_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED" | "ROUTING_RULE_CREATED" | "ROUTING_RULE_UPDATED" | "ROUTING_RULE_DELETED";
+            action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "URL_BULK_CREATED" | "URL_BULK_UPDATED" | "URL_BULK_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED" | "ROUTING_RULE_CREATED" | "ROUTING_RULE_UPDATED" | "ROUTING_RULE_DELETED" | "SSO_LOGIN" | "SSO_LOGIN_FAILED" | "OIDC_PROVIDER_CREATED" | "OIDC_PROVIDER_UPDATED" | "OIDC_PROVIDER_DELETED" | "OIDC_ACCOUNT_LINKED" | "OIDC_ACCOUNT_UNLINKED" | "SYSTEM_SETTING_UPDATED" | "SYSTEM_SETTING_DELETED";
             /**
-             * @description Filter by entity type (url, user, api_key, bundle, webhook, variant)
+             * @description Filter by entity type (url, user, api_key, bundle, webhook, variant, oidc_provider, oidc_account, system_setting)
              * @example url
              */
             entityType?: string;
@@ -3774,44 +4118,6 @@ export interface components {
              * @example ACTIVE
              */
             status: components["schemas"]["UrlStatus"];
-        };
-        TopPerformingUrlDto: {
-            /**
-             * @description URL ID
-             * @example clxxx123456789
-             */
-            id: string;
-            /**
-             * @description Short URL slug
-             * @example abc123
-             */
-            slug: string;
-            /**
-             * @description Title
-             * @example My Important Link
-             */
-            title?: string | null;
-            /**
-             * @description Original URL
-             * @example https://example.com/very-long-url
-             */
-            originalUrl: string;
-            /**
-             * @description Click count
-             * @example 142
-             */
-            clickCount: number;
-            /**
-             * @description Status
-             * @example ACTIVE
-             */
-            status: components["schemas"]["UrlStatus"];
-            /**
-             * Format: date-time
-             * @description Creation timestamp (ISO 8601 format)
-             * @example 2025-10-01T10:30:00.000Z
-             */
-            createdAt: string;
         };
         /**
          * @description Export format enum values
@@ -4149,14 +4455,18 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Forbidden - Requires admin privileges */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -4187,28 +4497,36 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Forbidden - Requires admin privileges */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description User with this email already exists */
             409: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -4238,21 +4556,27 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Forbidden - Requires admin privileges */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description User not found */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -4282,28 +4606,36 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Forbidden - Requires admin privileges */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description User not found */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -4337,28 +4669,36 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Forbidden - Requires admin privileges */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description User not found */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -4392,28 +4732,36 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Unauthorized */
             401: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Forbidden - Requires admin privileges */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description User not found */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -4447,21 +4795,170 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description Forbidden - Requires admin privileges */
             403: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
             /** @description User not found */
             404: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    UsersController_updateUserName: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description User ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUserNameDto"];
+            };
+        };
+        responses: {
+            /** @description Name updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponseDto"];
+                };
+            };
+            /** @description User not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    UsersController_adminDisable2FA: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description User ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description 2FA disabled successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UserResponseDto"];
+                };
+            };
+            /** @description 2FA is not enabled for this user */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description User not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    UsersController_getUserOidcAccounts: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description User ID */
+                id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved OIDC accounts */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OidcAccountResponseDto"][];
+                };
+            };
+            /** @description User not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    UsersController_deleteUserOidcAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description User ID */
+                id: string;
+                /** @description OIDC Account ID */
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description OIDC account unlinked successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SuccessResponseDto"];
+                };
+            };
+            /** @description OIDC account link not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
             };
         };
     };
@@ -4752,13 +5249,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        /**
-                         * @description Base64 encoded QR Code Data URL (can be directly used in img src)
-                         * @example data:image/png;base64,iVBORw0KGgoAAAANS...
-                         */
-                        qrCode?: string;
-                    };
+                    "application/json": components["schemas"]["QrCodeResponseDto"];
                 };
             };
             /** @description Unauthorized */
@@ -5670,7 +6161,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateUrlOrderDto"];
+            };
+        };
         responses: {
             /** @description URL order updated successfully */
             200: {
@@ -5842,14 +6337,15 @@ export interface operations {
     };
     AnalyticsController_getTopPerformingUrls: {
         parameters: {
-            query: {
+            query?: {
                 /** @description Time range (last_7_days: Last 7 days, last_30_days: Last 30 days, last_90_days: Last 90 days, custom: Custom range) */
                 timeRange?: "last_7_days" | "last_30_days" | "last_90_days" | "last_365_days" | "custom";
                 /** @description Custom start date (ISO 8601 format). Required when timeRange is custom. */
                 startDate?: string;
                 /** @description Custom end date (ISO 8601 format). Required when timeRange is custom. */
                 endDate?: string;
-                limit: number;
+                /** @description Number of top URLs to return (default: 5) */
+                limit?: number;
             };
             header?: never;
             path?: never;
@@ -5879,9 +6375,11 @@ export interface operations {
     };
     AnalyticsController_getRecentClicks: {
         parameters: {
-            query: {
-                limit: number;
-                includeBots: string;
+            query?: {
+                /** @description Number of recent clicks to return (default: 20) */
+                limit?: number;
+                /** @description Include bot clicks (true/false) */
+                includeBots?: string;
             };
             header?: never;
             path: {
@@ -6278,7 +6776,11 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSystemSettingDto"];
+            };
+        };
         responses: {
             /** @description Updated successfully */
             200: {
@@ -6644,8 +7146,8 @@ export interface operations {
                 /** @description Number of records per page (maximum 100) */
                 pageSize?: number;
                 /** @description Filter by action type */
-                action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "URL_BULK_CREATED" | "URL_BULK_UPDATED" | "URL_BULK_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED" | "ROUTING_RULE_CREATED" | "ROUTING_RULE_UPDATED" | "ROUTING_RULE_DELETED";
-                /** @description Filter by entity type (url, user, api_key, bundle, webhook, variant) */
+                action?: "URL_CREATED" | "URL_UPDATED" | "URL_DELETED" | "URL_BULK_CREATED" | "URL_BULK_UPDATED" | "URL_BULK_DELETED" | "USER_LOGIN" | "USER_LOGOUT" | "USER_CREATED" | "USER_UPDATED" | "USER_DELETED" | "API_KEY_CREATED" | "API_KEY_DELETED" | "SETTINGS_UPDATED" | "PASSWORD_CHANGED" | "TWO_FACTOR_ENABLED" | "TWO_FACTOR_DISABLED" | "VARIANT_CREATED" | "VARIANT_UPDATED" | "VARIANT_DELETED" | "BUNDLE_CREATED" | "BUNDLE_UPDATED" | "BUNDLE_DELETED" | "WEBHOOK_CREATED" | "WEBHOOK_UPDATED" | "WEBHOOK_DELETED" | "ROUTING_RULE_CREATED" | "ROUTING_RULE_UPDATED" | "ROUTING_RULE_DELETED" | "SSO_LOGIN" | "SSO_LOGIN_FAILED" | "OIDC_PROVIDER_CREATED" | "OIDC_PROVIDER_UPDATED" | "OIDC_PROVIDER_DELETED" | "OIDC_ACCOUNT_LINKED" | "OIDC_ACCOUNT_UNLINKED" | "SYSTEM_SETTING_UPDATED" | "SYSTEM_SETTING_DELETED";
+                /** @description Filter by entity type (url, user, api_key, bundle, webhook, variant, oidc_provider, oidc_account, system_setting) */
                 entityType?: string;
                 /** @description Filter by entity ID */
                 entityId?: string;
@@ -7047,6 +7549,321 @@ export interface operations {
             };
             /** @description Unauthorized */
             401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    OidcAuthController_getProviders: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved active providers */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OidcProviderPublicDto"][];
+                };
+            };
+        };
+    };
+    OidcAuthController_initiateLogin: {
+        parameters: {
+            query?: {
+                /** @description Redirect path after login */
+                redirect?: unknown;
+            };
+            header?: never;
+            path: {
+                /** @description Provider slug */
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirects to OIDC provider authorization URL */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OidcAuthController_handleCallback: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Provider slug */
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Redirects to frontend with authentication cookie */
+            302: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+        };
+    };
+    OidcProvidersController_findAll: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved providers */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OidcProviderResponseDto"][];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden - Requires admin privileges */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    OidcProvidersController_create: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CreateOidcProviderDto"];
+            };
+        };
+        responses: {
+            /** @description Provider created successfully */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OidcProviderResponseDto"];
+                };
+            };
+            /** @description Invalid request parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden - Requires admin privileges */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    OidcProvidersController_findOne: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Provider slug */
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successfully retrieved provider */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OidcProviderResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden - Requires admin privileges */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Provider not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    OidcProvidersController_update: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Provider slug */
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateOidcProviderDto"];
+            };
+        };
+        responses: {
+            /** @description Provider updated successfully */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OidcProviderResponseDto"];
+                };
+            };
+            /** @description Invalid request parameters */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden - Requires admin privileges */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Provider not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+        };
+    };
+    OidcProvidersController_delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Provider slug */
+                slug: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Provider deleted successfully */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Forbidden - Requires admin privileges */
+            403: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponseDto"];
+                };
+            };
+            /** @description Provider not found */
+            404: {
                 headers: {
                     [name: string]: unknown;
                 };

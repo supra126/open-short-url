@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
 import { buildQueryParams } from '@/lib/utils';
 import { QUERY_CONFIG } from '@/lib/query-config';
@@ -191,7 +191,7 @@ export function useUserBotAnalytics(
     queryKey: analyticsKeys.userBotAnalytics(params),
     queryFn: () => getUserBotAnalytics(params),
     ...QUERY_CONFIG.STANDARD,
-    refetchInterval: 120 * 1000, // Bot stats change less frequently
+    refetchInterval: 2 * 60 * 1000, // Bot stats change less frequently
   });
 }
 
@@ -205,6 +205,80 @@ export function useUserAbTestAnalytics(
     queryKey: analyticsKeys.userAbTestAnalytics(params),
     queryFn: () => getUserAbTestAnalytics(params),
     ...QUERY_CONFIG.STANDARD,
-    refetchInterval: 120 * 1000, // A/B test stats change less frequently
+    refetchInterval: 2 * 60 * 1000, // A/B test stats change less frequently
+  });
+}
+
+// ==================== Export ====================
+
+interface ExportOptions {
+  urlId?: string;
+  queryParams: AnalyticsQueryParams;
+  includeClicks?: boolean;
+}
+
+async function exportAnalytics(
+  format: ExportFormat,
+  options: ExportOptions,
+): Promise<{ blob: Blob; filename: string }> {
+  const params = new URLSearchParams();
+  params.append('format', format);
+
+  if (options.queryParams.timeRange) {
+    params.append('timeRange', options.queryParams.timeRange);
+  }
+  if (options.queryParams.startDate) {
+    params.append('startDate', options.queryParams.startDate);
+  }
+  if (options.queryParams.endDate) {
+    params.append('endDate', options.queryParams.endDate);
+  }
+  if (options.includeClicks) {
+    params.append('includeClicks', 'true');
+  }
+
+  const endpoint = options.urlId
+    ? `/api/analytics/urls/${options.urlId}/export`
+    : '/api/analytics/export';
+
+  const response = await apiClient.getRaw(`${endpoint}?${params.toString()}`);
+
+  if (!response.ok) {
+    throw new Error(`Export failed: ${response.statusText}`);
+  }
+
+  const contentDisposition = response.headers.get('Content-Disposition');
+  let filename = `analytics_export.${format}`;
+  if (contentDisposition) {
+    const match = contentDisposition.match(/filename="(.+)"/);
+    if (match) {
+      filename = match[1];
+    }
+  }
+
+  const blob = await response.blob();
+  return { blob, filename };
+}
+
+// Re-export ExportOptions for consumers
+export type { ExportOptions };
+
+/**
+ * Export analytics data as CSV or JSON
+ */
+export function useExportAnalytics() {
+  return useMutation({
+    mutationFn: async ({ format, ...options }: ExportOptions & { format: ExportFormat }) => {
+      const { blob, filename } = await exportAnalytics(format, options);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      return { success: true };
+    },
   });
 }

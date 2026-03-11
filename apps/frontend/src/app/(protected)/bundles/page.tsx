@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Pagination } from '@/components/shared/pagination';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -367,31 +368,13 @@ export default function BundlesPage() {
           </div>
 
           {/* Pagination */}
-          {data.totalPages > 1 && (
-            <div className="mt-6 flex items-center justify-between">
-              <p className="text-sm text-muted-foreground">
-                {t('common.page')} {page} {t('common.of')} {data.totalPages}（{t('common.total')} {data.total} {t('common.items')}）
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setPage(page - 1)}
-                  disabled={page === 1}
-                >
-                  {t('common.previous')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setPage(page + 1)}
-                  disabled={page === data.totalPages}
-                >
-                  {t('common.next')}
-                </Button>
-              </div>
-            </div>
-          )}
+          <Pagination
+            page={page}
+            totalPages={data.totalPages}
+            total={data.total}
+            onPageChange={setPage}
+            className="mt-6"
+          />
         </>
       ) : (
         /* Empty State */

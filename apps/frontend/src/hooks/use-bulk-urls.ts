@@ -27,6 +27,7 @@ export type {
   BulkUpdateResultDto,
   BulkDeleteUrlDto,
   BulkDeleteResultDto,
+  CreateUrlDto,
   BulkUpdateOperation,
   BulkUpdateOperationType,
 };
@@ -38,7 +39,7 @@ async function bulkCreateUrls(
 ): Promise<BulkCreateResultDto> {
   return apiClient.post<BulkCreateResultDto>(
     '/api/urls/bulk',
-    data as unknown as Record<string, unknown>,
+    data,
   );
 }
 
@@ -47,7 +48,7 @@ async function bulkUpdateUrls(
 ): Promise<BulkUpdateResultDto> {
   return apiClient.patch<BulkUpdateResultDto>(
     '/api/urls/bulk',
-    data as unknown as Record<string, unknown>,
+    data,
   );
 }
 
@@ -55,7 +56,7 @@ async function bulkDeleteUrls(
   data: BulkDeleteUrlDto,
 ): Promise<BulkDeleteResultDto> {
   return apiClient.delete<BulkDeleteResultDto>('/api/urls/bulk', {
-    data: data as unknown as Record<string, unknown>,
+    data: data,
   });
 }
 

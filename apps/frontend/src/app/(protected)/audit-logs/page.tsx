@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Pagination } from '@/components/shared/pagination';
 import {
   useAuditLogs,
   type AuditAction,
@@ -241,30 +242,13 @@ export default function AuditLogsPage() {
         </div>
 
         {/* Pagination */}
-        {data && data.totalPages > 1 && (
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-muted-foreground">
-              {t('common.page')} {page} {t('common.of')} {data.totalPages}（{t('common.total')} {data.total} {t('common.items')}）
-            </p>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setPage(page - 1)}
-                disabled={page === 1}
-              >
-                {t('common.previous')}
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setPage(page + 1)}
-                disabled={page === data.totalPages}
-              >
-                {t('common.next')}
-              </Button>
-            </div>
-          </div>
+        {data && (
+          <Pagination
+            page={page}
+            totalPages={data.totalPages}
+            total={data.total}
+            onPageChange={setPage}
+          />
         )}
       </div>
 

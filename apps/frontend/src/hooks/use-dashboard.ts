@@ -12,18 +12,17 @@ import { QUERY_CONFIG } from '@/lib/query-config';
 import type {
   UrlResponseDto,
   UrlListResponseDto,
+  UrlQueryParams,
   AnalyticsQueryParams,
-  TimeSeriesDataPoint,
   DashboardStatsResponseDto,
   TopPerformingUrlDto,
 } from '@/lib/api/schemas';
 
 // Re-export types for consumers of this hook
-export type { TimeSeriesDataPoint, DashboardStatsResponseDto, TopPerformingUrlDto };
-
-// Legacy type aliases for backwards compatibility
-export type DashboardStatsResponse = DashboardStatsResponseDto;
-export type TopPerformingUrl = TopPerformingUrlDto;
+export type {
+  DashboardStatsResponseDto,
+  TopPerformingUrlDto,
+};
 
 // Query Keys (exported for external cache management)
 export const dashboardKeys = {
@@ -36,16 +35,16 @@ export const dashboardKeys = {
 
 // ==================== API Functions ====================
 
-async function getDashboardStats(): Promise<DashboardStatsResponse> {
-  return apiClient.get<DashboardStatsResponse>('/api/urls/stats');
+async function getDashboardStats(): Promise<DashboardStatsResponseDto> {
+  return apiClient.get<DashboardStatsResponseDto>('/api/urls/stats');
 }
 
 async function getRecentUrls(limit: number): Promise<UrlResponseDto[]> {
-  const params = {
+  const params: UrlQueryParams = {
     page: 1,
     pageSize: limit,
     sortBy: 'createdAt',
-    sortOrder: 'desc' as const,
+    sortOrder: 'desc',
   };
   const query = buildQueryParams(params);
   const response = await apiClient.get<UrlListResponseDto>(`/api/urls?${query}`);
@@ -55,13 +54,13 @@ async function getRecentUrls(limit: number): Promise<UrlResponseDto[]> {
 async function getTopPerformingUrls(
   limit: number,
   params: AnalyticsQueryParams,
-): Promise<TopPerformingUrl[]> {
+): Promise<TopPerformingUrlDto[]> {
   const queryParams = {
     ...params,
     limit,
   };
   const query = buildQueryParams(queryParams);
-  return apiClient.get<TopPerformingUrl[]>(`/api/analytics/top-urls?${query}`);
+  return apiClient.get<TopPerformingUrlDto[]>(`/api/analytics/top-urls?${query}`);
 }
 
 // ==================== Hooks ====================
@@ -73,27 +72,7 @@ async function getTopPerformingUrls(
 export function useDashboardStats() {
   return useQuery({
     queryKey: dashboardKeys.stats(),
-    queryFn: async () => {
-      try {
-        return await getDashboardStats();
-      } catch {
-        // Fallback: fetch URLs and calculate stats manually
-        const response = await apiClient.get<UrlListResponseDto>(
-          '/api/urls?pageSize=1000',
-        );
-        const urls = response.data;
-        const now = new Date();
-
-        return {
-          totalUrls: response.total,
-          activeUrls: urls.filter((u) => u.status === 'ACTIVE').length,
-          inactiveUrls: urls.filter((u) => u.status === 'INACTIVE').length,
-          expiredUrls: urls.filter(
-            (u) => u.expiresAt && new Date(u.expiresAt) < now,
-          ).length,
-        };
-      }
-    },
+    queryFn: () => getDashboardStats(),
     ...QUERY_CONFIG.LIVE,
   });
 }
@@ -119,25 +98,7 @@ export function useTopPerformingUrls(
 ) {
   return useQuery({
     queryKey: dashboardKeys.topUrls(limit, params),
-    queryFn: async () => {
-      try {
-        return await getTopPerformingUrls(limit, params);
-      } catch {
-        // Fallback: fetch URLs sorted by clickCount
-        const response = await apiClient.get<UrlListResponseDto>(
-          `/api/urls?pageSize=${limit}&sortBy=clickCount&sortOrder=desc`,
-        );
-        return response.data.map((url) => ({
-          id: url.id,
-          slug: url.slug,
-          title: url.title,
-          originalUrl: url.originalUrl,
-          clickCount: url.clickCount,
-          status: url.status,
-          createdAt: url.createdAt,
-        }));
-      }
-    },
+    queryFn: () => getTopPerformingUrls(limit, params),
     ...QUERY_CONFIG.LIVE,
   });
 }

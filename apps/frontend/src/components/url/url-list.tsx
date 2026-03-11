@@ -5,8 +5,9 @@
 'use client';
 
 import { t } from '@/lib/i18n';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useUrls, useDeleteUrl } from '@/hooks/use-url';
+import { Pagination } from '@/components/shared/pagination';
 import { useBulkDeleteUrls } from '@/hooks/use-bulk-urls';
 import type { UrlStatus, UrlResponseDto } from '@/hooks/use-url';
 import { Badge } from '@/components/ui/badge';
@@ -77,7 +78,8 @@ export function UrlList() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
-  const { data, isPending, error, refetch } = useUrls({ page, pageSize });
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const { data, isPending, error, refetch } = useUrls({ page, pageSize, search: debouncedSearch || undefined });
   const deleteUrl = useDeleteUrl();
   const bulkDeleteUrls = useBulkDeleteUrls();
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -92,6 +94,15 @@ export function UrlList() {
   const [bulkCreateDialogOpen, setBulkCreateDialogOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
+  // Debounce search input and reset page
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
   // Clear selection and close dialogs when page changes
   useEffect(() => {
     setSelectedIds(new Set());
@@ -99,17 +110,7 @@ export function UrlList() {
     setDeleteConfirmText('');
   }, [page]);
 
-  // Client-side filter
-  const filteredData = useMemo(() => {
-    if (!data?.data || !searchQuery.trim()) return data?.data || [];
-    const q = searchQuery.toLowerCase();
-    return data.data.filter(
-      (url: UrlResponseDto) =>
-        url.slug.toLowerCase().includes(q) ||
-        url.originalUrl.toLowerCase().includes(q) ||
-        (url.title && url.title.toLowerCase().includes(q))
-    );
-  }, [data?.data, searchQuery]);
+  const filteredData = data?.data || [];
 
   const handleCopy = async (shortUrl: string, id: string) => {
     const success = await copyToClipboard(shortUrl);
@@ -500,54 +501,12 @@ export function UrlList() {
       </div>
 
       {/* Pagination */}
-      {data.totalPages > 1 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-muted-foreground">
-            {t('common.page')} {data.page} {t('common.of')} {data.totalPages} ({t('common.total')} {data.total} {t('common.items')})
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setPage(1)}
-              disabled={page === 1}
-            >
-              1
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-            >
-              {t('common.previous')}
-            </Button>
-            {page > 2 && page < data.totalPages - 1 && (
-              <Button size="sm" variant="default" disabled>
-                {page}
-              </Button>
-            )}
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setPage(page + 1)}
-              disabled={page === data.totalPages}
-            >
-              {t('common.next')}
-            </Button>
-            {data.totalPages > 1 && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setPage(data.totalPages)}
-                disabled={page === data.totalPages}
-              >
-                {data.totalPages}
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+      <Pagination
+        page={page}
+        totalPages={data.totalPages}
+        total={data.total}
+        onPageChange={setPage}
+      />
 
       {/* Single Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>

@@ -27,6 +27,7 @@ import {
   Webhook,
   Bot,
   ClipboardList,
+  ShieldCheck,
   BookOpen,
   ExternalLink,
 } from 'lucide-react';
@@ -120,6 +121,12 @@ const data = {
           icon: Users,
           adminOnly: true,
         },
+        {
+          title: t('sidebar.ssoProviders'),
+          url: '/sso-providers',
+          icon: ShieldCheck,
+          adminOnly: true,
+        },
       ],
     },
     {
@@ -157,7 +164,8 @@ function UserAvatar({ name, email }: { name?: string | null; email: string }) {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const { data: user, isLoading } = useCurrentUser();
-  const { isEnabled: isAIEnabled } = useAIEnabled();
+  const { data: aiStatus } = useAIEnabled();
+  const isAIEnabled = aiStatus?.enabled ?? null;
   const { isMobile, setOpenMobile } = useSidebar();
 
   // Close mobile sidebar on route change

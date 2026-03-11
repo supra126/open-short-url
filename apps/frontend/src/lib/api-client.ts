@@ -4,21 +4,12 @@
  */
 
 import { ErrorHandler } from './error-handler';
-
-/**
- * API Error interface for typed error handling
- */
-interface ApiError extends Error {
-  response?: {
-    status: number;
-    data: Record<string, unknown>;
-  };
-}
+import type { ApiError } from './api/schemas';
 
 /**
  * Request body type for API calls
  */
-type ApiRequestBody = Record<string, unknown> | unknown[] | FormData;
+type ApiRequestBody = Record<string, unknown> | unknown[] | FormData | object;
 
 /**
  * Paths that should not trigger automatic redirect on 401 errors
@@ -221,6 +212,19 @@ class ApiClient {
       ...config,
     });
     return this.handleResponse<T>(response);
+  }
+
+  /**
+   * Raw GET request (returns Response directly, for file downloads etc.)
+   */
+  async getRaw(endpoint: string, config?: RequestInit): Promise<Response> {
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      method: 'GET',
+      headers: this.getHeadersWithoutContentType(),
+      credentials: 'include',
+      ...config,
+    });
+    return response;
   }
 
   /**

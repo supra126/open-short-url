@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Pagination } from '@/components/shared/pagination';
 import {
   useUsers,
   useUpdateUserRole,
@@ -9,8 +10,8 @@ import {
   useResetUserPassword,
   useCreateUser,
   UserRole,
-  User,
-  CreateUserDto,
+  type UserResponseDto,
+  type CreateUserDto,
 } from '@/hooks/use-users';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -61,18 +62,29 @@ import {
 import { t } from '@/lib/i18n';
 import { Loading } from '@/components/ui/loading';
 import { formatDate } from '@/lib/utils';
+import Link from 'next/link';
 
 export default function UsersPage() {
   const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<UserRole | undefined>();
   const [statusFilter, setStatusFilter] = useState<boolean | undefined>();
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const { data, isLoading } = useUsers({
     page,
     pageSize: 10,
-    search: search || undefined,
+    search: debouncedSearch || undefined,
     role: roleFilter,
     isActive: statusFilter,
   });
@@ -84,9 +96,9 @@ export default function UsersPage() {
   const createUserMutation = useCreateUser();
 
   // Dialog states
-  const [editUser, setEditUser] = useState<User | null>(null);
-  const [deleteUser, setDeleteUser] = useState<User | null>(null);
-  const [resetPasswordUser, setResetPasswordUser] = useState<User | null>(null);
+  const [editUser, setEditUser] = useState<UserResponseDto | null>(null);
+  const [deleteUser, setDeleteUser] = useState<UserResponseDto | null>(null);
+  const [resetPasswordUser, setResetPasswordUser] = useState<UserResponseDto | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [createUserData, setCreateUserData] = useState<CreateUserDto>({
@@ -233,7 +245,7 @@ export default function UsersPage() {
         <Select
           value={roleFilter || 'all'}
           onValueChange={(value) =>
-            setRoleFilter(value === 'all' ? undefined : (value as UserRole))
+            { setRoleFilter(value === 'all' ? undefined : (value as UserRole)); setPage(1); }
           }
         >
           <SelectTrigger className="w-45">
@@ -256,11 +268,12 @@ export default function UsersPage() {
                 ? 'active'
                 : 'inactive'
           }
-          onValueChange={(value) =>
+          onValueChange={(value) => {
             setStatusFilter(
               value === 'all' ? undefined : value === 'active' ? true : false
-            )
-          }
+            );
+            setPage(1);
+          }}
         >
           <SelectTrigger className="w-45">
             <SelectValue />
@@ -303,9 +316,13 @@ export default function UsersPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              data?.data.map((user: User) => (
+              data?.data.map((user: UserResponseDto) => (
                 <TableRow key={user.id}>
-                  <TableCell className="font-medium">{user.email}</TableCell>
+                  <TableCell className="font-medium">
+                    <Link href={`/users/${user.id}`} className="hover:underline">
+                      {user.email}
+                    </Link>
+                  </TableCell>
                   <TableCell>{user.name || t('common.noValue')}</TableCell>
                   <TableCell>
                     <Badge
@@ -393,30 +410,13 @@ export default function UsersPage() {
         </div>
 
         {/* Pagination */}
-        {data && data.totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            {t('common.page')} {page} {t('common.of')} {data.totalPages}（{t('common.total')} {data.total} {t('common.items')}）
-          </p>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setPage(page - 1)}
-              disabled={page === 1}
-            >
-              {t('common.previous')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setPage(page + 1)}
-              disabled={page === data.totalPages}
-            >
-              {t('common.next')}
-            </Button>
-          </div>
-        </div>
+        {data && (
+          <Pagination
+            page={page}
+            totalPages={data.totalPages}
+            total={data.total}
+            onPageChange={setPage}
+          />
         )}
       </div>
 
