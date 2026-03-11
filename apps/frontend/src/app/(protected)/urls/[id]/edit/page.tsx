@@ -59,6 +59,7 @@ export default function EditUrlPage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [removePassword, setRemovePassword] = useState(false);
   const [removeExpiry, setRemoveExpiry] = useState(false);
+  const isPasswordTooShort = !removePassword && !!formData.password && formData.password.length > 0 && formData.password.length < 4;
 
   // Fill form when data is loaded
   useEffect(() => {
@@ -87,6 +88,15 @@ export default function EditUrlPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!removePassword && formData.password && formData.password.length < 4) {
+      toast({
+        title: t('common.error'),
+        description: t('urls.passwordTooShort'),
+        variant: 'destructive',
+      });
+      return;
+    }
 
     try {
       // Build the update payload with proper typing
@@ -272,13 +282,17 @@ export default function EditUrlPage() {
                     value={formData.password}
                     onChange={handleChange('password')}
                     disabled={removePassword}
+                    minLength={4}
+                    maxLength={128}
                   />
-                  <p className="text-xs text-muted-foreground">
+                  <p className={`text-xs ${isPasswordTooShort ? 'text-destructive' : 'text-muted-foreground'}`}>
                     {removePassword
                       ? t('urls.passwordWillBeRemoved')
-                      : urlData.hasPassword
-                        ? t('urls.passwordCurrentlySet')
-                        : t('urls.passwordHint')}
+                      : isPasswordTooShort
+                        ? t('urls.passwordTooShort')
+                        : urlData.hasPassword
+                          ? t('urls.passwordCurrentlySet')
+                          : t('urls.passwordHint')}
                   </p>
                 </div>
 

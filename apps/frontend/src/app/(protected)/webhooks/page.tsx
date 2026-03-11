@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { t } from '@/lib/i18n';
+import { t, getDocsUrl } from '@/lib/i18n';
 import {
   Card,
   CardContent,
@@ -71,6 +71,7 @@ export default function WebhooksPage() {
 
   const [deleteWebhookId, setDeleteWebhookId] = useState<string | null>(null);
   const [logsWebhookId, setLogsWebhookId] = useState<string | null>(null);
+  const webhooksDocsUrl = getDocsUrl('features/webhooks');
 
   const handleDelete = async () => {
     if (!deleteWebhookId) return;
@@ -131,6 +132,20 @@ export default function WebhooksPage() {
           <h1 className="text-3xl font-display font-bold">{t('webhooks.title')}</h1>
           <p className="text-muted-foreground mt-1">
             {t('webhooks.description')}
+            {webhooksDocsUrl && (
+              <>
+                {' · '}
+                <a
+                  href={webhooksDocsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  {t('common.viewDocs')}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </>
+            )}
           </p>
         </div>
 

@@ -34,6 +34,15 @@ export function CreateUrlForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (formData.password && formData.password.length < 4) {
+      toast({
+        title: t('common.error'),
+        description: t('urls.passwordTooShort'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     try {
       const data: CreateUrlDto = {
         originalUrl: formData.originalUrl,
@@ -129,9 +138,13 @@ export function CreateUrlForm() {
                 placeholder={t('urls.passwordPlaceholder')}
                 value={formData.password}
                 onChange={handleChange('password')}
+                minLength={4}
+                maxLength={128}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {t('urls.passwordHint')}
+                {formData.password && formData.password.length > 0 && formData.password.length < 4
+                  ? t('urls.passwordTooShort')
+                  : t('urls.passwordHint')}
               </p>
 
               <Input

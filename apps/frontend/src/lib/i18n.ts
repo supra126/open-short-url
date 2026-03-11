@@ -137,3 +137,17 @@ export function tDynamic(
 export function getLocale(): string {
   return process.env.NEXT_PUBLIC_LOCALE || 'en';
 }
+
+/**
+ * Build a documentation URL for a given path.
+ * Returns undefined if NEXT_PUBLIC_DOCS_URL is not set.
+ * @param path - e.g. 'features/api-keys', 'guide/getting-started'
+ */
+export function getDocsUrl(path?: string): string | undefined {
+  const base = process.env.NEXT_PUBLIC_DOCS_URL;
+  if (!base) return undefined;
+  const locale = getLocale() === 'zh-TW' ? 'zh-TW' : 'en';
+  const trimmed = base.replace(/\/+$/, '');
+  if (!path) return `${trimmed}/${locale}`;
+  return `${trimmed}/${locale}/${path}`;
+}

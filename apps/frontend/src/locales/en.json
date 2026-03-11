@@ -57,7 +57,8 @@
     "remove": "Remove",
     "clicks": "Clicks",
     "close": "Close",
-    "retry": "Retry"
+    "retry": "Retry",
+    "viewDocs": "View Docs"
   },
   "theme": {
     "toggle": "Toggle theme",
@@ -174,6 +175,7 @@
     "passwordProtection": "Password Protection (Optional)",
     "passwordPlaceholder": "Set access password",
     "passwordHint": "Visitors will need to enter password to access the original URL",
+    "passwordTooShort": "Password must be at least 4 characters",
     "expiresAt": "Expiration Time (Optional)",
     "expiresAtHint": "The short URL will automatically expire after the specified time",
     "createSuccess": "Short URL created successfully! Slug: {slug}",
@@ -346,7 +348,8 @@
     "aiAssistant": "AI Assistant",
     "ai": "AI",
     "title": "Sidebar",
-    "toggle": "Toggle Sidebar"
+    "toggle": "Toggle Sidebar",
+    "docs": "Documentation"
   },
   "apiKeys": {
     "title": "API Keys",

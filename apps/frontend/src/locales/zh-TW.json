@@ -57,7 +57,8 @@
     "remove": "移除",
     "clicks": "點擊",
     "close": "關閉",
-    "retry": "重試"
+    "retry": "重試",
+    "viewDocs": "查看文檔"
   },
   "theme": {
     "toggle": "切換主題",
@@ -174,6 +175,7 @@
     "passwordProtection": "密碼保護（選填）",
     "passwordPlaceholder": "設定訪問密碼",
     "passwordHint": "設定後，訪客需要輸入密碼才能訪問原始網址",
+    "passwordTooShort": "密碼至少需要 4 個字元",
     "expiresAt": "過期時間（選填）",
     "expiresAtHint": "設定後，短網址將在指定時間後自動過期",
     "createSuccess": "短網址創建成功！代碼：{slug}",
@@ -346,7 +348,8 @@
     "aiAssistant": "AI 助手",
     "ai": "AI",
     "title": "側邊欄",
-    "toggle": "切換側邊欄"
+    "toggle": "切換側邊欄",
+    "docs": "使用文檔"
   },
   "apiKeys": {
     "title": "API Keys",

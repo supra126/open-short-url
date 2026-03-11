@@ -15,7 +15,7 @@ import {
   type ApiKeyResponseDto,
 } from '@/hooks/use-api-keys';
 import { Button } from '@/components/ui/button';
-import { t } from '@/lib/i18n';
+import { t, getDocsUrl } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/utils';
 import {
   Card,
@@ -56,7 +56,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Copy, Key, Plus, Trash2 } from 'lucide-react';
+import { Copy, ExternalLink, Key, Plus, Trash2 } from 'lucide-react';
 import type { CreateApiKeyResponseDto } from '@/hooks/use-api-keys';
 
 const createApiKeySchema = z.object({
@@ -77,6 +77,7 @@ export default function ApiKeysPage() {
     useState<CreateApiKeyResponseDto | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [apiKeyToDelete, setApiKeyToDelete] = useState<{ id: string; name: string } | null>(null);
+  const apiKeysDocsUrl = getDocsUrl('features/api-keys');
 
   const {
     register,
@@ -176,6 +177,20 @@ export default function ApiKeysPage() {
           <h1 className="text-3xl font-display font-bold">{t('apiKeys.title')}</h1>
           <p className="text-muted-foreground mt-1">
             {t('apiKeys.description')}
+            {apiKeysDocsUrl && (
+              <>
+                {' · '}
+                <a
+                  href={apiKeysDocsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline inline-flex items-center gap-1"
+                >
+                  {t('common.viewDocs')}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </>
+            )}
           </p>
         </div>
 

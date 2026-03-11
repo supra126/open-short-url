@@ -57,7 +57,8 @@
     "remove": "Remover",
     "clicks": "Cliques",
     "close": "Fechar",
-    "retry": "Tentar novamente"
+    "retry": "Tentar novamente",
+    "viewDocs": "Ver Documentação"
   },
   "theme": {
     "toggle": "Alternar tema",
@@ -174,6 +175,7 @@
     "passwordProtection": "Proteção por Senha (Opcional)",
     "passwordPlaceholder": "Definir senha de acesso",
     "passwordHint": "Visitantes precisarão digitar a senha para acessar a URL original",
+    "passwordTooShort": "A senha deve ter pelo menos 4 caracteres",
     "expiresAt": "Data de Expiração (Opcional)",
     "expiresAtHint": "A URL curta expirará automaticamente após o tempo especificado",
     "createSuccess": "URL curta criada com sucesso! Slug: {slug}",
@@ -346,7 +348,8 @@
     "aiAssistant": "Assistente de IA",
     "ai": "IA",
     "title": "Barra Lateral",
-    "toggle": "Alternar Barra Lateral"
+    "toggle": "Alternar Barra Lateral",
+    "docs": "Documentação"
   },
   "apiKeys": {
     "title": "Chaves de API",

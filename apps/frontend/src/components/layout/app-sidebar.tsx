@@ -27,12 +27,14 @@ import {
   Webhook,
   Bot,
   ClipboardList,
+  BookOpen,
+  ExternalLink,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCurrentUser } from '@/hooks/use-auth';
 import { useAIEnabled } from '@/hooks/use-ai-enabled';
-import { t } from '@/lib/i18n';
+import { t, getDocsUrl } from '@/lib/i18n';
 import type { LucideIcon } from 'lucide-react';
 
 // Navigation item type
@@ -238,6 +240,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarFooter>
         <SidebarMenu>
+          {getDocsUrl() && (
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild tooltip={t('sidebar.docs')}>
+                <a href={getDocsUrl()!} target="_blank" rel="noopener noreferrer">
+                  <BookOpen />
+                  <span>{t('sidebar.docs')}</span>
+                  <ExternalLink className="ml-auto h-3 w-3 text-muted-foreground" />
+                </a>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild={!!user}
