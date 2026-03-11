@@ -7,6 +7,9 @@
 #   3. Edit .env.docker with your settings
 #   4. docker compose up -d
 #
+# With built-in SSL (auto Let's Encrypt via Caddy):
+#   docker compose --profile ssl up -d
+#
 # Images are pulled from GHCR. Pin a version with:
 #   IMAGE_TAG=v1.0.0 docker compose up -d
 # ============================================================
@@ -103,6 +106,28 @@ services:
     depends_on:
       - backend
 
+  # --- Caddy (SSL reverse proxy) ---
+  # Activate with: docker compose --profile ssl up -d
+  caddy:
+    image: caddy:2-alpine
+    profiles: ["ssl"]
+    restart: unless-stopped
+    environment:
+      SHORT_URL_DOMAIN: ${SHORT_URL_DOMAIN:-http://localhost:4101}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:4100}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - backend
+      - frontend
+
 volumes:
   postgres_data:
   redis_data:
+  caddy_data:
+  caddy_config:

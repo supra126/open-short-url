@@ -1,6 +1,6 @@
 {
   "name": "open-short-url",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Open-source, enterprise-grade, self-hosted URL shortener with analytics, branding & smart routing",
   "private": true,
   "packageManager": "pnpm@10.30.3",
@@ -32,9 +32,9 @@
   "devDependencies": {
     "@commitlint/cli": "^20.4.3",
     "@commitlint/config-conventional": "^20.4.3",
-    "@types/node": "^25.3.5",
+    "@types/node": "^25.4.0",
     "concurrently": "^9.2.1",
-    "eslint": "^9.39.3",
+    "eslint": "^10.0.3",
     "husky": "^9.1.7",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3"

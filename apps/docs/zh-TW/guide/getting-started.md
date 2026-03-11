@@ -92,11 +92,21 @@ pnpm dev
 
 ## 預設帳號
 
-如果啟用了種子資料，可使用以下帳號：
+初始管理員帳號會在首次啟動時自動建立：
 
 | 角色   | 電子郵件          | 密碼      |
 | ------ | ----------------- | --------- |
-| 管理員 | admin@example.com | admin123! |
+| 管理員 | admin@example.com | 由 `ADMIN_INITIAL_PASSWORD` 環境變數決定 |
+
+- **快速體驗**（`docker-compose.quickstart.yml`）：密碼為 `admin123`
+- **正式部署**（`docker-compose.yml`）：在 `.env.docker` 中設定 `ADMIN_INITIAL_PASSWORD`
+- **未設定**：系統會隨機產生密碼並印在後端 log 中
+
+查看密碼：
+
+```bash
+docker compose logs backend | grep -A2 "Admin credentials"
+```
 
 ::: warning
 請在正式環境中立即更改預設帳號密碼！

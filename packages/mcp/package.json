@@ -34,11 +34,11 @@
   "author": "supra126",
   "license": "MIT",
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.1"
+    "@modelcontextprotocol/sdk": "^1.27.1"
   },
   "devDependencies": {
-    "@types/node": "^25.0.3",
-    "rimraf": "^6.1.2",
+    "@types/node": "^25.4.0",
+    "rimraf": "^6.1.3",
     "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3"

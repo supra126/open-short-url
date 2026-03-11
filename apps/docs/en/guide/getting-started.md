@@ -92,11 +92,21 @@ The application will be available at:
 
 ## Default Credentials
 
-If seed data is enabled, use these credentials:
+The initial admin account is created automatically on first startup:
 
 | Role  | Email             | Password  |
 | ----- | ----------------- | --------- |
-| Admin | admin@example.com | admin123! |
+| Admin | admin@example.com | Set via `ADMIN_INITIAL_PASSWORD` env var |
+
+- **Quickstart** (`docker-compose.quickstart.yml`): password is `admin123`
+- **Production** (`docker-compose.yml`): set `ADMIN_INITIAL_PASSWORD` in `.env.docker`
+- **Not set**: a random password is generated and printed in the backend logs
+
+To check the password from logs:
+
+```bash
+docker compose logs backend | grep -A2 "Admin credentials"
+```
 
 ::: warning
 Change default credentials immediately in production!

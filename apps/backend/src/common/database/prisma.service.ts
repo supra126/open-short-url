@@ -38,7 +38,7 @@ export class PrismaService
       idleTimeoutMillis: 30000,     // Close idle clients after 30 seconds
       connectionTimeoutMillis: 5000, // Return error after 5 seconds if connection not available
     });
-    const adapter = new PrismaPg(pool);
+    const adapter = new PrismaPg(pool as any);
 
     super({
       adapter,

@@ -143,7 +143,7 @@ pnpm dev
 - Backend API: http://localhost:4101
 - API Docs: http://localhost:4101/api
 
-**Default Credentials:** admin@example.com / admin123
+**Default Credentials:** admin@example.com / password set via `ADMIN_INITIAL_PASSWORD` env var (quickstart default: `admin123`)
 
 ---
 

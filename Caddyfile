@@ -1,0 +1,19 @@
+# ============================================================
+# Open Short URL - Caddy Reverse Proxy Configuration
+# ============================================================
+# Auto-configured from your .env.docker variables.
+# No manual editing needed.
+#
+# Caddy automatically obtains and renews Let's Encrypt
+# SSL certificates for your domains.
+# ============================================================
+
+# Backend (Short URL domain)
+{$SHORT_URL_DOMAIN} {
+	reverse_proxy backend:4101
+}
+
+# Frontend (Dashboard)
+{$FRONTEND_URL} {
+	reverse_proxy frontend:4100
+}

@@ -19,6 +19,7 @@
 | **backend** | NestJS 後端 API | 4101 |
 | **postgres** | PostgreSQL 17-alpine 資料庫 | 5432 |
 | **redis** | Redis 7-alpine 快取 | 6379 |
+| **caddy** | Caddy 反向代理（選用，`--profile ssl`） | 80, 443 |
 
 後端容器啟動時會自動執行 `prisma migrate deploy` 和 `seed-if-empty`，無需手動執行資料庫遷移或建立管理員帳號。
 
@@ -119,6 +120,15 @@ docker compose up -d
 
 這就完成了。後端會自動執行資料庫遷移並建立初始管理員帳號。
 
+::: tip 預設管理員帳號
+- **Email：** `admin@example.com`
+- **密碼：** 由 `.env.docker` 中的 `ADMIN_INITIAL_PASSWORD` 決定
+- 若未設定 `ADMIN_INITIAL_PASSWORD`，系統會隨機產生密碼並印在後端 log 中：
+  ```bash
+  docker compose logs backend | grep -A2 "Admin credentials"
+  ```
+:::
+
 ### 4. 驗證服務
 
 ```bash
@@ -185,7 +195,7 @@ services:
     ports:
       - "${REDIS_PORT:-6379}:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep -q PONG"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -223,6 +233,7 @@ services:
     image: ghcr.io/supra126/open-short-url-frontend:latest
     restart: unless-stopped
     environment:
+      HOSTNAME: 0.0.0.0
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4101}
       NEXT_PUBLIC_SHORT_URL_DOMAIN: ${NEXT_PUBLIC_SHORT_URL_DOMAIN:-http://localhost:4101}
       NEXT_PUBLIC_LOCALE: ${NEXT_PUBLIC_LOCALE:-en}
@@ -230,6 +241,7 @@ services:
       NEXT_PUBLIC_BRAND_ICON_URL: ${NEXT_PUBLIC_BRAND_ICON_URL:-}
       NEXT_PUBLIC_BRAND_DESCRIPTION: ${NEXT_PUBLIC_BRAND_DESCRIPTION:-}
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+      NEXT_PUBLIC_DOCS_URL: ${NEXT_PUBLIC_DOCS_URL:-https://supra126.github.io/open-short-url/}
     ports:
       - "${FRONTEND_PORT:-4100}:4100"
     depends_on:
@@ -286,7 +298,11 @@ pnpm dev
 | `POSTGRES_DB` | 資料庫名稱 | `open_short_url` |
 | `POSTGRES_USER` | 資料庫使用者 | `postgres` |
 | `POSTGRES_PASSWORD` | 資料庫密碼 | `postgres` |
+| `POSTGRES_PORT` | PostgreSQL 主機連接埠 | `5432` |
 | `REDIS_PASSWORD` | Redis 密碼（留空表示無密碼） | （空） |
+| `REDIS_PORT` | Redis 主機連接埠 | `6379` |
+| `BACKEND_PORT` | 後端主機連接埠 | `4101` |
+| `FRONTEND_PORT` | 前端主機連接埠 | `4100` |
 
 #### 後端（必填）
 
@@ -308,6 +324,11 @@ pnpm dev
 | `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile 密鑰 | （空） |
 | `THROTTLE_TTL` | 速率限制時間窗口（秒） | `60` |
 | `THROTTLE_LIMIT` | 速率限制次數 | `10` |
+| `SMTP_HOST` | SMTP 伺服器主機名稱 | （空） |
+| `SMTP_PORT` | SMTP 伺服器連接埠 | `587` |
+| `SMTP_USER` | SMTP 使用者名稱 | （空） |
+| `SMTP_PASSWORD` | SMTP 密碼 | （空） |
+| `SMTP_FROM` | SMTP 寄件人地址 | （空） |
 
 #### 前端
 
@@ -322,6 +343,7 @@ pnpm dev
 | `NEXT_PUBLIC_BRAND_ICON_URL` | 品牌圖示 URL | （空） |
 | `NEXT_PUBLIC_BRAND_DESCRIPTION` | 品牌描述 | （空） |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile 站點金鑰 | （空） |
+| `NEXT_PUBLIC_DOCS_URL` | 文件連結 URL | `https://supra126.github.io/open-short-url/` |
 
 ### 產生安全密鑰
 
@@ -333,9 +355,39 @@ openssl rand -base64 32
 openssl rand -base64 24
 ```
 
-## 反向代理設定
+## SSL / HTTPS
 
-### Nginx 設定
+### 內建 SSL（Caddy，推薦）
+
+最簡單的 HTTPS 啟用方式。Caddy 以 Docker Compose profile 形式內建，自動申請並續期 Let's Encrypt 憑證。不需要額外的設定檔或環境變數。
+
+```bash
+# 啟動並啟用內建 SSL
+docker compose --profile ssl up -d
+```
+
+就這樣。Caddy 會讀取 `.env.docker` 中的 `SHORT_URL_DOMAIN` 和 `FRONTEND_URL`，自動完成：
+- 為兩個網域申請 Let's Encrypt 憑證
+- HTTP 自動重導向至 HTTPS
+- 憑證自動續期
+
+::: tip 何時使用
+當你**沒有**現有的反向代理（nginx、Cloudflare proxy 等）且想要零設定 HTTPS 時使用。
+
+如果你已有反向代理處理 SSL，使用標準的 `docker compose up -d`（不帶 `ssl` profile）即可。
+:::
+
+::: warning 前置條件
+- 連接埠 80 和 443 必須開放且未被其他程式佔用
+- 你的網域必須指向伺服器的公開 IP（DNS A 記錄）
+- Cloudflare 使用者：請使用僅 DNS 模式（灰雲），不要使用代理模式（橙雲）
+:::
+
+### 外部反向代理
+
+如果你偏好自行管理 SSL，使用標準的 `docker compose up -d`（不帶 `ssl` profile），搭配以下任一方案。
+
+#### Nginx 設定
 
 ```nginx
 # /etc/nginx/sites-available/shorturl
@@ -418,7 +470,7 @@ server {
 }
 ```
 
-### Traefik 設定
+#### Traefik 設定
 
 ```yaml
 # docker-compose.traefik.yml

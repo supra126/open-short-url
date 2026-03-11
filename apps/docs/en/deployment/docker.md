@@ -33,6 +33,15 @@ docker compose up -d
 
 That is it. The backend container automatically runs database migrations and seeds the initial admin user on startup -- no manual steps are needed.
 
+::: tip Default Admin Account
+- **Email:** `admin@example.com`
+- **Password:** the value of `ADMIN_INITIAL_PASSWORD` in your `.env.docker`
+- If `ADMIN_INITIAL_PASSWORD` is not set, a random password is generated and printed in the backend logs:
+  ```bash
+  docker compose logs backend | grep -A2 "Admin credentials"
+  ```
+:::
+
 ### Method 2: Use Pre-built GHCR Images
 
 If you do not want to clone the repository or build from source, create the following files manually.
@@ -76,7 +85,7 @@ services:
     ports:
       - "${REDIS_PORT:-6379}:6379"
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep -q PONG"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -114,6 +123,7 @@ services:
     image: ghcr.io/supra126/open-short-url-frontend:latest
     restart: unless-stopped
     environment:
+      HOSTNAME: 0.0.0.0
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4101}
       NEXT_PUBLIC_SHORT_URL_DOMAIN: ${NEXT_PUBLIC_SHORT_URL_DOMAIN:-http://localhost:4101}
       NEXT_PUBLIC_LOCALE: ${NEXT_PUBLIC_LOCALE:-en}
@@ -121,6 +131,7 @@ services:
       NEXT_PUBLIC_BRAND_ICON_URL: ${NEXT_PUBLIC_BRAND_ICON_URL:-}
       NEXT_PUBLIC_BRAND_DESCRIPTION: ${NEXT_PUBLIC_BRAND_DESCRIPTION:-}
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
+      NEXT_PUBLIC_DOCS_URL: ${NEXT_PUBLIC_DOCS_URL:-https://supra126.github.io/open-short-url/}
     ports:
       - "${FRONTEND_PORT:-4100}:4100"
     depends_on:
@@ -213,6 +224,7 @@ These variables configure the Next.js frontend. When building from source, they 
 | `NEXT_PUBLIC_BRAND_ICON_URL` | Custom brand icon URL | _(empty)_ |
 | `NEXT_PUBLIC_BRAND_DESCRIPTION` | Brand description | _(empty)_ |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key | _(empty)_ |
+| `NEXT_PUBLIC_DOCS_URL` | Documentation link URL | `https://supra126.github.io/open-short-url/` |
 
 ### Generate Secure Secrets
 
@@ -224,9 +236,39 @@ openssl rand -base64 32
 openssl rand -base64 24
 ```
 
-## Reverse Proxy Setup
+## SSL / HTTPS
 
-### Nginx Configuration
+### Built-in SSL with Caddy (Recommended)
+
+The simplest way to enable HTTPS. Caddy is included as a Docker Compose profile -- it automatically obtains and renews Let's Encrypt certificates. No extra configuration files or environment variables needed.
+
+```bash
+# Start with built-in SSL
+docker compose --profile ssl up -d
+```
+
+That is it. Caddy reads your `SHORT_URL_DOMAIN` and `FRONTEND_URL` from `.env.docker` and automatically:
+- Obtains Let's Encrypt certificates for both domains
+- Redirects HTTP to HTTPS
+- Renews certificates automatically
+
+::: tip When to use this
+Use the built-in Caddy when you do **not** have an existing reverse proxy (nginx, Cloudflare proxy, etc.) and want zero-config HTTPS.
+
+If you already have a reverse proxy handling SSL, use the standard `docker compose up -d` without the `ssl` profile.
+:::
+
+::: warning Prerequisites
+- Ports 80 and 443 must be open and not used by another process
+- Your domains must point to the server's public IP (DNS A record)
+- Cloudflare users: use DNS-only mode (grey cloud), not proxied (orange cloud)
+:::
+
+### External Reverse Proxy
+
+If you prefer to manage SSL yourself, use one of the following options with the standard `docker compose up -d` (without the `ssl` profile).
+
+#### Nginx Configuration
 
 ```nginx
 # /etc/nginx/sites-available/shorturl
@@ -309,7 +351,7 @@ server {
 }
 ```
 
-### Traefik Configuration
+#### Traefik Configuration
 
 ```yaml
 services:
