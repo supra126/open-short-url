@@ -10,7 +10,7 @@ A/B testing allows you to distribute visitors across multiple target URLs based 
 
 ```mermaid
 flowchart TB
-    URL["🔗 Short URL\nhttps://s.yourdomain.com/landing"]
+    URL["🔗 Short URL<br/>https://s.yourdomain.com/landing"]
     Engine["🧪 A/B Testing Engine"]
 
     URL --> Engine

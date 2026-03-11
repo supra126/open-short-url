@@ -127,11 +127,25 @@ GET /api/audit-logs?page=1&pageSize=20
 | `ROUTING_RULE_UPDATED` | 更新路由規則 |
 | `ROUTING_RULE_DELETED` | 刪除路由規則 |
 
+### SSO / OIDC 操作
+
+| 操作 | 說明 |
+|-----|------|
+| `SSO_LOGIN` | 使用者透過 SSO 登入 |
+| `SSO_LOGIN_FAILED` | SSO 登入嘗試失敗 |
+| `OIDC_PROVIDER_CREATED` | 建立 OIDC 提供者 |
+| `OIDC_PROVIDER_UPDATED` | 更新 OIDC 提供者 |
+| `OIDC_PROVIDER_DELETED` | 刪除 OIDC 提供者 |
+| `OIDC_ACCOUNT_LINKED` | OIDC 帳號綁定至使用者（首次 SSO 登入時自動綁定） |
+| `OIDC_ACCOUNT_UNLINKED` | 解除 OIDC 帳號與使用者的綁定 |
+
 ### 系統操作
 
 | 操作 | 說明 |
 |-----|------|
 | `SETTINGS_UPDATED` | 變更系統設定 |
+| `SYSTEM_SETTING_UPDATED` | 建立或更新系統設定 |
+| `SYSTEM_SETTING_DELETED` | 刪除系統設定 |
 
 ## 實體類型
 
@@ -145,6 +159,9 @@ GET /api/audit-logs?page=1&pageSize=20
 | `variant` | A/B 測試變體 |
 | `routing_rule` | 智慧路由規則 |
 | `settings` | 系統設定 |
+| `oidc_provider` | OIDC 身份提供者 |
+| `oidc_account` | OIDC 帳號綁定 |
+| `system_setting` | 系統組態設定 |
 
 ## 日誌欄位
 

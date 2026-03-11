@@ -6,12 +6,12 @@
 
 開始之前，請確保您已安裝：
 
-| 需求 | 版本 | 備註 |
-|------|------|------|
-| Node.js | 22+ | 建議使用 LTS 版本 |
-| pnpm | 9+ | 套件管理器 |
-| PostgreSQL | 16+ | 主要資料庫 |
-| Redis | 7+ | 快取層（開發可選，正式環境建議） |
+| 需求       | 版本 | 備註                             |
+| ---------- | ---- | -------------------------------- |
+| Node.js    | 22+  | 建議使用 LTS 版本                |
+| pnpm       | 9+   | 套件管理器                       |
+| PostgreSQL | 16+  | 主要資料庫                       |
+| Redis      | 7+   | 快取層（開發可選，正式環境建議） |
 
 ## 快速入門
 
@@ -76,10 +76,10 @@ pnpm dev
 
 應用程式將在以下位址啟動：
 
-| 服務 | 網址 |
-|------|------|
-| 前端 | http://localhost:4100 |
-| 後端 API | http://localhost:4101 |
+| 服務       | 網址                      |
+| ---------- | ------------------------- |
+| 前端       | http://localhost:4100     |
+| 後端 API   | http://localhost:4101     |
 | Swagger UI | http://localhost:4101/api |
 
 ### 6. 建立您的第一個短網址
@@ -94,9 +94,9 @@ pnpm dev
 
 如果啟用了種子資料，可使用以下帳號：
 
-| 角色 | 電子郵件 | 密碼 |
-|------|----------|------|
-| 管理員 | admin@example.com | Admin123! |
+| 角色   | 電子郵件          | 密碼      |
+| ------ | ----------------- | --------- |
+| 管理員 | admin@example.com | admin123! |
 
 ::: warning
 請在正式環境中立即更改預設帳號密碼！
@@ -128,16 +128,16 @@ open-short-url/
 
 ## 可用指令
 
-| 指令 | 說明 |
-|------|------|
-| `pnpm dev` | 以開發模式啟動所有服務 |
-| `pnpm dev:backend` | 僅啟動後端 |
-| `pnpm dev:frontend` | 僅啟動前端 |
-| `pnpm build` | 建置正式版本 |
-| `pnpm prisma:studio` | 開啟 Prisma Studio（資料庫 GUI） |
-| `pnpm prisma:migrate` | 執行資料庫遷移 |
-| `pnpm lint` | 執行所有套件的程式碼檢查 |
-| `pnpm type-check` | 執行 TypeScript 類型檢查 |
+| 指令                  | 說明                             |
+| --------------------- | -------------------------------- |
+| `pnpm dev`            | 以開發模式啟動所有服務           |
+| `pnpm dev:backend`    | 僅啟動後端                       |
+| `pnpm dev:frontend`   | 僅啟動前端                       |
+| `pnpm build`          | 建置正式版本                     |
+| `pnpm prisma:studio`  | 開啟 Prisma Studio（資料庫 GUI） |
+| `pnpm prisma:migrate` | 執行資料庫遷移                   |
+| `pnpm lint`           | 執行所有套件的程式碼檢查         |
+| `pnpm type-check`     | 執行 TypeScript 類型檢查         |
 
 ## 驗證安裝
 
@@ -154,6 +154,7 @@ Error: P1001: Can't reach database server
 ```
 
 **解決方案：**
+
 - 確認 PostgreSQL 正在執行
 - 驗證 `.env` 中的 `DATABASE_URL`
 - 檢查防火牆設定
@@ -165,6 +166,7 @@ Error: ECONNREFUSED 127.0.0.1:6379
 ```
 
 **解決方案：**
+
 - 確認 Redis 正在執行
 - 驗證 `.env` 中的 `REDIS_HOST` 和 `REDIS_PORT`
 
@@ -175,6 +177,7 @@ Error: EADDRINUSE: address already in use
 ```
 
 **解決方案：**
+
 - 在 `.env` 中修改連接埠（例如 `PORT=4102`）
 - 停止衝突的服務
 
@@ -185,6 +188,7 @@ Error: @prisma/client did not initialize yet
 ```
 
 **解決方案：**
+
 ```bash
 pnpm prisma:generate
 ```

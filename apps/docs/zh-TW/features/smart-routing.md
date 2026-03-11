@@ -8,7 +8,7 @@
 
 ```mermaid
 flowchart TB
-    URL["🔗 短網址\nhttps://s.yourdomain.com/app"]
+    URL["🔗 短網址<br/>https://s.yourdomain.com/app"]
     Engine["⚙️ 智慧路由引擎"]
 
     URL --> Engine
@@ -26,10 +26,10 @@ flowchart TB
 
 ```mermaid
 flowchart TD
-    Start["📥 傳入請求"] --> CheckRules{"檢查路由規則\n(依優先順序)"}
+    Start["📥 傳入請求"] --> CheckRules{"檢查路由規則<br/>(依優先順序)"}
 
     CheckRules -->|"規則符合"| Route["路由至目標網址"]
-    CheckRules -->|"無符合規則"| CheckAB{"A/B 測試\n已啟用？"}
+    CheckRules -->|"無符合規則"| CheckAB{"A/B 測試<br/>已啟用？"}
 
     CheckAB -->|"是"| ABTest["套用 A/B 測試"]
     CheckAB -->|"否"| Default["使用預設網址"]

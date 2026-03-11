@@ -102,7 +102,7 @@ REDIS_DB="0"
 
 | 變數 | 說明 | 預設值 |
 |------|------|--------|
-| `TRUSTED_PROXY` | 信任代理標頭 | `false` |
+| `TRUSTED_PROXY` | 信任代理標頭 | `false`（Docker 部署為 `true`） |
 
 ```bash
 # 會從 X-Forwarded-For 和 X-Real-IP 標頭讀取用戶端 IP

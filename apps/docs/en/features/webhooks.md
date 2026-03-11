@@ -23,11 +23,11 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    Event["📢 Event\nOccurs"] --> Queue["📋 Queue\nWebhook"]
-    Queue --> Send["📤 Send\nRequest"]
-    Send --> Check{"Response\nOK?"}
+    Event["📢 Event<br/>Occurs"] --> Queue["📋 Queue<br/>Webhook"]
+    Queue --> Send["📤 Send<br/>Request"]
+    Send --> Check{"Response<br/>OK?"}
     Check -->|"2xx"| Success["✅ Success"]
-    Check -->|"Error"| Retry["🔄 Retry\n(up to 3x)"]
+    Check -->|"Error"| Retry["🔄 Retry<br/>(up to 3x)"]
     Retry --> Send
     Retry -->|"Max retries"| Failed["❌ Failed"]
 ```

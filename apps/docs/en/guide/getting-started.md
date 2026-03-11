@@ -6,12 +6,12 @@ Get Open Short URL up and running in minutes.
 
 Before you begin, ensure you have:
 
-| Requirement | Version | Notes |
-|-------------|---------|-------|
-| Node.js | 22+ | LTS recommended |
-| pnpm | 9+ | Package manager |
-| PostgreSQL | 16+ | Primary database |
-| Redis | 7+ | Caching layer (optional for dev, recommended for prod) |
+| Requirement | Version | Notes                                                  |
+| ----------- | ------- | ------------------------------------------------------ |
+| Node.js     | 22+     | LTS recommended                                        |
+| pnpm        | 9+      | Package manager                                        |
+| PostgreSQL  | 16+     | Primary database                                       |
+| Redis       | 7+      | Caching layer (optional for dev, recommended for prod) |
 
 ## Quick Start
 
@@ -76,11 +76,11 @@ pnpm dev
 
 The application will be available at:
 
-| Service | URL |
-|---------|-----|
-| Frontend | http://localhost:4100 |
-| Backend API | http://localhost:4101 |
-| Swagger UI | http://localhost:4101/api |
+| Service     | URL                       |
+| ----------- | ------------------------- |
+| Frontend    | http://localhost:4100     |
+| Backend API | http://localhost:4101     |
+| Swagger UI  | http://localhost:4101/api |
 
 ### 6. Create Your First Short URL
 
@@ -94,9 +94,9 @@ The application will be available at:
 
 If seed data is enabled, use these credentials:
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@example.com | Admin123! |
+| Role  | Email             | Password  |
+| ----- | ----------------- | --------- |
+| Admin | admin@example.com | admin123! |
 
 ::: warning
 Change default credentials immediately in production!
@@ -128,16 +128,16 @@ open-short-url/
 
 ## Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start all services in development mode |
-| `pnpm dev:backend` | Start only the backend |
-| `pnpm dev:frontend` | Start only the frontend |
-| `pnpm build` | Build all services for production |
-| `pnpm prisma:studio` | Open Prisma Studio (database GUI) |
-| `pnpm prisma:migrate` | Run database migrations |
-| `pnpm lint` | Run linting on all packages |
-| `pnpm type-check` | Run TypeScript type checking |
+| Command               | Description                            |
+| --------------------- | -------------------------------------- |
+| `pnpm dev`            | Start all services in development mode |
+| `pnpm dev:backend`    | Start only the backend                 |
+| `pnpm dev:frontend`   | Start only the frontend                |
+| `pnpm build`          | Build all services for production      |
+| `pnpm prisma:studio`  | Open Prisma Studio (database GUI)      |
+| `pnpm prisma:migrate` | Run database migrations                |
+| `pnpm lint`           | Run linting on all packages            |
+| `pnpm type-check`     | Run TypeScript type checking           |
 
 ## Verifying Installation
 
@@ -154,6 +154,7 @@ Error: P1001: Can't reach database server
 ```
 
 **Solution:**
+
 - Ensure PostgreSQL is running
 - Verify `DATABASE_URL` in `.env`
 - Check firewall settings
@@ -165,6 +166,7 @@ Error: ECONNREFUSED 127.0.0.1:6379
 ```
 
 **Solution:**
+
 - Ensure Redis is running
 - Verify `REDIS_HOST` and `REDIS_PORT` in `.env`
 
@@ -175,6 +177,7 @@ Error: EADDRINUSE: address already in use
 ```
 
 **Solution:**
+
 - Change port in `.env` (e.g., `PORT=4102`)
 - Stop conflicting services
 
@@ -185,6 +188,7 @@ Error: @prisma/client did not initialize yet
 ```
 
 **Solution:**
+
 ```bash
 pnpm prisma:generate
 ```

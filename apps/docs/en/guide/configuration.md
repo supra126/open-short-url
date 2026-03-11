@@ -102,7 +102,7 @@ Enable if behind a reverse proxy (nginx, Cloudflare, etc.).
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `TRUSTED_PROXY` | Trust proxy headers | `false` |
+| `TRUSTED_PROXY` | Trust proxy headers | `false` (`true` in Docker) |
 
 ```bash
 # Reads client IP from X-Forwarded-For and X-Real-IP headers

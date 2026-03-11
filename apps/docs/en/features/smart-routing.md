@@ -8,7 +8,7 @@ Smart Routing enables conditional redirects based on visitor attributes. Create 
 
 ```mermaid
 flowchart TB
-    URL["🔗 Short URL\nhttps://s.yourdomain.com/app"]
+    URL["🔗 Short URL<br/>https://s.yourdomain.com/app"]
     Engine["⚙️ Smart Routing Engine"]
 
     URL --> Engine
@@ -26,10 +26,10 @@ flowchart TB
 
 ```mermaid
 flowchart TD
-    Start["📥 Incoming Request"] --> CheckRules{"Check Routing Rules\n(by priority)"}
+    Start["📥 Incoming Request"] --> CheckRules{"Check Routing Rules<br/>(by priority)"}
 
     CheckRules -->|"Rule matches"| Route["Route to Target URL"]
-    CheckRules -->|"No rules match"| CheckAB{"A/B Testing\nenabled?"}
+    CheckRules -->|"No rules match"| CheckAB{"A/B Testing<br/>enabled?"}
 
     CheckAB -->|"Yes"| ABTest["Apply A/B Testing"]
     CheckAB -->|"No"| Default["Use Default URL"]

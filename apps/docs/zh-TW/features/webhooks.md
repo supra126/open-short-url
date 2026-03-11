@@ -23,11 +23,11 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-    Event["📢 事件\n發生"] --> Queue["📋 排入\n佇列"]
-    Queue --> Send["📤 發送\n請求"]
-    Send --> Check{"回應\nOK?"}
+    Event["📢 事件<br/>發生"] --> Queue["📋 排入<br/>佇列"]
+    Queue --> Send["📤 發送<br/>請求"]
+    Send --> Check{"回應<br/>OK?"}
     Check -->|"2xx"| Success["✅ 成功"]
-    Check -->|"錯誤"| Retry["🔄 重試\n(最多 3 次)"]
+    Check -->|"錯誤"| Retry["🔄 重試<br/>(最多 3 次)"]
     Retry --> Send
     Retry -->|"達到上限"| Failed["❌ 失敗"]
 ```

@@ -10,22 +10,22 @@ Open Short URL transforms long URLs into short, memorable links with advanced fe
 
 ```mermaid
 flowchart TD
-    Visit["🔗 Visit Short URL"] --> Check{"URL\nexists?"}
+    Visit["🔗 Visit Short URL"] --> Check{"URL<br/>exists?"}
     Check -->|"No"| NotFound["❌ 404 Not Found"]
-    Check -->|"Yes"| Status{"URL\nstatus?"}
+    Check -->|"Yes"| Status{"URL<br/>status?"}
 
     Status -->|"Expired"| Gone["⏰ 410 Gone"]
     Status -->|"Inactive"| Gone
-    Status -->|"Active"| Password{"Password\nprotected?"}
+    Status -->|"Active"| Password{"Password<br/>protected?"}
 
     Password -->|"Yes"| Auth["🔐 Show password page"]
-    Password -->|"No"| Routing{"Smart Routing\nenabled?"}
+    Password -->|"No"| Routing{"Smart Routing<br/>enabled?"}
 
     Auth -->|"Correct"| Routing
     Auth -->|"Wrong"| Auth
 
     Routing -->|"Yes"| Rules["⚙️ Evaluate rules"]
-    Routing -->|"No"| ABTest{"A/B Testing\nenabled?"}
+    Routing -->|"No"| ABTest{"A/B Testing<br/>enabled?"}
 
     Rules -->|"Match"| Redirect["🔄 302 Redirect"]
     Rules -->|"No match"| ABTest

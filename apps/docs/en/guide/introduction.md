@@ -72,8 +72,8 @@ flowchart TB
     end
 
     subgraph Storage["💾 Storage"]
-        PostgreSQL[("PostgreSQL\n(Primary DB)")]
-        Redis[("Redis\n(Cache + Session)")]
+        PostgreSQL[("PostgreSQL<br/>(Primary DB)")]
+        Redis[("Redis<br/>(Cache + Session)")]
     end
 
     Client --> Frontend

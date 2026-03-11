@@ -127,11 +127,25 @@ GET /api/audit-logs?page=1&pageSize=20
 | `ROUTING_RULE_UPDATED` | Routing rule updated |
 | `ROUTING_RULE_DELETED` | Routing rule deleted |
 
+### SSO / OIDC Actions
+
+| Action | Description |
+|--------|-------------|
+| `SSO_LOGIN` | User logged in via SSO |
+| `SSO_LOGIN_FAILED` | SSO login attempt failed |
+| `OIDC_PROVIDER_CREATED` | OIDC provider created |
+| `OIDC_PROVIDER_UPDATED` | OIDC provider updated |
+| `OIDC_PROVIDER_DELETED` | OIDC provider deleted |
+| `OIDC_ACCOUNT_LINKED` | OIDC account linked to user (auto-link on first SSO login) |
+| `OIDC_ACCOUNT_UNLINKED` | OIDC account unlinked from user |
+
 ### System Actions
 
 | Action | Description |
 |--------|-------------|
 | `SETTINGS_UPDATED` | System settings changed |
+| `SYSTEM_SETTING_UPDATED` | System setting created or updated |
+| `SYSTEM_SETTING_DELETED` | System setting deleted |
 
 ## Entity Types
 
@@ -145,6 +159,9 @@ GET /api/audit-logs?page=1&pageSize=20
 | `variant` | A/B test variant |
 | `routing_rule` | Smart routing rule |
 | `settings` | System settings |
+| `oidc_provider` | OIDC identity provider |
+| `oidc_account` | OIDC account link |
+| `system_setting` | System configuration setting |
 
 ## Log Entry Fields
 

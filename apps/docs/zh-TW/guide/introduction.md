@@ -72,8 +72,8 @@ flowchart TB
     end
 
     subgraph Storage["💾 儲存"]
-        PostgreSQL[("PostgreSQL\n(主資料庫)")]
-        Redis[("Redis\n(快取 + Session)")]
+        PostgreSQL[("PostgreSQL<br/>(主資料庫)")]
+        Redis[("Redis<br/>(快取 + Session)")]
     end
 
     Client --> Frontend
