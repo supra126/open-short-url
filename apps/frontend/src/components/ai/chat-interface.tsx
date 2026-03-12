@@ -9,7 +9,7 @@ import { ChatInput } from './chat-input';
 import { useChatHistory } from '@/hooks/use-chat-history';
 import type { ChatHistory } from '@/types/ai';
 import { ErrorHandler } from '@/lib/error-handler';
-import { Trash2, History } from 'lucide-react';
+import { Trash2, History, AlertCircle } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +29,7 @@ export function ChatInterface() {
   const {
     messages,
     status,
+    error,
     sendMessage,
     stop,
     setMessages,
@@ -145,6 +146,14 @@ export function ChatInterface() {
           </Button>
         </div>
       </div>
+
+      {/* Error */}
+      {error && (
+        <div className="mx-4 mt-2 p-3 rounded-md bg-destructive/10 text-destructive text-sm flex items-start gap-2">
+          <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+          <span>{t('ai.chat.error')}</span>
+        </div>
+      )}
 
       {/* Messages */}
       <MessageList messages={messages} isLoading={isLoading} />

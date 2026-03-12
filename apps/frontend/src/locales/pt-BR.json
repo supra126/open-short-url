@@ -1159,7 +1159,8 @@
       "sendHintSend": "para enviar,",
       "sendHintNewLine": "para nova linha",
       "enterKey": "Enter",
-      "shiftEnterKey": "Shift + Enter"
+      "shiftEnterKey": "Shift + Enter",
+      "error": "Ocorreu um erro. Tente novamente mais tarde."
     },
     "messages": {
       "welcome": "Iniciar Conversa",

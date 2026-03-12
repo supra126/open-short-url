@@ -1159,7 +1159,8 @@
       "sendHintSend": "發送訊息，",
       "sendHintNewLine": "換行",
       "enterKey": "Enter",
-      "shiftEnterKey": "Shift + Enter"
+      "shiftEnterKey": "Shift + Enter",
+      "error": "發生錯誤，請稍後再試。"
     },
     "messages": {
       "welcome": "開始對話",
