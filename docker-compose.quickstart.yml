@@ -48,6 +48,7 @@ services:
       DATABASE_URL: postgresql://postgres:quickstart-not-for-production@postgres:5432/open_short_url?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      REDIS_PASSWORD: ""
       NODE_ENV: production
       PORT: 4101
       HOST: 0.0.0.0
@@ -78,6 +79,7 @@ services:
       NEXT_PUBLIC_BRAND_ICON_URL: ""
       NEXT_PUBLIC_BRAND_DESCRIPTION: ""
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ""
+      NEXT_PUBLIC_DOCS_URL: https://supra126.github.io/open-short-url/
     ports:
       - "4100:4100"
     depends_on:
