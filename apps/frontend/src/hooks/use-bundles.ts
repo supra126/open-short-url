@@ -195,8 +195,10 @@ export function useDeleteBundle() {
 
   return useMutation({
     mutationFn: deleteBundle,
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: bundleKeys.lists() });
+      queryClient.removeQueries({ queryKey: bundleKeys.detail(id) });
+      queryClient.removeQueries({ queryKey: bundleKeys.stats(id) });
     },
   });
 }

@@ -131,8 +131,9 @@ export function useDeleteUrl() {
 
   return useMutation({
     mutationFn: (id: string) => deleteUrl(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: urlKeys.lists() });
+      queryClient.removeQueries({ queryKey: urlKeys.detail(id) });
     },
   });
 }

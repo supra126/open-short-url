@@ -148,10 +148,9 @@ export function useUpdateUserRole() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUserRoleDto }) =>
       updateUserRole(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: userKeys.lists(),
-      });
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(id) });
     },
   });
 }
@@ -165,10 +164,9 @@ export function useUpdateUserStatus() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUserStatusDto }) =>
       updateUserStatus(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: userKeys.lists(),
-      });
+    onSuccess: (_, { id }) => {
+      queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(id) });
     },
   });
 }
@@ -225,8 +223,9 @@ export function useUpdateUserName() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateUserNameDto }) =>
       updateUserName(id, data),
-    onSuccess: () => {
+    onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(id) });
     },
   });
 }
@@ -239,8 +238,9 @@ export function useAdminDisable2FA() {
 
   return useMutation({
     mutationFn: (id: string) => adminDisable2FA(id),
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(id) });
     },
   });
 }
@@ -266,8 +266,10 @@ export function useDeleteUserOidcAccount() {
   return useMutation({
     mutationFn: ({ userId, accountId }: { userId: string; accountId: string }) =>
       deleteUserOidcAccount(userId, accountId),
-    onSuccess: () => {
+    onSuccess: (_, { userId }) => {
       queryClient.invalidateQueries({ queryKey: userKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: userKeys.detail(userId) });
+      queryClient.invalidateQueries({ queryKey: userKeys.oidcAccounts(userId) });
     },
   });
 }
