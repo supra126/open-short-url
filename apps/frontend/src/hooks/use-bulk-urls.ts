@@ -108,8 +108,11 @@ export function useBulkDeleteUrls() {
 
   return useMutation({
     mutationFn: (urlIds: string[]) => bulkDeleteUrls({ urlIds }),
-    onSuccess: () => {
+    onSuccess: (_, urlIds) => {
       queryClient.invalidateQueries({ queryKey: urlKeys.lists() });
+      for (const id of urlIds) {
+        queryClient.removeQueries({ queryKey: urlKeys.detail(id) });
+      }
     },
   });
 }

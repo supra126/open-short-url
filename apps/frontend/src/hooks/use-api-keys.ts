@@ -99,11 +99,9 @@ export function useDeleteApiKey() {
 
   return useMutation({
     mutationFn: (id: string) => deleteApiKey(id),
-    onSuccess: () => {
-      // Invalidate list cache to ensure fresh data
-      queryClient.invalidateQueries({
-        queryKey: apiKeyKeys.lists(),
-      });
+    onSuccess: (_, id) => {
+      queryClient.invalidateQueries({ queryKey: apiKeyKeys.lists() });
+      queryClient.removeQueries({ queryKey: apiKeyKeys.detail(id) });
     },
   });
 }

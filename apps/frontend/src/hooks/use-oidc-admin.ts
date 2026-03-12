@@ -101,8 +101,9 @@ export function useUpdateOidcProvider() {
   return useMutation({
     mutationFn: ({ slug, data }: { slug: string; data: UpdateOidcProviderDto }) =>
       updateOidcProvider(slug, data),
-    onSuccess: () => {
+    onSuccess: (_, { slug }) => {
       queryClient.invalidateQueries({ queryKey: oidcAdminKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: oidcAdminKeys.detail(slug) });
     },
   });
 }
@@ -112,8 +113,9 @@ export function useDeleteOidcProvider() {
 
   return useMutation({
     mutationFn: (slug: string) => deleteOidcProvider(slug),
-    onSuccess: () => {
+    onSuccess: (_, slug) => {
       queryClient.invalidateQueries({ queryKey: oidcAdminKeys.lists() });
+      queryClient.removeQueries({ queryKey: oidcAdminKeys.detail(slug) });
     },
   });
 }

@@ -161,8 +161,9 @@ export function useDeleteWebhook() {
 
   return useMutation({
     mutationFn: deleteWebhook,
-    onSuccess: () => {
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: webhookKeys.lists() });
+      queryClient.removeQueries({ queryKey: webhookKeys.detail(id) });
     },
   });
 }
