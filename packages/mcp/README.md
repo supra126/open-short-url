@@ -49,19 +49,19 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 **77 MCP Tools** across 11 modules:
 
-| Module | Tools | Description |
-|--------|-------|-------------|
-| URL Management | 10 | Create, list, update, delete, QR code, bulk operations |
-| Bundle Management | 12 | Group URLs, reorder, archive/restore, statistics |
-| Analytics | 10 | Click analysis, trends, bot detection, data export |
-| A/B Testing | 5 | Create variants, traffic distribution, performance comparison |
-| Smart Routing | 8 | Conditional routing rules, templates, geo/device targeting |
-| Webhooks | 7 | Event notifications, delivery logs, webhook testing |
-| User Management | 11 | Create/manage users, roles, 2FA, OIDC accounts |
-| API Keys | 4 | Create, list, view, revoke API keys |
-| OIDC/SSO | 5 | Manage OIDC/SSO identity providers |
-| System Settings | 4 | View and manage system configuration |
-| Audit Logs | 1 | Query system audit trail |
+| Module            | Tools | Description                                                   |
+| ----------------- | ----- | ------------------------------------------------------------- |
+| URL Management    | 10    | Create, list, update, delete, QR code, bulk operations        |
+| Bundle Management | 12    | Group URLs, reorder, archive/restore, statistics              |
+| Analytics         | 10    | Click analysis, trends, bot detection, data export            |
+| A/B Testing       | 5     | Create variants, traffic distribution, performance comparison |
+| Smart Routing     | 8     | Conditional routing rules, templates, geo/device targeting    |
+| Webhooks          | 7     | Event notifications, delivery logs, webhook testing           |
+| User Management   | 11    | Create/manage users, roles, 2FA, OIDC accounts                |
+| API Keys          | 4     | Create, list, view, revoke API keys                           |
+| OIDC/SSO          | 5     | Manage OIDC/SSO identity providers                            |
+| System Settings   | 4     | View and manage system configuration                          |
+| Audit Logs        | 1     | Query system audit trail                                      |
 
 ### Security
 
@@ -77,10 +77,10 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 The MCP server supports two transport modes:
 
-| Mode | Use Case | Protocol |
-|------|----------|----------|
-| **stdio** (default) | CLI and IDE integrations (Claude Desktop, VS Code, etc.) | Standard I/O |
-| **http** | Remote access, containerized deployments, multi-client | Streamable HTTP |
+| Mode                | Use Case                                                 | Protocol        |
+| ------------------- | -------------------------------------------------------- | --------------- |
+| **stdio** (default) | CLI and IDE integrations (Claude Desktop, VS Code, etc.) | Standard I/O    |
+| **http**            | Remote access, containerized deployments, multi-client   | Streamable HTTP |
 
 ### Option 1: npm (stdio)
 
@@ -157,13 +157,13 @@ MCP_TRANSPORT=http API_URL=https://your-backend.com API_KEY=ak_xxx node dist/ind
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `API_URL` | Yes | — | Open Short URL backend API URL |
-| `API_KEY` | Yes | — | API key for authentication |
-| `MCP_TRANSPORT` | No | `stdio` | Transport mode: `stdio` or `http` |
-| `MCP_PORT` | No | `3200` | HTTP server port (http mode only) |
-| `MCP_HOST` | No | `0.0.0.0` | HTTP bind address (http mode only) |
+| Variable        | Required | Default   | Description                        |
+| --------------- | -------- | --------- | ---------------------------------- |
+| `API_URL`       | Yes      | —         | Open Short URL backend API URL     |
+| `API_KEY`       | Yes      | —         | API key for authentication         |
+| `MCP_TRANSPORT` | No       | `stdio`   | Transport mode: `stdio` or `http`  |
+| `MCP_PORT`      | No       | `3200`    | HTTP server port (http mode only)  |
+| `MCP_HOST`      | No       | `0.0.0.0` | HTTP bind address (http mode only) |
 
 ---
 
@@ -171,134 +171,134 @@ MCP_TRANSPORT=http API_URL=https://your-backend.com API_KEY=ak_xxx node dist/ind
 
 ### URL Management (10)
 
-| Tool | Description |
-|------|-------------|
+| Tool               | Description                                                  |
+| ------------------ | ------------------------------------------------------------ |
 | `create_short_url` | Create short URL with custom slug, password, expiration, UTM |
-| `list_short_urls` | List all short URLs with pagination, search, filtering |
-| `get_short_url` | Get short URL details |
-| `update_short_url` | Update short URL settings |
-| `delete_short_url` | Delete short URL [DESTRUCTIVE] |
-| `get_url_stats` | Get URL dashboard statistics |
-| `generate_qrcode` | Generate QR code for a short URL |
-| `bulk_create_urls` | Bulk create short URLs (max 100) |
-| `bulk_update_urls` | Bulk update short URLs |
-| `bulk_delete_urls` | Bulk delete short URLs [DESTRUCTIVE] |
+| `list_short_urls`  | List all short URLs with pagination, search, filtering       |
+| `get_short_url`    | Get short URL details                                        |
+| `update_short_url` | Update short URL settings                                    |
+| `delete_short_url` | Delete short URL [DESTRUCTIVE]                               |
+| `get_url_stats`    | Get URL dashboard statistics                                 |
+| `generate_qrcode`  | Generate QR code for a short URL                             |
+| `bulk_create_urls` | Bulk create short URLs (max 100)                             |
+| `bulk_update_urls` | Bulk update short URLs                                       |
+| `bulk_delete_urls` | Bulk delete short URLs [DESTRUCTIVE]                         |
 
 ### Bundle Management (12)
 
-| Tool | Description |
-|------|-------------|
-| `create_bundle` | Create new bundle |
-| `list_bundles` | List all bundles |
-| `get_bundle` | Get bundle details |
-| `update_bundle` | Update bundle information |
-| `delete_bundle` | Delete bundle [DESTRUCTIVE] |
-| `add_url_to_bundle` | Add single URL to bundle |
-| `add_multiple_urls_to_bundle` | Batch add URLs to bundle |
-| `remove_url_from_bundle` | Remove URL from bundle |
-| `update_url_order_in_bundle` | Reorder URLs in bundle |
-| `get_bundle_stats` | Get bundle statistics |
-| `archive_bundle` | Archive bundle |
-| `restore_bundle` | Restore archived bundle |
+| Tool                          | Description                 |
+| ----------------------------- | --------------------------- |
+| `create_bundle`               | Create new bundle           |
+| `list_bundles`                | List all bundles            |
+| `get_bundle`                  | Get bundle details          |
+| `update_bundle`               | Update bundle information   |
+| `delete_bundle`               | Delete bundle [DESTRUCTIVE] |
+| `add_url_to_bundle`           | Add single URL to bundle    |
+| `add_multiple_urls_to_bundle` | Batch add URLs to bundle    |
+| `remove_url_from_bundle`      | Remove URL from bundle      |
+| `update_url_order_in_bundle`  | Reorder URLs in bundle      |
+| `get_bundle_stats`            | Get bundle statistics       |
+| `archive_bundle`              | Archive bundle              |
+| `restore_bundle`              | Restore archived bundle     |
 
 ### Analytics (10)
 
-| Tool | Description |
-|------|-------------|
-| `get_url_analytics` | URL click analytics (geo, device, browser) |
-| `get_overview_analytics` | Overview analytics dashboard |
-| `get_top_performing_urls` | Top performing URLs by clicks |
-| `get_recent_clicks` | Recent click records |
-| `get_bot_analytics` | Bot analysis for single URL |
-| `get_user_bot_analytics` | Global bot analysis |
-| `get_ab_test_analytics` | A/B test analytics |
-| `get_routing_analytics` | Smart routing statistics |
-| `export_url_analytics` | Export single URL analytics (CSV/JSON) |
-| `export_all_analytics` | Export all analytics data (CSV/JSON) |
+| Tool                      | Description                                |
+| ------------------------- | ------------------------------------------ |
+| `get_url_analytics`       | URL click analytics (geo, device, browser) |
+| `get_overview_analytics`  | Overview analytics dashboard               |
+| `get_top_performing_urls` | Top performing URLs by clicks              |
+| `get_recent_clicks`       | Recent click records                       |
+| `get_bot_analytics`       | Bot analysis for single URL                |
+| `get_user_bot_analytics`  | Global bot analysis                        |
+| `get_ab_test_analytics`   | A/B test analytics                         |
+| `get_routing_analytics`   | Smart routing statistics                   |
+| `export_url_analytics`    | Export single URL analytics (CSV/JSON)     |
+| `export_all_analytics`    | Export all analytics data (CSV/JSON)       |
 
 ### A/B Testing (5)
 
-| Tool | Description |
-|------|-------------|
-| `create_variant` | Create test variant |
-| `list_variants` | List all variants |
-| `get_variant` | Get variant details |
-| `update_variant` | Update variant settings |
+| Tool             | Description                  |
+| ---------------- | ---------------------------- |
+| `create_variant` | Create test variant          |
+| `list_variants`  | List all variants            |
+| `get_variant`    | Get variant details          |
+| `update_variant` | Update variant settings      |
 | `delete_variant` | Delete variant [DESTRUCTIVE] |
 
 ### Smart Routing (8)
 
-| Tool | Description |
-|------|-------------|
-| `create_routing_rule` | Create conditional routing rule |
+| Tool                                | Description                                   |
+| ----------------------------------- | --------------------------------------------- |
+| `create_routing_rule`               | Create conditional routing rule               |
 | `create_routing_rule_from_template` | Create rule from template (geo, device, etc.) |
-| `list_routing_rules` | List routing rules for a URL |
-| `get_routing_rule` | Get routing rule details |
-| `update_routing_rule` | Update routing rule |
-| `delete_routing_rule` | Delete routing rule [DESTRUCTIVE] |
-| `update_smart_routing_settings` | Update routing settings for a URL |
-| `list_routing_templates` | List available routing templates |
+| `list_routing_rules`                | List routing rules for a URL                  |
+| `get_routing_rule`                  | Get routing rule details                      |
+| `update_routing_rule`               | Update routing rule                           |
+| `delete_routing_rule`               | Delete routing rule [DESTRUCTIVE]             |
+| `update_smart_routing_settings`     | Update routing settings for a URL             |
+| `list_routing_templates`            | List available routing templates              |
 
 ### Webhooks (7)
 
-| Tool | Description |
-|------|-------------|
-| `create_webhook` | Create webhook endpoint |
-| `list_webhooks` | List all webhooks |
-| `get_webhook` | Get webhook details |
-| `update_webhook` | Update webhook settings |
-| `delete_webhook` | Delete webhook [DESTRUCTIVE] |
-| `get_webhook_logs` | View webhook delivery logs |
-| `test_webhook` | Send test webhook event |
+| Tool               | Description                  |
+| ------------------ | ---------------------------- |
+| `create_webhook`   | Create webhook endpoint      |
+| `list_webhooks`    | List all webhooks            |
+| `get_webhook`      | Get webhook details          |
+| `update_webhook`   | Update webhook settings      |
+| `delete_webhook`   | Delete webhook [DESTRUCTIVE] |
+| `get_webhook_logs` | View webhook delivery logs   |
+| `test_webhook`     | Send test webhook event      |
 
 ### User Management (11)
 
-| Tool | Description |
-|------|-------------|
-| `create_user` | Create new user |
-| `list_users` | List all users |
-| `get_user` | Get user details |
-| `update_user_role` | Update user role |
-| `update_user_status` | Activate/deactivate user |
-| `update_user_name` | Update user display name |
-| `delete_user` | Delete user [DESTRUCTIVE] |
-| `reset_user_password` | Reset user password [DESTRUCTIVE] |
-| `disable_user_2fa` | Disable user 2FA [DESTRUCTIVE] |
-| `get_user_oidc_accounts` | List user's linked OIDC accounts |
+| Tool                       | Description                       |
+| -------------------------- | --------------------------------- |
+| `create_user`              | Create new user                   |
+| `list_users`               | List all users                    |
+| `get_user`                 | Get user details                  |
+| `update_user_role`         | Update user role                  |
+| `update_user_status`       | Activate/deactivate user          |
+| `update_user_name`         | Update user display name          |
+| `delete_user`              | Delete user [DESTRUCTIVE]         |
+| `reset_user_password`      | Reset user password [DESTRUCTIVE] |
+| `disable_user_2fa`         | Disable user 2FA [DESTRUCTIVE]    |
+| `get_user_oidc_accounts`   | List user's linked OIDC accounts  |
 | `unlink_user_oidc_account` | Unlink OIDC account [DESTRUCTIVE] |
 
 ### API Keys (4)
 
-| Tool | Description |
-|------|-------------|
+| Tool             | Description                                    |
+| ---------------- | ---------------------------------------------- |
 | `create_api_key` | Create new API key (shown once, then redacted) |
-| `list_api_keys` | List all API keys |
-| `get_api_key` | Get API key details |
-| `delete_api_key` | Revoke API key [DESTRUCTIVE] |
+| `list_api_keys`  | List all API keys                              |
+| `get_api_key`    | Get API key details                            |
+| `delete_api_key` | Revoke API key [DESTRUCTIVE]                   |
 
 ### OIDC/SSO Providers (5)
 
-| Tool | Description |
-|------|-------------|
-| `list_oidc_providers` | List OIDC providers |
-| `create_oidc_provider` | Create OIDC provider |
-| `get_oidc_provider` | Get OIDC provider details |
-| `update_oidc_provider` | Update OIDC provider |
+| Tool                   | Description                        |
+| ---------------------- | ---------------------------------- |
+| `list_oidc_providers`  | List OIDC providers                |
+| `create_oidc_provider` | Create OIDC provider               |
+| `get_oidc_provider`    | Get OIDC provider details          |
+| `update_oidc_provider` | Update OIDC provider               |
 | `delete_oidc_provider` | Delete OIDC provider [DESTRUCTIVE] |
 
 ### System Settings (4)
 
-| Tool | Description |
-|------|-------------|
-| `get_system_settings` | Get all system settings |
-| `get_system_setting` | Get a single setting by key |
-| `update_system_setting` | Update a system setting |
+| Tool                    | Description                           |
+| ----------------------- | ------------------------------------- |
+| `get_system_settings`   | Get all system settings               |
+| `get_system_setting`    | Get a single setting by key           |
+| `update_system_setting` | Update a system setting               |
 | `delete_system_setting` | Delete a system setting [DESTRUCTIVE] |
 
 ### Audit Logs (1)
 
-| Tool | Description |
-|------|-------------|
+| Tool             | Description                     |
+| ---------------- | ------------------------------- |
 | `get_audit_logs` | Query audit logs with filtering |
 
 ---

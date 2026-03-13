@@ -8,21 +8,25 @@ import { handleTool } from '../utils/tool-handler.js';
 export function registerUrlTools(apiClient: ApiClient) {
   return {
     create_short_url: {
-      description: 'Create a new short URL with optional features like custom slug, password protection, expiration time, and UTM parameters.',
+      description:
+        'Create a new short URL with optional features like custom slug, password protection, expiration time, and UTM parameters.',
       inputSchema: {
         type: 'object',
         properties: {
           originalUrl: {
             type: 'string',
-            description: 'The original URL to shorten (must include http:// or https://)',
+            description:
+              'The original URL to shorten (must include http:// or https://)',
           },
           customSlug: {
             type: 'string',
-            description: 'Custom slug for the short URL (optional, auto-generated if not provided)',
+            description:
+              'Custom slug for the short URL (optional, auto-generated if not provided)',
           },
           title: {
             type: 'string',
-            description: 'Title for the short URL (optional, used for management and identification)',
+            description:
+              'Title for the short URL (optional, used for management and identification)',
           },
           description: {
             type: 'string',
@@ -30,22 +34,39 @@ export function registerUrlTools(apiClient: ApiClient) {
           },
           password: {
             type: 'string',
-            description: 'Access password (optional, visitors must enter password to access if set)',
+            description:
+              'Access password (optional, visitors must enter password to access if set)',
           },
           expiresAt: {
             type: 'string',
-            description: 'Expiration time (optional, ISO 8601 format, e.g., 2025-12-31T23:59:59Z)',
+            description:
+              'Expiration time (optional, ISO 8601 format, e.g., 2025-12-31T23:59:59Z)',
           },
           status: {
             type: 'string',
             enum: ['ACTIVE', 'INACTIVE'],
             description: 'Status (optional, defaults to ACTIVE)',
           },
-          utmSource: { type: 'string', description: 'UTM source parameter (optional)' },
-          utmMedium: { type: 'string', description: 'UTM medium parameter (optional)' },
-          utmCampaign: { type: 'string', description: 'UTM campaign parameter (optional)' },
-          utmTerm: { type: 'string', description: 'UTM term parameter (optional)' },
-          utmContent: { type: 'string', description: 'UTM content parameter (optional)' },
+          utmSource: {
+            type: 'string',
+            description: 'UTM source parameter (optional)',
+          },
+          utmMedium: {
+            type: 'string',
+            description: 'UTM medium parameter (optional)',
+          },
+          utmCampaign: {
+            type: 'string',
+            description: 'UTM campaign parameter (optional)',
+          },
+          utmTerm: {
+            type: 'string',
+            description: 'UTM term parameter (optional)',
+          },
+          utmContent: {
+            type: 'string',
+            description: 'UTM content parameter (optional)',
+          },
         },
         required: ['originalUrl'],
       },
@@ -53,16 +74,39 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     list_short_urls: {
-      description: 'List all short URLs with support for pagination, search, filtering, and sorting.',
+      description:
+        'List all short URLs with support for pagination, search, filtering, and sorting.',
       inputSchema: {
         type: 'object',
         properties: {
-          page: { type: 'number', description: 'Page number (starts from 1, defaults to 1)', default: 1 },
-          pageSize: { type: 'number', description: 'Items per page (defaults to 10, max 100)', default: 10 },
-          search: { type: 'string', description: 'Search keyword (searches in title and original URL)' },
-          status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'], description: 'Filter by status' },
-          sortBy: { type: 'string', description: 'Sort field (e.g., createdAt, clickCount)' },
-          sortOrder: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction' },
+          page: {
+            type: 'number',
+            description: 'Page number (starts from 1, defaults to 1)',
+            default: 1,
+          },
+          pageSize: {
+            type: 'number',
+            description: 'Items per page (defaults to 10, max 100)',
+            default: 10,
+          },
+          search: {
+            type: 'string',
+            description: 'Search keyword (searches in title and original URL)',
+          },
+          status: {
+            type: 'string',
+            enum: ['ACTIVE', 'INACTIVE'],
+            description: 'Filter by status',
+          },
+          sortBy: {
+            type: 'string',
+            description: 'Sort field (e.g., createdAt, clickCount)',
+          },
+          sortOrder: {
+            type: 'string',
+            enum: ['asc', 'desc'],
+            description: 'Sort direction',
+          },
         },
       },
       handler: handleTool((args) => apiClient.listUrls(args)),
@@ -81,22 +125,55 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     update_short_url: {
-      description: 'Update short URL settings including original URL, title, status, password, etc.',
+      description:
+        'Update short URL settings including original URL, title, status, password, etc.',
       inputSchema: {
         type: 'object',
         properties: {
           id: { type: 'string', description: 'Short URL ID' },
-          originalUrl: { type: 'string', description: 'New original URL (optional)' },
+          originalUrl: {
+            type: 'string',
+            description: 'New original URL (optional)',
+          },
           title: { type: 'string', description: 'New title (optional)' },
-          description: { type: 'string', description: 'New description (optional)' },
-          password: { type: 'string', description: 'New password (optional, set to empty string to remove password)' },
-          expiresAt: { type: 'string', description: 'New expiration time (optional, ISO 8601 format)' },
-          status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'], description: 'New status (optional)' },
-          utmSource: { type: 'string', description: 'UTM source parameter (optional)' },
-          utmMedium: { type: 'string', description: 'UTM medium parameter (optional)' },
-          utmCampaign: { type: 'string', description: 'UTM campaign parameter (optional)' },
-          utmTerm: { type: 'string', description: 'UTM term parameter (optional)' },
-          utmContent: { type: 'string', description: 'UTM content parameter (optional)' },
+          description: {
+            type: 'string',
+            description: 'New description (optional)',
+          },
+          password: {
+            type: 'string',
+            description:
+              'New password (optional, set to empty string to remove password)',
+          },
+          expiresAt: {
+            type: 'string',
+            description: 'New expiration time (optional, ISO 8601 format)',
+          },
+          status: {
+            type: 'string',
+            enum: ['ACTIVE', 'INACTIVE'],
+            description: 'New status (optional)',
+          },
+          utmSource: {
+            type: 'string',
+            description: 'UTM source parameter (optional)',
+          },
+          utmMedium: {
+            type: 'string',
+            description: 'UTM medium parameter (optional)',
+          },
+          utmCampaign: {
+            type: 'string',
+            description: 'UTM campaign parameter (optional)',
+          },
+          utmTerm: {
+            type: 'string',
+            description: 'UTM term parameter (optional)',
+          },
+          utmContent: {
+            type: 'string',
+            description: 'UTM content parameter (optional)',
+          },
         },
         required: ['id'],
       },
@@ -107,7 +184,8 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     delete_short_url: {
-      description: '[DESTRUCTIVE] Delete the specified short URL and all related data (including click records). Always confirm with the user before executing.',
+      description:
+        '[DESTRUCTIVE] Delete the specified short URL and all related data (including click records). Always confirm with the user before executing.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -122,7 +200,8 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     get_url_stats: {
-      description: 'Get dashboard statistics including total, active, inactive, and expired URL counts.',
+      description:
+        'Get dashboard statistics including total, active, inactive, and expired URL counts.',
       inputSchema: {
         type: 'object',
         properties: {},
@@ -131,13 +210,22 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     generate_qrcode: {
-      description: 'Generate a QR code for the specified short URL (returns Base64 Data URL format).',
+      description:
+        'Generate a QR code for the specified short URL (returns Base64 Data URL format).',
       inputSchema: {
         type: 'object',
         properties: {
           id: { type: 'string', description: 'Short URL ID' },
-          width: { type: 'number', description: 'QR code width in pixels (optional, defaults to 300)', default: 300 },
-          color: { type: 'string', description: 'QR code color in hex format (optional, e.g., #000000)' },
+          width: {
+            type: 'number',
+            description: 'QR code width in pixels (optional, defaults to 300)',
+            default: 300,
+          },
+          color: {
+            type: 'string',
+            description:
+              'QR code color in hex format (optional, e.g., #000000)',
+          },
         },
         required: ['id'],
       },
@@ -148,7 +236,8 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     bulk_create_urls: {
-      description: 'Bulk create multiple short URLs in a single request (max 100). Returns success/failure details for each URL.',
+      description:
+        'Bulk create multiple short URLs in a single request (max 100). Returns success/failure details for each URL.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -157,18 +246,49 @@ export function registerUrlTools(apiClient: ApiClient) {
             items: {
               type: 'object',
               properties: {
-                originalUrl: { type: 'string', description: 'The original URL to shorten' },
-                customSlug: { type: 'string', description: 'Custom slug (optional)' },
+                originalUrl: {
+                  type: 'string',
+                  description: 'The original URL to shorten',
+                },
+                customSlug: {
+                  type: 'string',
+                  description: 'Custom slug (optional)',
+                },
                 title: { type: 'string', description: 'Title (optional)' },
-                description: { type: 'string', description: 'Description (optional)' },
-                password: { type: 'string', description: 'Access password (optional)' },
-                expiresAt: { type: 'string', description: 'Expiration time in ISO 8601 format (optional)' },
-                status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'], description: 'Status (optional)' },
-                utmSource: { type: 'string', description: 'UTM source (optional)' },
-                utmMedium: { type: 'string', description: 'UTM medium (optional)' },
-                utmCampaign: { type: 'string', description: 'UTM campaign (optional)' },
+                description: {
+                  type: 'string',
+                  description: 'Description (optional)',
+                },
+                password: {
+                  type: 'string',
+                  description: 'Access password (optional)',
+                },
+                expiresAt: {
+                  type: 'string',
+                  description: 'Expiration time in ISO 8601 format (optional)',
+                },
+                status: {
+                  type: 'string',
+                  enum: ['ACTIVE', 'INACTIVE'],
+                  description: 'Status (optional)',
+                },
+                utmSource: {
+                  type: 'string',
+                  description: 'UTM source (optional)',
+                },
+                utmMedium: {
+                  type: 'string',
+                  description: 'UTM medium (optional)',
+                },
+                utmCampaign: {
+                  type: 'string',
+                  description: 'UTM campaign (optional)',
+                },
                 utmTerm: { type: 'string', description: 'UTM term (optional)' },
-                utmContent: { type: 'string', description: 'UTM content (optional)' },
+                utmContent: {
+                  type: 'string',
+                  description: 'UTM content (optional)',
+                },
               },
               required: ['originalUrl'],
             },
@@ -196,21 +316,48 @@ export function registerUrlTools(apiClient: ApiClient) {
           },
           operation: {
             type: 'object',
-            description: 'Update operation. Must include "type" field: "status", "bundle", "expiration", or "utm"',
+            description:
+              'Update operation. Must include "type" field: "status", "bundle", "expiration", or "utm"',
             properties: {
               type: {
                 type: 'string',
                 enum: ['status', 'bundle', 'expiration', 'utm'],
                 description: 'Operation type',
               },
-              status: { type: 'string', enum: ['ACTIVE', 'INACTIVE'], description: 'New status (for type=status)' },
-              bundleId: { type: 'string', description: 'Bundle ID (for type=bundle)' },
-              expiresAt: { type: 'string', description: 'Expiration date in ISO 8601 format, null to remove (for type=expiration)' },
-              utmSource: { type: 'string', description: 'UTM source (for type=utm)' },
-              utmMedium: { type: 'string', description: 'UTM medium (for type=utm)' },
-              utmCampaign: { type: 'string', description: 'UTM campaign (for type=utm)' },
-              utmTerm: { type: 'string', description: 'UTM term (for type=utm)' },
-              utmContent: { type: 'string', description: 'UTM content (for type=utm)' },
+              status: {
+                type: 'string',
+                enum: ['ACTIVE', 'INACTIVE'],
+                description: 'New status (for type=status)',
+              },
+              bundleId: {
+                type: 'string',
+                description: 'Bundle ID (for type=bundle)',
+              },
+              expiresAt: {
+                type: 'string',
+                description:
+                  'Expiration date in ISO 8601 format, null to remove (for type=expiration)',
+              },
+              utmSource: {
+                type: 'string',
+                description: 'UTM source (for type=utm)',
+              },
+              utmMedium: {
+                type: 'string',
+                description: 'UTM medium (for type=utm)',
+              },
+              utmCampaign: {
+                type: 'string',
+                description: 'UTM campaign (for type=utm)',
+              },
+              utmTerm: {
+                type: 'string',
+                description: 'UTM term (for type=utm)',
+              },
+              utmContent: {
+                type: 'string',
+                description: 'UTM content (for type=utm)',
+              },
             },
             required: ['type'],
           },
@@ -221,7 +368,8 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     bulk_delete_urls: {
-      description: '[DESTRUCTIVE] Bulk delete multiple short URLs and all their related data (max 100). Always confirm with the user before executing.',
+      description:
+        '[DESTRUCTIVE] Bulk delete multiple short URLs and all their related data (max 100). Always confirm with the user before executing.',
       inputSchema: {
         type: 'object',
         properties: {

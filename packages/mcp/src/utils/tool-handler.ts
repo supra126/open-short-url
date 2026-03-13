@@ -36,9 +36,10 @@ export function handleTool(
       } else if (typeof result === 'string') {
         // String results: sanitize JSON content, pass CSV/text through as-is
         const trimmed = result.trimStart();
-        text = (trimmed.startsWith('{') || trimmed.startsWith('['))
-          ? sanitizeJson(result)
-          : result;
+        text =
+          trimmed.startsWith('{') || trimmed.startsWith('[')
+            ? sanitizeJson(result)
+            : result;
       } else {
         // Sanitize response data to prevent sensitive info leaking to LLM
         const safeResult = options?.skipSanitize ? result : sanitize(result);

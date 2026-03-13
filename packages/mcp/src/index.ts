@@ -65,11 +65,15 @@ function getConfig() {
   const host = process.env.MCP_HOST || '0.0.0.0';
 
   if (!apiUrl) {
-    throw new Error('Environment variable API_URL is required (e.g., https://your-backend.com)');
+    throw new Error(
+      'Environment variable API_URL is required (e.g., https://your-backend.com)'
+    );
   }
 
   if (!apiKey) {
-    throw new Error('Environment variable API_KEY is required (generate one in your backend system)');
+    throw new Error(
+      'Environment variable API_KEY is required (generate one in your backend system)'
+    );
   }
 
   return { apiUrl, apiKey, transport, port, host };
@@ -146,33 +150,40 @@ async function startStdio(server: Server) {
  */
 async function startHttp(apiClient: ApiClient, host: string, port: number) {
   // Dynamic imports to avoid bundling express when using stdio
-  const { createMcpExpressApp } = await import(
-    '@modelcontextprotocol/sdk/server/express.js'
-  );
-  const { StreamableHTTPServerTransport } = await import(
-    '@modelcontextprotocol/sdk/server/streamableHttp.js'
-  );
-  const { isInitializeRequest } = await import(
-    '@modelcontextprotocol/sdk/types.js'
-  );
+  const { createMcpExpressApp } =
+    await import('@modelcontextprotocol/sdk/server/express.js');
+  const { StreamableHTTPServerTransport } =
+    await import('@modelcontextprotocol/sdk/server/streamableHttp.js');
+  const { isInitializeRequest } =
+    await import('@modelcontextprotocol/sdk/types.js');
   const { randomUUID } = await import('node:crypto');
 
   const app = createMcpExpressApp({ host });
 
   // Session management for stateful connections
   const SESSION_TTL_MS = 30 * 60 * 1000; // 30 minutes
-  const sessions = new Map<string, { server: Server; transport: InstanceType<typeof StreamableHTTPServerTransport>; lastSeen: number }>();
+  const sessions = new Map<
+    string,
+    {
+      server: Server;
+      transport: InstanceType<typeof StreamableHTTPServerTransport>;
+      lastSeen: number;
+    }
+  >();
 
   // Periodic cleanup of stale sessions (unref to not block process exit)
-  const cleanupInterval = setInterval(() => {
-    const now = Date.now();
-    for (const [id, session] of sessions) {
-      if (now - session.lastSeen > SESSION_TTL_MS) {
-        session.transport.close().catch(() => {});
-        sessions.delete(id);
+  const cleanupInterval = setInterval(
+    () => {
+      const now = Date.now();
+      for (const [id, session] of sessions) {
+        if (now - session.lastSeen > SESSION_TTL_MS) {
+          session.transport.close().catch(() => {});
+          sessions.delete(id);
+        }
       }
-    }
-  }, 5 * 60 * 1000);
+    },
+    5 * 60 * 1000
+  );
   cleanupInterval.unref();
 
   // Health check endpoint
@@ -216,7 +227,11 @@ async function startHttp(apiClient: ApiClient, host: string, port: number) {
     // Invalid request
     res.status(400).json({
       jsonrpc: '2.0',
-      error: { code: -32000, message: 'Invalid or missing session. Send an initialize request first.' },
+      error: {
+        code: -32000,
+        message:
+          'Invalid or missing session. Send an initialize request first.',
+      },
       id: null,
     });
   });

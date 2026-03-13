@@ -24,11 +24,7 @@ const REDACT_FIELDS = new Set([
 ]);
 
 /** Fields that should be partially masked (show prefix only) */
-const MASK_FIELDS = new Set([
-  'key',
-  'apiKey',
-  'api_key',
-]);
+const MASK_FIELDS = new Set(['key', 'apiKey', 'api_key']);
 
 const REDACTED_PLACEHOLDER = '[REDACTED]';
 
@@ -60,7 +56,9 @@ export function sanitize<T>(data: T): T {
   for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
     if (typeof value === 'string' && REDACT_FIELDS.has(key)) {
       // For fields that can be masked, show prefix; otherwise fully redact
-      result[key] = MASK_FIELDS.has(key) ? maskValue(value) : REDACTED_PLACEHOLDER;
+      result[key] = MASK_FIELDS.has(key)
+        ? maskValue(value)
+        : REDACTED_PLACEHOLDER;
     } else if (typeof value === 'object' && value !== null) {
       result[key] = sanitize(value);
     } else {

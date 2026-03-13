@@ -1,4 +1,4 @@
-pnpm lint
+pnpm lint-staged
 
 # Env sync check
 ./scripts/check-env-sync.sh

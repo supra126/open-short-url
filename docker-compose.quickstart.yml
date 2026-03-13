@@ -25,9 +25,9 @@ services:
     volumes:
       - quickstart_postgres:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -38,9 +38,9 @@ services:
     volumes:
       - quickstart_redis:/data
     ports:
-      - "6379:6379"
+      - '6379:6379'
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -52,7 +52,7 @@ services:
       DATABASE_URL: postgresql://postgres:quickstart-not-for-production@postgres:5432/open_short_url?schema=public
       REDIS_HOST: redis
       REDIS_PORT: 6379
-      REDIS_PASSWORD: ""
+      REDIS_PASSWORD: ''
       NODE_ENV: production
       PORT: 4101
       HOST: 0.0.0.0
@@ -62,9 +62,9 @@ services:
       SHORT_URL_DOMAIN: http://localhost:4101
       FRONTEND_URL: http://localhost:4100
       CORS_ORIGIN: http://localhost:4100
-      TRUSTED_PROXY: "true"
+      TRUSTED_PROXY: 'true'
     ports:
-      - "4101:4101"
+      - '4101:4101'
     depends_on:
       postgres:
         condition: service_healthy
@@ -80,12 +80,12 @@ services:
       NEXT_PUBLIC_SHORT_URL_DOMAIN: http://localhost:4101
       NEXT_PUBLIC_LOCALE: en
       NEXT_PUBLIC_BRAND_NAME: Open Short URL
-      NEXT_PUBLIC_BRAND_ICON_URL: ""
-      NEXT_PUBLIC_BRAND_DESCRIPTION: ""
-      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ""
+      NEXT_PUBLIC_BRAND_ICON_URL: ''
+      NEXT_PUBLIC_BRAND_DESCRIPTION: ''
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ''
       NEXT_PUBLIC_DOCS_URL: https://supra126.github.io/open-short-url/
     ports:
-      - "4100:4100"
+      - '4100:4100'
     depends_on:
       - backend
 
@@ -93,16 +93,16 @@ services:
   # Enable with: docker compose -f docker-compose.quickstart.yml --profile mcp up -d
   mcp:
     image: ghcr.io/supra126/open-short-url-mcp:${IMAGE_TAG:-latest}
-    profiles: ["mcp"]
+    profiles: ['mcp']
     restart: unless-stopped
     environment:
       API_URL: http://backend:4101
-      API_KEY: "${MCP_API_KEY:-}"
+      API_KEY: '${MCP_API_KEY:-}'
       MCP_TRANSPORT: http
       MCP_PORT: 3200
       MCP_HOST: 0.0.0.0
     ports:
-      - "3200:3200"
+      - '3200:3200'
     depends_on:
       - backend
 

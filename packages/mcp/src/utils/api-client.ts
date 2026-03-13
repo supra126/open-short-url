@@ -78,7 +78,10 @@ export class ApiClient {
   private apiKey?: string;
   private cookies?: string;
 
-  constructor(baseUrl: string, auth: string | { apiKey?: string; cookies?: string }) {
+  constructor(
+    baseUrl: string,
+    auth: string | { apiKey?: string; cookies?: string }
+  ) {
     this.baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
 
     // Support both string (apiKey) and object (apiKey or cookies) for auth
@@ -102,7 +105,7 @@ export class ApiClient {
     // Build headers with either API Key or Cookie authentication
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers as Record<string, string>,
+      ...(options.headers as Record<string, string>),
     };
 
     // Use Cookie authentication if available, otherwise fall back to API Key
@@ -182,7 +185,9 @@ export class ApiClient {
   private buildQuery(params?: Record<string, unknown> | object): string {
     if (!params) return '';
     const queryParams = new URLSearchParams();
-    for (const [key, value] of Object.entries(params as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(
+      params as Record<string, unknown>
+    )) {
       if (value !== undefined && value !== null) {
         queryParams.set(key, String(value));
       }
@@ -243,21 +248,27 @@ export class ApiClient {
 
   // ==================== Bulk Operations ====================
 
-  async bulkCreateUrls(data: BulkCreateUrlRequest): Promise<BulkCreateResultResponse> {
+  async bulkCreateUrls(
+    data: BulkCreateUrlRequest
+  ): Promise<BulkCreateResultResponse> {
     return this.request<BulkCreateResultResponse>('/api/urls/bulk', {
       method: 'POST',
       body: JSON.stringify(data),
     });
   }
 
-  async bulkUpdateUrls(data: BulkUpdateUrlRequest): Promise<BulkUpdateResultResponse> {
+  async bulkUpdateUrls(
+    data: BulkUpdateUrlRequest
+  ): Promise<BulkUpdateResultResponse> {
     return this.request<BulkUpdateResultResponse>('/api/urls/bulk', {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
 
-  async bulkDeleteUrls(data: BulkDeleteUrlRequest): Promise<BulkDeleteResultResponse> {
+  async bulkDeleteUrls(
+    data: BulkDeleteUrlRequest
+  ): Promise<BulkDeleteResultResponse> {
     return this.request<BulkDeleteResultResponse>('/api/urls/bulk', {
       method: 'DELETE',
       body: JSON.stringify(data),
@@ -402,7 +413,10 @@ export class ApiClient {
     return this.request<BundleResponse>(`/api/bundles/${id}`);
   }
 
-  async updateBundle(id: string, data: UpdateBundleRequest): Promise<BundleResponse> {
+  async updateBundle(
+    id: string,
+    data: UpdateBundleRequest
+  ): Promise<BundleResponse> {
     return this.request<BundleResponse>(`/api/bundles/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
@@ -435,10 +449,16 @@ export class ApiClient {
     });
   }
 
-  async removeUrlFromBundle(bundleId: string, urlId: string): Promise<BundleResponse> {
-    return this.request<BundleResponse>(`/api/bundles/${bundleId}/urls/${urlId}`, {
-      method: 'DELETE',
-    });
+  async removeUrlFromBundle(
+    bundleId: string,
+    urlId: string
+  ): Promise<BundleResponse> {
+    return this.request<BundleResponse>(
+      `/api/bundles/${bundleId}/urls/${urlId}`,
+      {
+        method: 'DELETE',
+      }
+    );
   }
 
   async updateUrlOrder(
@@ -477,10 +497,13 @@ export class ApiClient {
     urlId: string,
     data: CreateRoutingRuleRequest
   ): Promise<RoutingRuleResponse> {
-    return this.request<RoutingRuleResponse>(`/api/urls/${urlId}/routing-rules`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
+    return this.request<RoutingRuleResponse>(
+      `/api/urls/${urlId}/routing-rules`,
+      {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }
+    );
   }
 
   async createRoutingRuleFromTemplate(
@@ -520,10 +543,9 @@ export class ApiClient {
   }
 
   async deleteRoutingRule(urlId: string, ruleId: string): Promise<void> {
-    return this.request<void>(
-      `/api/urls/${urlId}/routing-rules/${ruleId}`,
-      { method: 'DELETE' }
-    );
+    return this.request<void>(`/api/urls/${urlId}/routing-rules/${ruleId}`, {
+      method: 'DELETE',
+    });
   }
 
   async updateSmartRoutingSettings(

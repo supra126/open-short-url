@@ -26,9 +26,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - '${POSTGRES_PORT:-5432}:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -50,9 +50,13 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - '${REDIS_PORT:-6379}:6379'
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep -q PONG"]
+      test:
+        [
+          'CMD-SHELL',
+          'redis-cli ${REDIS_PASSWORD:+-a "$REDIS_PASSWORD"} ping | grep -q PONG',
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -80,7 +84,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4100}
       TRUSTED_PROXY: ${TRUSTED_PROXY:-true}
     ports:
-      - "${BACKEND_PORT:-4101}:4101"
+      - '${BACKEND_PORT:-4101}:4101'
     depends_on:
       postgres:
         condition: service_healthy
@@ -102,7 +106,7 @@ services:
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
       NEXT_PUBLIC_DOCS_URL: ${NEXT_PUBLIC_DOCS_URL:-https://supra126.github.io/open-short-url/}
     ports:
-      - "${FRONTEND_PORT:-4100}:4100"
+      - '${FRONTEND_PORT:-4100}:4100'
     depends_on:
       - backend
 
@@ -111,7 +115,7 @@ services:
   # Requires an API key from the backend
   mcp:
     image: ghcr.io/supra126/open-short-url-mcp:${IMAGE_TAG:-latest}
-    profiles: ["mcp"]
+    profiles: ['mcp']
     restart: unless-stopped
     environment:
       API_URL: http://backend:4101
@@ -120,7 +124,7 @@ services:
       MCP_PORT: 3200
       MCP_HOST: 0.0.0.0
     ports:
-      - "${MCP_PORT:-3200}:3200"
+      - '${MCP_PORT:-3200}:3200'
     depends_on:
       - backend
 
@@ -128,7 +132,7 @@ services:
   # Activate with: docker compose --profile ssl up -d
   caddy:
     image: caddy:2-alpine
-    profiles: ["ssl"]
+    profiles: ['ssl']
     restart: unless-stopped
     environment:
       SHORT_URL_DOMAIN: ${SHORT_URL_DOMAIN:-http://localhost:4101}
@@ -138,8 +142,8 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     depends_on:
       - backend
       - frontend

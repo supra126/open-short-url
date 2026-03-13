@@ -8,13 +8,20 @@ import { handleTool } from '../utils/tool-handler.js';
 export function registerBundleTools(apiClient: ApiClient) {
   return {
     create_bundle: {
-      description: 'Create a new bundle to organize and group multiple short URLs together.',
+      description:
+        'Create a new bundle to organize and group multiple short URLs together.',
       inputSchema: {
         type: 'object',
         properties: {
           name: { type: 'string', description: 'Bundle name' },
-          description: { type: 'string', description: 'Bundle description (optional)' },
-          color: { type: 'string', description: 'Bundle color code (optional, e.g., #FF5733)' },
+          description: {
+            type: 'string',
+            description: 'Bundle description (optional)',
+          },
+          color: {
+            type: 'string',
+            description: 'Bundle color code (optional, e.g., #FF5733)',
+          },
           icon: { type: 'string', description: 'Bundle icon name (optional)' },
           urlIds: {
             type: 'array',
@@ -32,17 +39,34 @@ export function registerBundleTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          page: { type: 'number', description: 'Page number (optional, defaults to 1)', default: 1 },
-          pageSize: { type: 'number', description: 'Number of bundles per page (optional, defaults to 10)', default: 10 },
-          status: { type: 'string', enum: ['ACTIVE', 'ARCHIVED'], description: 'Filter by status (optional)' },
-          search: { type: 'string', description: 'Search by bundle name (optional)' },
+          page: {
+            type: 'number',
+            description: 'Page number (optional, defaults to 1)',
+            default: 1,
+          },
+          pageSize: {
+            type: 'number',
+            description:
+              'Number of bundles per page (optional, defaults to 10)',
+            default: 10,
+          },
+          status: {
+            type: 'string',
+            enum: ['ACTIVE', 'ARCHIVED'],
+            description: 'Filter by status (optional)',
+          },
+          search: {
+            type: 'string',
+            description: 'Search by bundle name (optional)',
+          },
         },
       },
       handler: handleTool((args) => apiClient.listBundles(args)),
     },
 
     get_bundle: {
-      description: 'Get detailed information about a specific bundle, including its URLs.',
+      description:
+        'Get detailed information about a specific bundle, including its URLs.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -54,13 +78,17 @@ export function registerBundleTools(apiClient: ApiClient) {
     },
 
     update_bundle: {
-      description: 'Update bundle information including name, description, color, and icon. Use archive_bundle/restore_bundle to change status.',
+      description:
+        'Update bundle information including name, description, color, and icon. Use archive_bundle/restore_bundle to change status.',
       inputSchema: {
         type: 'object',
         properties: {
           id: { type: 'string', description: 'Bundle ID' },
           name: { type: 'string', description: 'New bundle name (optional)' },
-          description: { type: 'string', description: 'New description (optional)' },
+          description: {
+            type: 'string',
+            description: 'New description (optional)',
+          },
           color: { type: 'string', description: 'New color code (optional)' },
           icon: { type: 'string', description: 'New icon name (optional)' },
         },
@@ -73,7 +101,8 @@ export function registerBundleTools(apiClient: ApiClient) {
     },
 
     delete_bundle: {
-      description: '[DESTRUCTIVE] Delete a bundle. This does not delete the URLs within the bundle. Always confirm with the user before executing.',
+      description:
+        '[DESTRUCTIVE] Delete a bundle. This does not delete the URLs within the bundle. Always confirm with the user before executing.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -117,12 +146,15 @@ export function registerBundleTools(apiClient: ApiClient) {
         required: ['bundleId', 'urlIds'],
       },
       handler: handleTool((args) =>
-        apiClient.addMultipleUrlsToBundle(args.bundleId, { urlIds: args.urlIds })
+        apiClient.addMultipleUrlsToBundle(args.bundleId, {
+          urlIds: args.urlIds,
+        })
       ),
     },
 
     remove_url_from_bundle: {
-      description: 'Remove a short URL from a bundle. This does not delete the URL itself.',
+      description:
+        'Remove a short URL from a bundle. This does not delete the URL itself.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -143,7 +175,10 @@ export function registerBundleTools(apiClient: ApiClient) {
         properties: {
           bundleId: { type: 'string', description: 'Bundle ID' },
           urlId: { type: 'string', description: 'URL ID' },
-          order: { type: 'number', description: 'New order position (0-based index)' },
+          order: {
+            type: 'number',
+            description: 'New order position (0-based index)',
+          },
         },
         required: ['bundleId', 'urlId', 'order'],
       },
@@ -153,7 +188,8 @@ export function registerBundleTools(apiClient: ApiClient) {
     },
 
     get_bundle_stats: {
-      description: 'Get statistics for a bundle including total clicks, URL count, and top performing URLs.',
+      description:
+        'Get statistics for a bundle including total clicks, URL count, and top performing URLs.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -165,7 +201,8 @@ export function registerBundleTools(apiClient: ApiClient) {
     },
 
     archive_bundle: {
-      description: 'Archive a bundle to hide it from the active list without deleting it.',
+      description:
+        'Archive a bundle to hide it from the active list without deleting it.',
       inputSchema: {
         type: 'object',
         properties: {

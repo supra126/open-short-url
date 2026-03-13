@@ -99,10 +99,17 @@ describe('Sanitizer - Edge Cases', () => {
       client_secret: long,
     });
     for (const field of [
-      'password', 'newPassword', 'new_password',
-      'token', 'accessToken', 'access_token',
-      'refreshToken', 'refresh_token',
-      'secret', 'clientSecret', 'client_secret',
+      'password',
+      'newPassword',
+      'new_password',
+      'token',
+      'accessToken',
+      'access_token',
+      'refreshToken',
+      'refresh_token',
+      'secret',
+      'clientSecret',
+      'client_secret',
     ]) {
       expect(result[field]).toBe('[REDACTED]');
     }
@@ -159,9 +166,7 @@ describe('Sanitizer - Edge Cases', () => {
       users: [
         {
           id: '1',
-          keys: [
-            { key: 'user1-key-value-long' },
-          ],
+          keys: [{ key: 'user1-key-value-long' }],
         },
       ],
     };

@@ -54,7 +54,7 @@ describe('MCP Tool Registration', () => {
   });
 
   it('should register expected number of tools per module', () => {
-    expect(Object.keys(allModules.url)).toHaveLength(10);      // 7 original + 3 bulk
+    expect(Object.keys(allModules.url)).toHaveLength(10); // 7 original + 3 bulk
     expect(Object.keys(allModules.analytics)).toHaveLength(10); // 8 original + 2 export
     expect(Object.keys(allModules.variant)).toHaveLength(5);
     expect(Object.keys(allModules.bundle)).toHaveLength(12);

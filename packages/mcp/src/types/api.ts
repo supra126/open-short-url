@@ -324,15 +324,34 @@ export interface PaginationMeta {
 // ==================== Routing Rule Types ====================
 
 export type ConditionType =
-  | 'COUNTRY' | 'REGION' | 'CITY'
-  | 'DEVICE' | 'OS' | 'BROWSER' | 'LANGUAGE'
-  | 'REFERER' | 'TIME' | 'DAY_OF_WEEK'
-  | 'UTM_SOURCE' | 'UTM_MEDIUM' | 'UTM_CAMPAIGN' | 'UTM_TERM' | 'UTM_CONTENT';
+  | 'COUNTRY'
+  | 'REGION'
+  | 'CITY'
+  | 'DEVICE'
+  | 'OS'
+  | 'BROWSER'
+  | 'LANGUAGE'
+  | 'REFERER'
+  | 'TIME'
+  | 'DAY_OF_WEEK'
+  | 'UTM_SOURCE'
+  | 'UTM_MEDIUM'
+  | 'UTM_CAMPAIGN'
+  | 'UTM_TERM'
+  | 'UTM_CONTENT';
 
 export type ConditionOperator =
-  | 'EQUALS' | 'NOT_EQUALS' | 'CONTAINS' | 'NOT_CONTAINS'
-  | 'IN' | 'NOT_IN' | 'STARTS_WITH' | 'ENDS_WITH'
-  | 'BETWEEN' | 'BEFORE' | 'AFTER';
+  | 'EQUALS'
+  | 'NOT_EQUALS'
+  | 'CONTAINS'
+  | 'NOT_CONTAINS'
+  | 'IN'
+  | 'NOT_IN'
+  | 'STARTS_WITH'
+  | 'ENDS_WITH'
+  | 'BETWEEN'
+  | 'BEFORE'
+  | 'AFTER';
 
 export type LogicalOperator = 'AND' | 'OR';
 
@@ -680,7 +699,12 @@ export interface AuditLogListResponse {
 
 export type ExportFormat = 'csv' | 'json';
 
-export type TimeRange = 'last_7_days' | 'last_30_days' | 'last_90_days' | 'last_365_days' | 'custom';
+export type TimeRange =
+  | 'last_7_days'
+  | 'last_30_days'
+  | 'last_90_days'
+  | 'last_365_days'
+  | 'custom';
 
 export interface ExportQueryParams {
   timeRange?: TimeRange;

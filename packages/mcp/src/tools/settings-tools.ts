@@ -8,7 +8,8 @@ import { handleTool } from '../utils/tool-handler.js';
 export function registerSettingsTools(apiClient: ApiClient) {
   return {
     get_system_settings: {
-      description: 'Get all system settings (admin only). Common settings: allowRegistration, defaultSlugLength, requireEmailVerification, enableAnalytics.',
+      description:
+        'Get all system settings (admin only). Common settings: allowRegistration, defaultSlugLength, requireEmailVerification, enableAnalytics.',
       inputSchema: {
         type: 'object',
         properties: {},
@@ -21,7 +22,11 @@ export function registerSettingsTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          key: { type: 'string', description: 'Setting key (e.g., allowRegistration, defaultSlugLength)' },
+          key: {
+            type: 'string',
+            description:
+              'Setting key (e.g., allowRegistration, defaultSlugLength)',
+          },
         },
         required: ['key'],
       },
@@ -34,8 +39,14 @@ export function registerSettingsTools(apiClient: ApiClient) {
         type: 'object',
         properties: {
           key: { type: 'string', description: 'Setting key' },
-          value: { description: 'Setting value (any JSON-compatible value: string, number, boolean, object, array)' },
-          description: { type: 'string', description: 'Setting description (optional, max 500 characters)' },
+          value: {
+            description:
+              'Setting value (any JSON-compatible value: string, number, boolean, object, array)',
+          },
+          description: {
+            type: 'string',
+            description: 'Setting description (optional, max 500 characters)',
+          },
         },
         required: ['key', 'value'],
       },
@@ -46,7 +57,8 @@ export function registerSettingsTools(apiClient: ApiClient) {
     },
 
     delete_system_setting: {
-      description: '[DESTRUCTIVE] Delete a system setting, reverting it to its default value (admin only). Always confirm with the user before executing.',
+      description:
+        '[DESTRUCTIVE] Delete a system setting, reverting it to its default value (admin only). Always confirm with the user before executing.',
       inputSchema: {
         type: 'object',
         properties: {

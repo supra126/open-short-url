@@ -64,7 +64,9 @@ function registerAllTools(apiClient: ApiClient): Record<string, MCPTool> {
  */
 function convertMCPTool(toolName: string, mcpTool: MCPTool): Tool {
   // Create the zod schema from JSON Schema
-  const zodInputSchema = jsonSchemaToZod(mcpTool.inputSchema) as z.ZodObject<Record<string, z.ZodTypeAny>>;
+  const zodInputSchema = jsonSchemaToZod(mcpTool.inputSchema) as z.ZodObject<
+    Record<string, z.ZodTypeAny>
+  >;
 
   return tool({
     description: mcpTool.description,
@@ -75,7 +77,8 @@ function convertMCPTool(toolName: string, mcpTool: MCPTool): Tool {
         const cookies = getCookies();
 
         // Get backend URL
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3100';
+        const apiUrl =
+          process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3100';
 
         // Create MCP API Client with cookie authentication
         const apiClient = new ApiClient(apiUrl, { cookies });
@@ -121,7 +124,8 @@ function convertMCPTool(toolName: string, mcpTool: MCPTool): Tool {
         return result;
       } catch (error: unknown) {
         ErrorHandler.log(error, 'MCP Tool Execution');
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         return {
           success: false,
           error: errorMessage,
@@ -141,7 +145,9 @@ function convertMCPTool(toolName: string, mcpTool: MCPTool): Tool {
 export function createAllMCPTools() {
   // Create a dummy API client just to get tool definitions
   // The actual client with authentication will be created during execution
-  const dummyClient = new ApiClient('http://localhost:3100', { apiKey: 'dummy' });
+  const dummyClient = new ApiClient('http://localhost:3100', {
+    apiKey: 'dummy',
+  });
 
   // Register all MCP tools
   const allMCPTools = registerAllTools(dummyClient);
@@ -151,7 +157,9 @@ export function createAllMCPTools() {
 
   for (const [name, mcpTool] of Object.entries(allMCPTools)) {
     // Convert snake_case to camelCase for better JS naming
-    const camelCaseName = name.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
+    const camelCaseName = name.replace(/_([a-z])/g, (_, letter: string) =>
+      letter.toUpperCase()
+    );
     convertedTools[camelCaseName] = convertMCPTool(name, mcpTool);
   }
 
@@ -168,10 +176,16 @@ export function getToolStats() {
   return {
     total: toolNames.length,
     byCategory: {
-      url: toolNames.filter((n) => n.includes('Url') || n.includes('QR')).length,
+      url: toolNames.filter((n) => n.includes('Url') || n.includes('QR'))
+        .length,
       bundle: toolNames.filter((n) => n.includes('Bundle')).length,
-      analytics: toolNames.filter((n) => n.includes('Analytics') || n.includes('Bot') || n.includes('Click')).length,
-      variant: toolNames.filter((n) => n.includes('Variant') || n.includes('AbTest')).length,
+      analytics: toolNames.filter(
+        (n) =>
+          n.includes('Analytics') || n.includes('Bot') || n.includes('Click')
+      ).length,
+      variant: toolNames.filter(
+        (n) => n.includes('Variant') || n.includes('AbTest')
+      ).length,
     },
     tools: toolNames,
   };

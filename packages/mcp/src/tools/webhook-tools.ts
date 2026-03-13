@@ -8,13 +8,24 @@ import { handleTool } from '../utils/tool-handler.js';
 export function registerWebhookTools(apiClient: ApiClient) {
   return {
     create_webhook: {
-      description: 'Create a webhook to receive event notifications (e.g., URL created, clicked, deleted).',
+      description:
+        'Create a webhook to receive event notifications (e.g., URL created, clicked, deleted).',
       inputSchema: {
         type: 'object',
         properties: {
-          name: { type: 'string', description: 'Webhook name (max 100 characters)' },
-          url: { type: 'string', description: 'Webhook endpoint URL to receive POST requests' },
-          secret: { type: 'string', description: 'Secret for HMAC signature verification (max 255 characters)' },
+          name: {
+            type: 'string',
+            description: 'Webhook name (max 100 characters)',
+          },
+          url: {
+            type: 'string',
+            description: 'Webhook endpoint URL to receive POST requests',
+          },
+          secret: {
+            type: 'string',
+            description:
+              'Secret for HMAC signature verification (max 255 characters)',
+          },
           events: {
             type: 'array',
             items: { type: 'string' },
@@ -22,9 +33,13 @@ export function registerWebhookTools(apiClient: ApiClient) {
           },
           headers: {
             type: 'object',
-            description: 'Custom HTTP headers to include in webhook requests (optional)',
+            description:
+              'Custom HTTP headers to include in webhook requests (optional)',
           },
-          isActive: { type: 'boolean', description: 'Enable the webhook (optional, defaults to true)' },
+          isActive: {
+            type: 'boolean',
+            description: 'Enable the webhook (optional, defaults to true)',
+          },
         },
         required: ['name', 'url', 'secret', 'events'],
       },
@@ -36,17 +51,28 @@ export function registerWebhookTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          page: { type: 'number', description: 'Page number (optional, defaults to 1)' },
-          limit: { type: 'number', description: 'Items per page (optional, defaults to 10)' },
+          page: {
+            type: 'number',
+            description: 'Page number (optional, defaults to 1)',
+          },
+          limit: {
+            type: 'number',
+            description: 'Items per page (optional, defaults to 10)',
+          },
           sortBy: { type: 'string', description: 'Sort field (optional)' },
-          sortOrder: { type: 'string', enum: ['asc', 'desc'], description: 'Sort direction (optional)' },
+          sortOrder: {
+            type: 'string',
+            enum: ['asc', 'desc'],
+            description: 'Sort direction (optional)',
+          },
         },
       },
       handler: handleTool((args) => apiClient.listWebhooks(args)),
     },
 
     get_webhook: {
-      description: 'Get detailed information about a specific webhook including delivery statistics.',
+      description:
+        'Get detailed information about a specific webhook including delivery statistics.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -58,7 +84,8 @@ export function registerWebhookTools(apiClient: ApiClient) {
     },
 
     update_webhook: {
-      description: 'Update webhook settings including URL, events, headers, and active status.',
+      description:
+        'Update webhook settings including URL, events, headers, and active status.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -75,7 +102,10 @@ export function registerWebhookTools(apiClient: ApiClient) {
             type: 'object',
             description: 'New custom headers (optional)',
           },
-          isActive: { type: 'boolean', description: 'Enable/disable (optional)' },
+          isActive: {
+            type: 'boolean',
+            description: 'Enable/disable (optional)',
+          },
         },
         required: ['id'],
       },
@@ -86,7 +116,8 @@ export function registerWebhookTools(apiClient: ApiClient) {
     },
 
     delete_webhook: {
-      description: '[DESTRUCTIVE] Delete a webhook and all its delivery logs. Always confirm with the user before executing.',
+      description:
+        '[DESTRUCTIVE] Delete a webhook and all its delivery logs. Always confirm with the user before executing.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -101,13 +132,20 @@ export function registerWebhookTools(apiClient: ApiClient) {
     },
 
     get_webhook_logs: {
-      description: 'Get delivery logs for a specific webhook, including request/response details and errors.',
+      description:
+        'Get delivery logs for a specific webhook, including request/response details and errors.',
       inputSchema: {
         type: 'object',
         properties: {
           id: { type: 'string', description: 'Webhook ID' },
-          page: { type: 'number', description: 'Page number (optional, defaults to 1)' },
-          limit: { type: 'number', description: 'Items per page (optional, defaults to 10)' },
+          page: {
+            type: 'number',
+            description: 'Page number (optional, defaults to 1)',
+          },
+          limit: {
+            type: 'number',
+            description: 'Items per page (optional, defaults to 10)',
+          },
         },
         required: ['id'],
       },
@@ -118,7 +156,8 @@ export function registerWebhookTools(apiClient: ApiClient) {
     },
 
     test_webhook: {
-      description: 'Send a test event to a webhook endpoint and return the delivery result.',
+      description:
+        'Send a test event to a webhook endpoint and return the delivery result.',
       inputSchema: {
         type: 'object',
         properties: {

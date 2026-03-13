@@ -37,10 +37,7 @@ describe('handleTool', () => {
 
     it('should use custom success message when provided', async () => {
       const fn = vi.fn().mockResolvedValue(undefined);
-      const handler = handleTool(
-        fn,
-        (args) => `Deleted ${args.id}`
-      );
+      const handler = handleTool(fn, (args) => `Deleted ${args.id}`);
       const result = await handler({ id: '123' });
 
       expect(result.content[0].text).toBe('Deleted 123');
@@ -105,9 +102,11 @@ describe('handleTool', () => {
     });
 
     it('should sanitize Bearer tokens from error messages', async () => {
-      const fn = vi.fn().mockRejectedValue(
-        new Error('Unauthorized: Bearer sk-ant-api03-realkey123 is invalid')
-      );
+      const fn = vi
+        .fn()
+        .mockRejectedValue(
+          new Error('Unauthorized: Bearer sk-ant-api03-realkey123 is invalid')
+        );
       const handler = handleTool(fn);
       const result = await handler({});
 
@@ -117,9 +116,11 @@ describe('handleTool', () => {
     });
 
     it('should sanitize key= patterns from error messages', async () => {
-      const fn = vi.fn().mockRejectedValue(
-        new Error('Failed with key=mysecretkey123 in request')
-      );
+      const fn = vi
+        .fn()
+        .mockRejectedValue(
+          new Error('Failed with key=mysecretkey123 in request')
+        );
       const handler = handleTool(fn);
       const result = await handler({});
 
@@ -129,9 +130,9 @@ describe('handleTool', () => {
     });
 
     it('should sanitize token= patterns from error messages', async () => {
-      const fn = vi.fn().mockRejectedValue(
-        new Error('Request with token: abc123xyz failed')
-      );
+      const fn = vi
+        .fn()
+        .mockRejectedValue(new Error('Request with token: abc123xyz failed'));
       const handler = handleTool(fn);
       const result = await handler({});
 
@@ -140,9 +141,11 @@ describe('handleTool', () => {
     });
 
     it('should sanitize secret= patterns from error messages', async () => {
-      const fn = vi.fn().mockRejectedValue(
-        new Error('Config error secret=my-client-secret-value')
-      );
+      const fn = vi
+        .fn()
+        .mockRejectedValue(
+          new Error('Config error secret=my-client-secret-value')
+        );
       const handler = handleTool(fn);
       const result = await handler({});
 
@@ -151,9 +154,7 @@ describe('handleTool', () => {
     });
 
     it('should preserve non-sensitive error messages as-is', async () => {
-      const fn = vi.fn().mockRejectedValue(
-        new Error('URL not found: 404')
-      );
+      const fn = vi.fn().mockRejectedValue(new Error('URL not found: 404'));
       const handler = handleTool(fn);
       const result = await handler({});
 
@@ -216,7 +217,10 @@ describe('Tool Handler Parameter Passing', () => {
       });
       expect(calls[0].method).toBe('updateUrl');
       expect(calls[0].args[0]).toBe('url-123');
-      expect(calls[0].args[1]).toEqual({ title: 'New Title', status: 'INACTIVE' });
+      expect(calls[0].args[1]).toEqual({
+        title: 'New Title',
+        status: 'INACTIVE',
+      });
     });
 
     it('delete_short_url should pass id', async () => {
@@ -232,7 +236,11 @@ describe('Tool Handler Parameter Passing', () => {
       const { client, calls } = createMockClient();
       const { registerUrlTools } = await import('../tools/url-tools.js');
       const tools = registerUrlTools(client);
-      await tools.generate_qrcode.handler({ id: 'url-1', width: 500, color: '#FF0000' });
+      await tools.generate_qrcode.handler({
+        id: 'url-1',
+        width: 500,
+        color: '#FF0000',
+      });
       expect(calls[0].method).toBe('generateQRCode');
       expect(calls[0].args[0]).toBe('url-1');
       expect(calls[0].args[1]).toEqual({ width: 500, color: '#FF0000' });
@@ -244,7 +252,8 @@ describe('Tool Handler Parameter Passing', () => {
   describe('Analytics tools', () => {
     it('get_url_analytics should extract urlId and pass params', async () => {
       const { client, calls } = createMockClient();
-      const { registerAnalyticsTools } = await import('../tools/analytics-tools.js');
+      const { registerAnalyticsTools } =
+        await import('../tools/analytics-tools.js');
       const tools = registerAnalyticsTools(client);
       await tools.get_url_analytics.handler({
         urlId: 'url-1',
@@ -261,7 +270,8 @@ describe('Tool Handler Parameter Passing', () => {
 
     it('export_url_analytics should extract urlId and pass export params', async () => {
       const { client, calls } = createMockClient();
-      const { registerAnalyticsTools } = await import('../tools/analytics-tools.js');
+      const { registerAnalyticsTools } =
+        await import('../tools/analytics-tools.js');
       const tools = registerAnalyticsTools(client);
       await tools.export_url_analytics.handler({
         urlId: 'url-1',
@@ -275,7 +285,8 @@ describe('Tool Handler Parameter Passing', () => {
 
     it('export_all_analytics should pass params directly', async () => {
       const { client, calls } = createMockClient();
-      const { registerAnalyticsTools } = await import('../tools/analytics-tools.js');
+      const { registerAnalyticsTools } =
+        await import('../tools/analytics-tools.js');
       const tools = registerAnalyticsTools(client);
       await tools.export_all_analytics.handler({ format: 'json' });
       expect(calls[0].method).toBe('exportAllAnalytics');
@@ -288,7 +299,8 @@ describe('Tool Handler Parameter Passing', () => {
   describe('Variant tools', () => {
     it('create_variant should extract urlId and pass variant data', async () => {
       const { client, calls } = createMockClient();
-      const { registerVariantTools } = await import('../tools/variant-tools.js');
+      const { registerVariantTools } =
+        await import('../tools/variant-tools.js');
       const tools = registerVariantTools(client);
       await tools.create_variant.handler({
         urlId: 'url-1',
@@ -307,7 +319,8 @@ describe('Tool Handler Parameter Passing', () => {
 
     it('update_variant should extract urlId, variantId and pass update data', async () => {
       const { client, calls } = createMockClient();
-      const { registerVariantTools } = await import('../tools/variant-tools.js');
+      const { registerVariantTools } =
+        await import('../tools/variant-tools.js');
       const tools = registerVariantTools(client);
       await tools.update_variant.handler({
         urlId: 'url-1',
@@ -326,7 +339,8 @@ describe('Tool Handler Parameter Passing', () => {
   describe('Routing tools', () => {
     it('create_routing_rule should extract urlId and pass rule data', async () => {
       const { client, calls } = createMockClient();
-      const { registerRoutingTools } = await import('../tools/routing-tools.js');
+      const { registerRoutingTools } =
+        await import('../tools/routing-tools.js');
       const tools = registerRoutingTools(client);
       const conditions = {
         operator: 'AND',
@@ -349,7 +363,8 @@ describe('Tool Handler Parameter Passing', () => {
 
     it('update_routing_rule should extract urlId, ruleId and pass data', async () => {
       const { client, calls } = createMockClient();
-      const { registerRoutingTools } = await import('../tools/routing-tools.js');
+      const { registerRoutingTools } =
+        await import('../tools/routing-tools.js');
       const tools = registerRoutingTools(client);
       await tools.update_routing_rule.handler({
         urlId: 'url-1',
@@ -365,7 +380,8 @@ describe('Tool Handler Parameter Passing', () => {
 
     it('update_smart_routing_settings should extract urlId', async () => {
       const { client, calls } = createMockClient();
-      const { registerRoutingTools } = await import('../tools/routing-tools.js');
+      const { registerRoutingTools } =
+        await import('../tools/routing-tools.js');
       const tools = registerRoutingTools(client);
       await tools.update_smart_routing_settings.handler({
         urlId: 'url-1',
@@ -382,7 +398,8 @@ describe('Tool Handler Parameter Passing', () => {
   describe('Webhook tools', () => {
     it('update_webhook should extract id and pass data', async () => {
       const { client, calls } = createMockClient();
-      const { registerWebhookTools } = await import('../tools/webhook-tools.js');
+      const { registerWebhookTools } =
+        await import('../tools/webhook-tools.js');
       const tools = registerWebhookTools(client);
       await tools.update_webhook.handler({
         id: 'wh-1',
@@ -396,7 +413,8 @@ describe('Tool Handler Parameter Passing', () => {
 
     it('get_webhook_logs should extract id and pass pagination', async () => {
       const { client, calls } = createMockClient();
-      const { registerWebhookTools } = await import('../tools/webhook-tools.js');
+      const { registerWebhookTools } =
+        await import('../tools/webhook-tools.js');
       const tools = registerWebhookTools(client);
       await tools.get_webhook_logs.handler({ id: 'wh-1', page: 2, limit: 20 });
       expect(calls[0].method).toBe('getWebhookLogs');
@@ -432,7 +450,10 @@ describe('Tool Handler Parameter Passing', () => {
       const { client, calls } = createMockClient();
       const { registerUserTools } = await import('../tools/user-tools.js');
       const tools = registerUserTools(client);
-      await tools.reset_user_password.handler({ id: 'u-1', newPassword: 'newpass123' });
+      await tools.reset_user_password.handler({
+        id: 'u-1',
+        newPassword: 'newpass123',
+      });
       expect(calls[0].method).toBe('resetUserPassword');
       expect(calls[0].args[0]).toBe('u-1');
       expect(calls[0].args[1]).toEqual({ newPassword: 'newpass123' });
@@ -442,7 +463,10 @@ describe('Tool Handler Parameter Passing', () => {
       const { client, calls } = createMockClient();
       const { registerUserTools } = await import('../tools/user-tools.js');
       const tools = registerUserTools(client);
-      await tools.unlink_user_oidc_account.handler({ userId: 'u-1', accountId: 'oidc-1' });
+      await tools.unlink_user_oidc_account.handler({
+        userId: 'u-1',
+        accountId: 'oidc-1',
+      });
       expect(calls[0].method).toBe('unlinkUserOidcAccount');
       expect(calls[0].args[0]).toBe('u-1');
       expect(calls[0].args[1]).toBe('oidc-1');
@@ -472,7 +496,8 @@ describe('Tool Handler Parameter Passing', () => {
   describe('Settings tools', () => {
     it('update_system_setting should extract key and pass data', async () => {
       const { client, calls } = createMockClient();
-      const { registerSettingsTools } = await import('../tools/settings-tools.js');
+      const { registerSettingsTools } =
+        await import('../tools/settings-tools.js');
       const tools = registerSettingsTools(client);
       await tools.update_system_setting.handler({
         key: 'allowRegistration',
@@ -502,14 +527,20 @@ describe('Tool Handler Parameter Passing', () => {
       });
       expect(calls[0].method).toBe('updateBundle');
       expect(calls[0].args[0]).toBe('b-1');
-      expect(calls[0].args[1]).toEqual({ name: 'Updated Bundle', color: '#FF0000' });
+      expect(calls[0].args[1]).toEqual({
+        name: 'Updated Bundle',
+        color: '#FF0000',
+      });
     });
 
     it('add_url_to_bundle should construct correct payload', async () => {
       const { client, calls } = createMockClient();
       const { registerBundleTools } = await import('../tools/bundle-tools.js');
       const tools = registerBundleTools(client);
-      await tools.add_url_to_bundle.handler({ bundleId: 'b-1', urlId: 'url-1' });
+      await tools.add_url_to_bundle.handler({
+        bundleId: 'b-1',
+        urlId: 'url-1',
+      });
       expect(calls[0].method).toBe('addUrlToBundle');
       expect(calls[0].args[0]).toBe('b-1');
       expect(calls[0].args[1]).toEqual({ urlId: 'url-1' });
