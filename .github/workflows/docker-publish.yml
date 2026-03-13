@@ -21,6 +21,8 @@ jobs:
             dockerfile: apps/backend/Dockerfile
           - image: open-short-url-frontend
             dockerfile: apps/frontend/Dockerfile
+          - image: open-short-url-mcp
+            dockerfile: packages/mcp/Dockerfile
     steps:
       - uses: actions/checkout@v6
 

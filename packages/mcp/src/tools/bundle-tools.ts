@@ -73,7 +73,7 @@ export function registerBundleTools(apiClient: ApiClient) {
     },
 
     delete_bundle: {
-      description: 'Delete a bundle. This does not delete the URLs within the bundle.',
+      description: '[DESTRUCTIVE] Delete a bundle. This does not delete the URLs within the bundle. Always confirm with the user before executing.',
       inputSchema: {
         type: 'object',
         properties: {

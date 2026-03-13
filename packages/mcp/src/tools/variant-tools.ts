@@ -82,7 +82,7 @@ export function registerVariantTools(apiClient: ApiClient) {
     },
 
     delete_variant: {
-      description: 'Delete a specific A/B testing variant. If this is the last variant, A/B testing will be automatically disabled for the URL.',
+      description: '[DESTRUCTIVE] Delete a specific A/B testing variant. If this is the last variant, A/B testing will be automatically disabled for the URL. Always confirm with the user before executing.',
       inputSchema: {
         type: 'object',
         properties: {

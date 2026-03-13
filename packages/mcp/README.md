@@ -7,32 +7,27 @@
 [![npm version](https://img.shields.io/npm/v/@open-short-url/mcp.svg)](https://www.npmjs.com/package/@open-short-url/mcp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **⚠️ Notice**: This is an early testing version v0.1.0. APIs may change. Issues and suggestions are welcome!
-
 ---
 
-## ⚠️ Prerequisites
+## Prerequisites
 
-> **🔴 Important**: This MCP Server is a **client tool for Open Short URL** and requires connection to a deployed Open Short URL backend system.
+> **Important**: This MCP Server is a **client tool for Open Short URL** and requires connection to a deployed Open Short URL backend system.
 >
 > This is not a standalone short URL service, but rather manages your existing short URL system through AI applications that support the MCP protocol.
 
-### 📋 Requirements
+### Requirements
 
-Before installing this MCP Server, ensure you have:
-
-#### 1. ✅ Open Short URL Backend System (Required!)
+#### 1. Open Short URL Backend System (Required)
 
 You need to deploy the Open Short URL backend first:
 
-- 📦 **Deploy Backend**: Deploy from the [Open Short URL main project](https://github.com/supra126/open-short-url)
-- 🔧 **Ensure Running**: Backend must be running and accessible via network
-- 🗄️ **Configure Database**: PostgreSQL properly configured
-- 🌐 **Get URL**: Note your backend URL (e.g., `https://your-backend.com`)
+- Deploy from the [Open Short URL main project](https://github.com/supra126/open-short-url)
+- Backend must be running and accessible via network
+- Note your backend URL (e.g., `https://your-backend.com`)
 
-> 💡 **Don't have a backend system?** Visit the [main project repository](https://github.com/supra126/open-short-url) first to learn how to deploy the backend.
+> Don't have a backend system? Visit the [main project repository](https://github.com/supra126/open-short-url) first.
 
-#### 2. ✅ API Key
+#### 2. API Key
 
 Obtain an API Key from your backend system:
 
@@ -41,408 +36,315 @@ Obtain an API Key from your backend system:
 3. Click "Create New API Key"
 4. Copy the generated API Key (format: `ak_xxxxxxxxxxxxxx`)
 
-### 🧪 Quick Connection Test
-
-Before installation, it's recommended to test if the backend API is accessible:
+### Quick Connection Test
 
 ```bash
 curl -H "Authorization: Bearer YOUR_API_KEY" \
      https://your-backend.com/api/urls
 ```
 
-**Expected Result**: Returns a JSON list of short URLs
+---
 
-**If Failed**: Check:
+## Features
 
-- ✓ Backend service is running
-- ✓ API URL is correct
-- ✓ API Key is valid
-- ✓ Firewall allows connections
+**77 MCP Tools** across 11 modules:
+
+| Module | Tools | Description |
+|--------|-------|-------------|
+| URL Management | 10 | Create, list, update, delete, QR code, bulk operations |
+| Bundle Management | 12 | Group URLs, reorder, archive/restore, statistics |
+| Analytics | 10 | Click analysis, trends, bot detection, data export |
+| A/B Testing | 5 | Create variants, traffic distribution, performance comparison |
+| Smart Routing | 8 | Conditional routing rules, templates, geo/device targeting |
+| Webhooks | 7 | Event notifications, delivery logs, webhook testing |
+| User Management | 11 | Create/manage users, roles, 2FA, OIDC accounts |
+| API Keys | 4 | Create, list, view, revoke API keys |
+| OIDC/SSO | 5 | Manage OIDC/SSO identity providers |
+| System Settings | 4 | View and manage system configuration |
+| Audit Logs | 1 | Query system audit trail |
+
+### Security
+
+- **Sensitive data sanitization** — API keys, tokens, passwords are automatically redacted in all responses
+- **Destructive tool marking** — Delete/reset operations are prefixed with `[DESTRUCTIVE]` and include confirmation hints for the AI assistant
+- **Error message cleaning** — Credentials are stripped from error outputs
 
 ---
 
-## 🌟 Features
+## Quick Start
 
-### URL Management
+### Transport Modes
 
-- ✅ **Create Short URLs** - Support custom slug, password protection, expiration time, UTM parameters
-- 📋 **List Short URLs** - Pagination, search, filtering, sorting
-- 🔍 **Query Details** - Get complete information for a single short URL
-- ✏️ **Update Settings** - Modify URL, title, status, etc.
-- 🗑️ **Delete URLs** - Remove short URLs and related data
-- 📱 **Generate QR Code** - Generate QR codes for short URLs
+The MCP server supports two transport modes:
 
-### Bundle Management
+| Mode | Use Case | Protocol |
+|------|----------|----------|
+| **stdio** (default) | CLI and IDE integrations (Claude Desktop, VS Code, etc.) | Standard I/O |
+| **http** | Remote access, containerized deployments, multi-client | Streamable HTTP |
 
-- 📦 **Create Bundles** - Organize and group multiple short URLs
-- 📂 **Manage Bundles** - List, query, update, delete bundles
-- 🔗 **URL Association** - Add/remove URLs to/from bundles
-- 📊 **Bundle Statistics** - View bundle click statistics
-- 🗂️ **Archive Management** - Archive/restore bundles
+### Option 1: npm (stdio)
 
-### Analytics
-
-- 📊 **Click Analysis** - Geographic location, device, browser distribution
-- 📈 **Trend Analysis** - Click trends over time
-- 🤖 **Bot Analysis** - Identify and analyze bot traffic
-- 📝 **Recent Clicks** - View latest visitor records
-
-### A/B Testing
-
-- 🧪 **Create Variants** - Set up different target URLs
-- ⚖️ **Traffic Distribution** - Customize traffic weights for variants
-- 📊 **Performance Analysis** - Compare variant performance
-
----
-
-## 🚀 Quick Start
-
-### 1. Installation
-
-#### Option 1: Global Install (Recommended)
+#### Global Install (Recommended)
 
 ```bash
 npm install -g @open-short-url/mcp
 ```
 
-> ⭐ **Why Recommended**: As a background service, global installation provides the best experience
->
-> - ⚡ Fast startup (< 100ms)
-> - 🔌 Works offline
-> - 🎯 Stable and reliable
-
-#### Option 2: Using npx (Quick Trial)
+#### Using npx
 
 ```bash
 npx @open-short-url/mcp
 ```
 
-> ⚠️ **Note**: Suitable for quick trials, but first startup is slower (1-5 seconds). For production use, switch to global installation.
+#### MCP Client Configuration
 
-#### Option 3: Build from Source
+```json
+{
+  "mcpServers": {
+    "open-short-url": {
+      "command": "open-short-url-mcp",
+      "env": {
+        "API_URL": "https://your-backend.com",
+        "API_KEY": "ak_your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+### Option 2: Docker (HTTP)
+
+```bash
+docker run -p 3200:3200 \
+  -e API_URL=http://your-backend:4101 \
+  -e API_KEY=ak_your_api_key_here \
+  ghcr.io/supra126/open-short-url-mcp:latest
+```
+
+The server will be available at `http://localhost:3200/mcp`.
+
+#### Health Check
+
+```bash
+curl http://localhost:3200/health
+```
+
+### Option 3: Docker Compose
+
+Add the `mcp` profile to your existing Open Short URL deployment:
+
+```bash
+docker compose --profile mcp up -d
+```
+
+Set `MCP_API_KEY` in your `.env.docker` file. See the main project's `docker-compose.yml` for full configuration.
+
+### Option 4: Build from Source
 
 ```bash
 git clone https://github.com/supra126/open-short-url.git
 cd open-short-url/packages/mcp
-pnpm install
-pnpm build
-```
+pnpm install && pnpm build
 
-### 2. Get API Key
+# stdio mode
+API_URL=https://your-backend.com API_KEY=ak_xxx node dist/index.js
 
-1. Log in to your Open Short URL backend system
-2. Navigate to "Settings" → "API Keys"
-3. Click "Create New API Key"
-4. Copy the generated API Key (e.g., `ak_1234567890abcdef`)
-
----
-
-## 🔧 Usage
-
-#### Option 1: Using Global Install (Recommended) ⭐
-
-> Requires first running: `npm install -g @open-short-url/mcp`
-
-```json
-{
-  "mcpServers": {
-    "open-short-url": {
-      "command": "open-short-url-mcp",
-      "env": {
-        "API_URL": "https://your-backend.com",
-        "API_KEY": "ak_your_api_key_here"
-      }
-    }
-  }
-}
-```
-
-**Advantages**: ⚡ Fast startup, stable, works offline
-
-#### Option 2: Using npx (Quick Trial)
-
-```json
-{
-  "mcpServers": {
-    "open-short-url": {
-      "command": "npx",
-      "args": ["-y", "@open-short-url/mcp"],
-      "env": {
-        "API_URL": "https://your-backend.com",
-        "API_KEY": "ak_your_api_key_here"
-      }
-    }
-  }
-}
-```
-
-**Advantages**: No installation needed, always latest
-**Disadvantages**: ⚠️ Slower first startup (1-5 seconds)
-
-#### Option 3: Using Local Build (Developers)
-
-```json
-{
-  "mcpServers": {
-    "open-short-url": {
-      "command": "node",
-      "args": ["/absolute/path/open-short-url/packages/mcp/dist/index.js"],
-      "env": {
-        "API_URL": "https://your-backend.com",
-        "API_KEY": "ak_your_api_key_here"
-      }
-    }
-  }
-}
-```
-
-**Use Case**: Need to modify source code or debug
-
-### Using with MCP Clients
-
-Any application that supports the Model Context Protocol can use this MCP Server.
-
-#### General Configuration Format
-
-Depending on the MCP client you use, the configuration format may vary slightly, but the core elements remain the same:
-
-```json
-{
-  "mcpServers": {
-    "open-short-url": {
-      "command": "open-short-url-mcp",
-      "env": {
-        "API_URL": "https://your-backend.com",
-        "API_KEY": "ak_your_api_key_here"
-      }
-    }
-  }
-}
-```
-
-#### Environment Variables
-
-| Variable  | Required | Description                    | Example                    |
-| --------- | -------- | ------------------------------ | -------------------------- |
-| `API_URL` | ✅       | Open Short URL backend API URL | `https://your-backend.com` |
-| `API_KEY` | ✅       | API Key generated by backend   | `ak_1234567890abcdef`      |
-
----
-
-## 💬 Usage Examples
-
-### Create Short URL
-
-```
-User: Shorten https://example.com/very-long-url for me
-
-Claude: I'll create a short URL for you...
-[Calling create_short_url tool]
-Short URL created:
-- Short URL: https://your-domain.com/abc123
-- Original URL: https://example.com/very-long-url
-- Clicks: 0
-```
-
-### Create Short URL with UTM Parameters
-
-```
-User: Create a short URL with UTM tracking:
-- Original URL: https://example.com/product
-- UTM Source: facebook
-- UTM Campaign: summer-sale
-
-Claude: Sure, I'll create it...
-[Calling create_short_url tool]
-Created short URL with UTM tracking:
-- Short URL: https://your-domain.com/xyz789
-- Redirects to: https://example.com/product?utm_source=facebook&utm_campaign=summer-sale
-```
-
-### Manage Bundles
-
-```
-User: Create a bundle called "2025 Spring Campaign" and add abc123 and xyz789 to it
-
-Claude: Sure, I'll create the bundle...
-[Calling create_bundle and add_multiple_urls_to_bundle tools]
-Created bundle "2025 Spring Campaign":
-- Bundle ID: bundle_abc
-- Contains 2 short URLs
-- Can be used for unified management and tracking of these links
-```
-
-### View Analytics
-
-```
-User: How many clicks did my short URL abc123 get this week? Which countries are they from?
-
-Claude: Let me check...
-[Calling get_url_analytics tool]
-Your short URL statistics for this week:
-- Total clicks: 1,234
-- Top countries:
-  1. Taiwan (TW): 45%
-  2. United States (US): 30%
-  3. Japan (JP): 15%
-- Top devices:
-  - Mobile: 60%
-  - Desktop: 35%
-  - Tablet: 5%
-```
-
-### Set Up A/B Testing
-
-```
-User: Set up A/B testing for short URL xyz789:
-- 50% traffic to https://landing-a.com
-- 50% traffic to https://landing-b.com
-
-Claude: Sure, I'll set up A/B testing...
-[Calling create_variant tool twice]
-A/B testing configured:
-- Variant A: https://landing-a.com (weight: 50%)
-- Variant B: https://landing-b.com (weight: 50%)
-The system will automatically distribute visitors to different pages.
-```
-
-### Generate QR Code
-
-```
-User: Generate a QR code for abc123, size 500px
-
-Claude: Generating...
-[Calling generate_qrcode tool]
-QR Code generated:
-- Size: 500x500 px
-- Format: Base64 Data URL
-- Can be embedded in web pages or downloaded for use
+# HTTP mode
+MCP_TRANSPORT=http API_URL=https://your-backend.com API_KEY=ak_xxx node dist/index.js
 ```
 
 ---
 
-## 🛠️ Available Tools
+## Environment Variables
 
-### URL Management (10 tools)
-
-1. `create_short_url` - Create short URL
-2. `list_short_urls` - List all short URLs
-3. `get_short_url` - Query short URL details
-4. `update_short_url` - Update short URL settings
-5. `delete_short_url` - Delete short URL
-6. `get_url_stats` - Get URL dashboard statistics
-7. `generate_qrcode` - Generate QR Code
-8. `bulk_create_urls` - Bulk create short URLs (max 100)
-9. `bulk_update_urls` - Bulk update short URLs (status, bundle, expiration, UTM)
-10. `bulk_delete_urls` - Bulk delete short URLs
-
-### Bundle Management (12 tools)
-
-11. `create_bundle` - Create new bundle
-12. `list_bundles` - List all bundles
-13. `get_bundle` - Query bundle details
-14. `update_bundle` - Update bundle information
-15. `delete_bundle` - Delete bundle
-16. `add_url_to_bundle` - Add single URL to bundle
-17. `add_multiple_urls_to_bundle` - Batch add URLs to bundle
-18. `remove_url_from_bundle` - Remove URL from bundle
-19. `update_url_order_in_bundle` - Update URL order in bundle
-20. `get_bundle_stats` - Get bundle statistics
-21. `archive_bundle` - Archive bundle
-22. `restore_bundle` - Restore archived bundle
-
-### Analytics (8 tools)
-
-23. `get_url_analytics` - Get URL analytics
-24. `get_overview_analytics` - Get overview analytics
-25. `get_top_performing_urls` - Get top performing URLs by clicks
-26. `get_recent_clicks` - View recent clicks
-27. `get_bot_analytics` - Bot analysis for single URL
-28. `get_user_bot_analytics` - Global bot analysis
-29. `get_ab_test_analytics` - A/B test analytics
-30. `get_routing_analytics` - Smart routing statistics
-
-### A/B Testing (5 tools)
-
-31. `create_variant` - Create test variant
-32. `list_variants` - List all variants
-33. `get_variant` - Query variant details
-34. `update_variant` - Update variant settings
-35. `delete_variant` - Delete variant
-
-**Total: 35 MCP Tools**
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `API_URL` | Yes | — | Open Short URL backend API URL |
+| `API_KEY` | Yes | — | API key for authentication |
+| `MCP_TRANSPORT` | No | `stdio` | Transport mode: `stdio` or `http` |
+| `MCP_PORT` | No | `3200` | HTTP server port (http mode only) |
+| `MCP_HOST` | No | `0.0.0.0` | HTTP bind address (http mode only) |
 
 ---
 
-## 🔍 Troubleshooting
+## Available Tools (77)
+
+### URL Management (10)
+
+| Tool | Description |
+|------|-------------|
+| `create_short_url` | Create short URL with custom slug, password, expiration, UTM |
+| `list_short_urls` | List all short URLs with pagination, search, filtering |
+| `get_short_url` | Get short URL details |
+| `update_short_url` | Update short URL settings |
+| `delete_short_url` | Delete short URL [DESTRUCTIVE] |
+| `get_url_stats` | Get URL dashboard statistics |
+| `generate_qrcode` | Generate QR code for a short URL |
+| `bulk_create_urls` | Bulk create short URLs (max 100) |
+| `bulk_update_urls` | Bulk update short URLs |
+| `bulk_delete_urls` | Bulk delete short URLs [DESTRUCTIVE] |
+
+### Bundle Management (12)
+
+| Tool | Description |
+|------|-------------|
+| `create_bundle` | Create new bundle |
+| `list_bundles` | List all bundles |
+| `get_bundle` | Get bundle details |
+| `update_bundle` | Update bundle information |
+| `delete_bundle` | Delete bundle [DESTRUCTIVE] |
+| `add_url_to_bundle` | Add single URL to bundle |
+| `add_multiple_urls_to_bundle` | Batch add URLs to bundle |
+| `remove_url_from_bundle` | Remove URL from bundle |
+| `update_url_order_in_bundle` | Reorder URLs in bundle |
+| `get_bundle_stats` | Get bundle statistics |
+| `archive_bundle` | Archive bundle |
+| `restore_bundle` | Restore archived bundle |
+
+### Analytics (10)
+
+| Tool | Description |
+|------|-------------|
+| `get_url_analytics` | URL click analytics (geo, device, browser) |
+| `get_overview_analytics` | Overview analytics dashboard |
+| `get_top_performing_urls` | Top performing URLs by clicks |
+| `get_recent_clicks` | Recent click records |
+| `get_bot_analytics` | Bot analysis for single URL |
+| `get_user_bot_analytics` | Global bot analysis |
+| `get_ab_test_analytics` | A/B test analytics |
+| `get_routing_analytics` | Smart routing statistics |
+| `export_url_analytics` | Export single URL analytics (CSV/JSON) |
+| `export_all_analytics` | Export all analytics data (CSV/JSON) |
+
+### A/B Testing (5)
+
+| Tool | Description |
+|------|-------------|
+| `create_variant` | Create test variant |
+| `list_variants` | List all variants |
+| `get_variant` | Get variant details |
+| `update_variant` | Update variant settings |
+| `delete_variant` | Delete variant [DESTRUCTIVE] |
+
+### Smart Routing (8)
+
+| Tool | Description |
+|------|-------------|
+| `create_routing_rule` | Create conditional routing rule |
+| `create_routing_rule_from_template` | Create rule from template (geo, device, etc.) |
+| `list_routing_rules` | List routing rules for a URL |
+| `get_routing_rule` | Get routing rule details |
+| `update_routing_rule` | Update routing rule |
+| `delete_routing_rule` | Delete routing rule [DESTRUCTIVE] |
+| `update_smart_routing_settings` | Update routing settings for a URL |
+| `list_routing_templates` | List available routing templates |
+
+### Webhooks (7)
+
+| Tool | Description |
+|------|-------------|
+| `create_webhook` | Create webhook endpoint |
+| `list_webhooks` | List all webhooks |
+| `get_webhook` | Get webhook details |
+| `update_webhook` | Update webhook settings |
+| `delete_webhook` | Delete webhook [DESTRUCTIVE] |
+| `get_webhook_logs` | View webhook delivery logs |
+| `test_webhook` | Send test webhook event |
+
+### User Management (11)
+
+| Tool | Description |
+|------|-------------|
+| `create_user` | Create new user |
+| `list_users` | List all users |
+| `get_user` | Get user details |
+| `update_user_role` | Update user role |
+| `update_user_status` | Activate/deactivate user |
+| `update_user_name` | Update user display name |
+| `delete_user` | Delete user [DESTRUCTIVE] |
+| `reset_user_password` | Reset user password [DESTRUCTIVE] |
+| `disable_user_2fa` | Disable user 2FA [DESTRUCTIVE] |
+| `get_user_oidc_accounts` | List user's linked OIDC accounts |
+| `unlink_user_oidc_account` | Unlink OIDC account [DESTRUCTIVE] |
+
+### API Keys (4)
+
+| Tool | Description |
+|------|-------------|
+| `create_api_key` | Create new API key (shown once, then redacted) |
+| `list_api_keys` | List all API keys |
+| `get_api_key` | Get API key details |
+| `delete_api_key` | Revoke API key [DESTRUCTIVE] |
+
+### OIDC/SSO Providers (5)
+
+| Tool | Description |
+|------|-------------|
+| `list_oidc_providers` | List OIDC providers |
+| `create_oidc_provider` | Create OIDC provider |
+| `get_oidc_provider` | Get OIDC provider details |
+| `update_oidc_provider` | Update OIDC provider |
+| `delete_oidc_provider` | Delete OIDC provider [DESTRUCTIVE] |
+
+### System Settings (4)
+
+| Tool | Description |
+|------|-------------|
+| `get_system_settings` | Get all system settings |
+| `get_system_setting` | Get a single setting by key |
+| `update_system_setting` | Update a system setting |
+| `delete_system_setting` | Delete a system setting [DESTRUCTIVE] |
+
+### Audit Logs (1)
+
+| Tool | Description |
+|------|-------------|
+| `get_audit_logs` | Query audit logs with filtering |
+
+---
+
+## Troubleshooting
 
 ### MCP Server Won't Start
 
-**Check Environment Variables**:
-
-Verify that `API_URL` and `API_KEY` are correctly configured.
-
-**Test API Connection**:
-
-```bash
-curl -H "Authorization: Bearer YOUR_API_KEY" \
-     https://your-backend.com/api/urls
-```
+1. Verify `API_URL` and `API_KEY` are set
+2. Test API connection:
+   ```bash
+   curl -H "Authorization: Bearer YOUR_API_KEY" https://your-backend.com/api/urls
+   ```
 
 ### Tool Invocation Fails
 
-1. **Check API Key** - Ensure it's valid and not expired
-2. **Check Backend Service** - Ensure it's running normally
-3. **Check Network Connection** - Ensure backend is reachable
-4. **Check API Permissions** - Ensure API Key has sufficient permissions
+1. Check API Key is valid and not expired
+2. Check backend service is running
+3. Check network connectivity
+4. Check API Key has sufficient permissions
 
-### Installation Issues
+### Docker Container Issues
 
-**npm Installation Fails**:
-
-```bash
-# Clear npm cache
-npm cache clean --force
-
-# Reinstall
-npm install -g @open-short-url/mcp
-```
-
-**npx Runs Slowly**:
-
-First-time use of npx downloads the package. Switch to global installation for better performance.
+1. Ensure `API_URL` uses the Docker network hostname (e.g., `http://backend:4101`) not `localhost`
+2. Check container logs: `docker logs <container-id>`
+3. Verify health endpoint: `curl http://localhost:3200/health`
 
 ---
 
-## 🔐 Security Recommendations
+## Security Recommendations
 
-### Protect API Key
-
-- ❌ **Don't** share API Key with others
-- ❌ **Don't** commit configuration files containing API Keys to Git
-- ✅ Rotate API Keys regularly
-- ✅ Use different API Keys for different environments
-- ✅ Create dedicated API Keys with minimal permissions for MCP Server
-
-### API Key Permission Recommendations
-
-It's recommended to create a dedicated API Key for MCP Server with appropriate permissions:
-
-- ✅ URL management permissions
-- ✅ Bundle management permissions
-- ✅ Analytics data read permissions
-- ❌ System administrator permissions not needed
-- ❌ User management permissions not needed
+- Do not share or commit API Keys to Git
+- Rotate API Keys regularly
+- Use separate API Keys for different environments
+- Create dedicated API Keys with minimal permissions for MCP Server
+- The MCP server automatically redacts sensitive data (keys, tokens, passwords) in all responses
 
 ---
 
-## 📚 Related Resources
+## Related Resources
 
 - [Open Short URL Main Project](https://github.com/supra126/open-short-url)
-- [Model Context Protocol Official Documentation](https://modelcontextprotocol.io)
+- [Model Context Protocol Documentation](https://modelcontextprotocol.io)
 
 ---
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT License - see the [LICENSE](LICENSE) file for details.

@@ -107,7 +107,7 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     delete_short_url: {
-      description: 'Delete the specified short URL and all related data (including click records).',
+      description: '[DESTRUCTIVE] Delete the specified short URL and all related data (including click records). Always confirm with the user before executing.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -221,7 +221,7 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     bulk_delete_urls: {
-      description: 'Bulk delete multiple short URLs and all their related data (max 100).',
+      description: '[DESTRUCTIVE] Bulk delete multiple short URLs and all their related data (max 100). Always confirm with the user before executing.',
       inputSchema: {
         type: 'object',
         properties: {

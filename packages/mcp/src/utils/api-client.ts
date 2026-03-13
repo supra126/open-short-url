@@ -33,6 +33,38 @@ import type {
   BundleStatsResponse,
   AddUrlToBundleRequest,
   AddMultipleUrlsRequest,
+  CreateRoutingRuleRequest,
+  UpdateRoutingRuleRequest,
+  RoutingRuleResponse,
+  RoutingRulesListResponse,
+  UpdateSmartRoutingSettingsRequest,
+  SmartRoutingSettingsResponse,
+  CreateFromTemplateRequest,
+  TemplateListResponse,
+  CreateWebhookRequest,
+  UpdateWebhookRequest,
+  WebhookResponse,
+  WebhookListResponse,
+  WebhookLogsListResponse,
+  WebhookTestResponse,
+  CreateUserRequest,
+  UpdateUserRoleRequest,
+  UpdateUserStatusRequest,
+  UpdateUserNameRequest,
+  ResetPasswordRequest,
+  UserResponse,
+  UserListResponse,
+  OidcAccountResponse,
+  CreateApiKeyRequest,
+  CreateApiKeyResponse,
+  ApiKeyListResponse,
+  CreateOidcProviderRequest,
+  UpdateOidcProviderRequest,
+  OidcProviderResponse,
+  UpdateSystemSettingRequest,
+  SystemSettingResponse,
+  AuditLogListResponse,
+  ExportQueryParams,
 } from '../types/api.js';
 
 interface AnalyticsQueryParams {
@@ -105,6 +137,43 @@ export class ApiClient {
     }
 
     return response.json() as Promise<T>;
+  }
+
+  /**
+   * Make an authenticated request and return the response as text.
+   * Used for endpoints that return non-JSON content (e.g., CSV export).
+   */
+  private async requestText(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<string> {
+    const url = `${this.baseUrl}${endpoint}`;
+
+    const headers: Record<string, string> = {
+      ...(options.headers as Record<string, string>),
+    };
+
+    if (this.cookies) {
+      headers['Cookie'] = this.cookies;
+    } else if (this.apiKey) {
+      headers['Authorization'] = `Bearer ${this.apiKey}`;
+    }
+
+    const response = await fetch(url, { ...options, headers });
+
+    if (!response.ok) {
+      let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      try {
+        const errorText = await response.text();
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.message || errorMessage;
+      } catch {
+        // Use default error message
+      }
+      throw new Error(errorMessage);
+    }
+
+    return response.text();
   }
 
   /**
@@ -400,5 +469,345 @@ export class ApiClient {
     return this.request<BundleResponse>(`/api/bundles/${bundleId}/restore`, {
       method: 'POST',
     });
+  }
+
+  // ==================== Routing Rules ====================
+
+  async createRoutingRule(
+    urlId: string,
+    data: CreateRoutingRuleRequest
+  ): Promise<RoutingRuleResponse> {
+    return this.request<RoutingRuleResponse>(`/api/urls/${urlId}/routing-rules`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async createRoutingRuleFromTemplate(
+    urlId: string,
+    data: CreateFromTemplateRequest
+  ): Promise<RoutingRuleResponse> {
+    return this.request<RoutingRuleResponse>(
+      `/api/urls/${urlId}/routing-rules/from-template`,
+      { method: 'POST', body: JSON.stringify(data) }
+    );
+  }
+
+  async listRoutingRules(urlId: string): Promise<RoutingRulesListResponse> {
+    return this.request<RoutingRulesListResponse>(
+      `/api/urls/${urlId}/routing-rules`
+    );
+  }
+
+  async getRoutingRule(
+    urlId: string,
+    ruleId: string
+  ): Promise<RoutingRuleResponse> {
+    return this.request<RoutingRuleResponse>(
+      `/api/urls/${urlId}/routing-rules/${ruleId}`
+    );
+  }
+
+  async updateRoutingRule(
+    urlId: string,
+    ruleId: string,
+    data: UpdateRoutingRuleRequest
+  ): Promise<RoutingRuleResponse> {
+    return this.request<RoutingRuleResponse>(
+      `/api/urls/${urlId}/routing-rules/${ruleId}`,
+      { method: 'PUT', body: JSON.stringify(data) }
+    );
+  }
+
+  async deleteRoutingRule(urlId: string, ruleId: string): Promise<void> {
+    return this.request<void>(
+      `/api/urls/${urlId}/routing-rules/${ruleId}`,
+      { method: 'DELETE' }
+    );
+  }
+
+  async updateSmartRoutingSettings(
+    urlId: string,
+    data: UpdateSmartRoutingSettingsRequest
+  ): Promise<SmartRoutingSettingsResponse> {
+    return this.request<SmartRoutingSettingsResponse>(
+      `/api/urls/${urlId}/routing-rules/settings`,
+      { method: 'PATCH', body: JSON.stringify(data) }
+    );
+  }
+
+  async getRoutingTemplates(): Promise<TemplateListResponse> {
+    return this.request<TemplateListResponse>('/api/routing-templates');
+  }
+
+  // ==================== Webhooks ====================
+
+  async createWebhook(data: CreateWebhookRequest): Promise<WebhookResponse> {
+    return this.request<WebhookResponse>('/api/webhooks', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listWebhooks(params?: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<WebhookListResponse> {
+    return this.request<WebhookListResponse>(
+      `/api/webhooks${this.buildQuery(params)}`
+    );
+  }
+
+  async getWebhook(id: string): Promise<WebhookResponse> {
+    return this.request<WebhookResponse>(`/api/webhooks/${id}`);
+  }
+
+  async updateWebhook(
+    id: string,
+    data: UpdateWebhookRequest
+  ): Promise<WebhookResponse> {
+    return this.request<WebhookResponse>(`/api/webhooks/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteWebhook(id: string): Promise<void> {
+    return this.request<void>(`/api/webhooks/${id}`, { method: 'DELETE' });
+  }
+
+  async getWebhookLogs(
+    id: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<WebhookLogsListResponse> {
+    return this.request<WebhookLogsListResponse>(
+      `/api/webhooks/${id}/logs${this.buildQuery(params)}`
+    );
+  }
+
+  async testWebhook(id: string): Promise<WebhookTestResponse> {
+    return this.request<WebhookTestResponse>(`/api/webhooks/${id}/test`, {
+      method: 'POST',
+    });
+  }
+
+  // ==================== User Management (Admin) ====================
+
+  async createUser(data: CreateUserRequest): Promise<UserResponse> {
+    return this.request<UserResponse>('/api/users', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listUsers(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    role?: string;
+    isActive?: boolean;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<UserListResponse> {
+    return this.request<UserListResponse>(
+      `/api/users${this.buildQuery(params)}`
+    );
+  }
+
+  async getUser(id: string): Promise<UserResponse> {
+    return this.request<UserResponse>(`/api/users/${id}`);
+  }
+
+  async updateUserRole(
+    id: string,
+    data: UpdateUserRoleRequest
+  ): Promise<UserResponse> {
+    return this.request<UserResponse>(`/api/users/${id}/role`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateUserStatus(
+    id: string,
+    data: UpdateUserStatusRequest
+  ): Promise<UserResponse> {
+    return this.request<UserResponse>(`/api/users/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteUser(id: string): Promise<void> {
+    return this.request<void>(`/api/users/${id}`, { method: 'DELETE' });
+  }
+
+  async resetUserPassword(
+    id: string,
+    data: ResetPasswordRequest
+  ): Promise<void> {
+    return this.request<void>(`/api/users/${id}/reset-password`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateUserName(
+    id: string,
+    data: UpdateUserNameRequest
+  ): Promise<UserResponse> {
+    return this.request<UserResponse>(`/api/users/${id}/name`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async disableUser2FA(id: string): Promise<void> {
+    return this.request<void>(`/api/users/${id}/2fa`, {
+      method: 'PATCH',
+      body: JSON.stringify({ enabled: false }),
+    });
+  }
+
+  async getUserOidcAccounts(id: string): Promise<OidcAccountResponse[]> {
+    return this.request<OidcAccountResponse[]>(
+      `/api/users/${id}/oidc-accounts`
+    );
+  }
+
+  async unlinkUserOidcAccount(
+    userId: string,
+    accountId: string
+  ): Promise<void> {
+    return this.request<void>(
+      `/api/users/${userId}/oidc-accounts/${accountId}`,
+      { method: 'DELETE' }
+    );
+  }
+
+  // ==================== API Keys ====================
+
+  async createApiKey(data: CreateApiKeyRequest): Promise<CreateApiKeyResponse> {
+    return this.request<CreateApiKeyResponse>('/api/api-keys', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async listApiKeys(params?: {
+    page?: number;
+    limit?: number;
+    sortBy?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<ApiKeyListResponse> {
+    return this.request<ApiKeyListResponse>(
+      `/api/api-keys${this.buildQuery(params)}`
+    );
+  }
+
+  async getApiKey(id: string): Promise<CreateApiKeyResponse> {
+    return this.request<CreateApiKeyResponse>(`/api/api-keys/${id}`);
+  }
+
+  async deleteApiKey(id: string): Promise<void> {
+    return this.request<void>(`/api/api-keys/${id}`, { method: 'DELETE' });
+  }
+
+  // ==================== OIDC Providers (Admin) ====================
+
+  async listOidcProviders(): Promise<OidcProviderResponse[]> {
+    return this.request<OidcProviderResponse[]>('/api/admin/oidc-providers');
+  }
+
+  async createOidcProvider(
+    data: CreateOidcProviderRequest
+  ): Promise<OidcProviderResponse> {
+    return this.request<OidcProviderResponse>('/api/admin/oidc-providers', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getOidcProvider(slug: string): Promise<OidcProviderResponse> {
+    return this.request<OidcProviderResponse>(
+      `/api/admin/oidc-providers/${slug}`
+    );
+  }
+
+  async updateOidcProvider(
+    slug: string,
+    data: UpdateOidcProviderRequest
+  ): Promise<OidcProviderResponse> {
+    return this.request<OidcProviderResponse>(
+      `/api/admin/oidc-providers/${slug}`,
+      { method: 'PUT', body: JSON.stringify(data) }
+    );
+  }
+
+  async deleteOidcProvider(slug: string): Promise<void> {
+    return this.request<void>(`/api/admin/oidc-providers/${slug}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== Settings (Admin) ====================
+
+  async getSystemSettings(): Promise<SystemSettingResponse[]> {
+    return this.request<SystemSettingResponse[]>('/api/settings/system');
+  }
+
+  async getSystemSetting(key: string): Promise<SystemSettingResponse> {
+    return this.request<SystemSettingResponse>(`/api/settings/system/${key}`);
+  }
+
+  async updateSystemSetting(
+    key: string,
+    data: UpdateSystemSettingRequest
+  ): Promise<SystemSettingResponse> {
+    return this.request<SystemSettingResponse>(`/api/settings/system/${key}`, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteSystemSetting(key: string): Promise<void> {
+    return this.request<void>(`/api/settings/system/${key}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // ==================== Audit Logs (Admin) ====================
+
+  async getAuditLogs(params?: {
+    page?: number;
+    limit?: number;
+    action?: string;
+    entityType?: string;
+    entityId?: string;
+    userId?: string;
+    startDate?: string;
+    endDate?: string;
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<AuditLogListResponse> {
+    return this.request<AuditLogListResponse>(
+      `/api/audit-logs${this.buildQuery(params)}`
+    );
+  }
+
+  // ==================== Analytics Export ====================
+
+  async exportUrlAnalytics(
+    urlId: string,
+    params?: ExportQueryParams
+  ): Promise<string> {
+    const query = this.buildQuery(params);
+    return this.requestText(`/api/analytics/urls/${urlId}/export${query}`);
+  }
+
+  async exportAllAnalytics(params?: ExportQueryParams): Promise<string> {
+    const query = this.buildQuery(params);
+    return this.requestText(`/api/analytics/export${query}`);
   }
 }

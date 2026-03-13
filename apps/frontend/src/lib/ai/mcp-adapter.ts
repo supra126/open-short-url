@@ -7,6 +7,13 @@ import {
   registerAnalyticsTools,
   registerVariantTools,
   registerBundleTools,
+  registerRoutingTools,
+  registerWebhookTools,
+  registerUserTools,
+  registerApiKeyTools,
+  registerOidcTools,
+  registerSettingsTools,
+  registerAuditLogTools,
 } from '@open-short-url/mcp';
 import { getCookies } from './request-context';
 import { ErrorHandler } from '@/lib/error-handler';
@@ -34,9 +41,28 @@ interface MCPTool {
 }
 
 /**
+ * Register all MCP tools with the given API client
+ */
+function registerAllTools(apiClient: ApiClient): Record<string, MCPTool> {
+  return {
+    ...registerUrlTools(apiClient),
+    ...registerAnalyticsTools(apiClient),
+    ...registerVariantTools(apiClient),
+    ...registerBundleTools(apiClient),
+    ...registerRoutingTools(apiClient),
+    ...registerWebhookTools(apiClient),
+    ...registerUserTools(apiClient),
+    ...registerApiKeyTools(apiClient),
+    ...registerOidcTools(apiClient),
+    ...registerSettingsTools(apiClient),
+    ...registerAuditLogTools(apiClient),
+  } as Record<string, MCPTool>;
+}
+
+/**
  * Convert a single MCP tool to Vercel AI SDK format
  */
-function convertMCPTool(mcpTool: MCPTool): Tool {
+function convertMCPTool(toolName: string, mcpTool: MCPTool): Tool {
   // Create the zod schema from JSON Schema
   const zodInputSchema = jsonSchemaToZod(mcpTool.inputSchema) as z.ZodObject<Record<string, z.ZodTypeAny>>;
 
@@ -54,28 +80,12 @@ function convertMCPTool(mcpTool: MCPTool): Tool {
         // Create MCP API Client with cookie authentication
         const apiClient = new ApiClient(apiUrl, { cookies });
 
-        // Create a temporary set of tools with this client
-        // We need to re-register tools with the authenticated client
-        const urlTools = registerUrlTools(apiClient);
-        const analyticsTools = registerAnalyticsTools(apiClient);
-        const variantTools = registerVariantTools(apiClient);
-        const bundleTools = registerBundleTools(apiClient);
-
-        const allMCPTools: Record<string, MCPTool> = {
-          ...urlTools,
-          ...analyticsTools,
-          ...variantTools,
-          ...bundleTools,
-        } as Record<string, MCPTool>;
-
-        // Find the matching tool by comparing descriptions
-        // (since we don't have the original tool name here)
-        const matchingTool = Object.values(allMCPTools).find(
-          (t) => t.description === mcpTool.description
-        );
+        // Register tools with authenticated client and look up by name
+        const allMCPTools = registerAllTools(apiClient);
+        const matchingTool = allMCPTools[toolName];
 
         if (!matchingTool) {
-          throw new Error('Tool not found');
+          throw new Error(`Tool not found: ${toolName}`);
         }
 
         // Execute the MCP tool handler
@@ -134,26 +144,15 @@ export function createAllMCPTools() {
   const dummyClient = new ApiClient('http://localhost:3100', { apiKey: 'dummy' });
 
   // Register all MCP tools
-  const urlTools = registerUrlTools(dummyClient);
-  const analyticsTools = registerAnalyticsTools(dummyClient);
-  const variantTools = registerVariantTools(dummyClient);
-  const bundleTools = registerBundleTools(dummyClient);
-
-  const allMCPTools: Record<string, MCPTool> = {
-    ...urlTools,
-    ...analyticsTools,
-    ...variantTools,
-    ...bundleTools,
-  } as Record<string, MCPTool>;
+  const allMCPTools = registerAllTools(dummyClient);
 
   // Convert all MCP tools to Vercel AI SDK format
   const convertedTools: Record<string, Tool> = {};
 
-  for (const name of Object.keys(allMCPTools)) {
-    const mcpTool = allMCPTools[name];
+  for (const [name, mcpTool] of Object.entries(allMCPTools)) {
     // Convert snake_case to camelCase for better JS naming
     const camelCaseName = name.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
-    convertedTools[camelCaseName] = convertMCPTool(mcpTool);
+    convertedTools[camelCaseName] = convertMCPTool(name, mcpTool);
   }
 
   return convertedTools;

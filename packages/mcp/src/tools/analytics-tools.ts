@@ -130,5 +130,56 @@ export function registerAnalyticsTools(apiClient: ApiClient) {
         return apiClient.getRoutingAnalytics(urlId, params);
       }),
     },
+
+    export_url_analytics: {
+      description: 'Export analytics data for a specific short URL in CSV or JSON format.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          urlId: { type: 'string', description: 'Short URL ID' },
+          timeRange: {
+            type: 'string',
+            enum: ['last_7_days', 'last_30_days', 'last_90_days', 'last_365_days', 'custom'],
+            description: 'Time range preset (optional, defaults to last_7_days)',
+          },
+          startDate: { type: 'string', description: 'Start date for custom range (ISO 8601 format, optional)' },
+          endDate: { type: 'string', description: 'End date for custom range (ISO 8601 format, optional)' },
+          format: {
+            type: 'string',
+            enum: ['csv', 'json'],
+            description: 'Export format (optional, defaults to csv)',
+          },
+          includeClicks: { type: 'boolean', description: 'Include individual click records (optional, defaults to false)' },
+        },
+        required: ['urlId'],
+      },
+      handler: handleTool((args) => {
+        const { urlId, ...params } = args;
+        return apiClient.exportUrlAnalytics(urlId, params);
+      }),
+    },
+
+    export_all_analytics: {
+      description: 'Export analytics data for all short URLs in CSV or JSON format.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          timeRange: {
+            type: 'string',
+            enum: ['last_7_days', 'last_30_days', 'last_90_days', 'last_365_days', 'custom'],
+            description: 'Time range preset (optional, defaults to last_7_days)',
+          },
+          startDate: { type: 'string', description: 'Start date for custom range (ISO 8601 format, optional)' },
+          endDate: { type: 'string', description: 'End date for custom range (ISO 8601 format, optional)' },
+          format: {
+            type: 'string',
+            enum: ['csv', 'json'],
+            description: 'Export format (optional, defaults to csv)',
+          },
+          includeClicks: { type: 'boolean', description: 'Include individual click records (optional, defaults to false)' },
+        },
+      },
+      handler: handleTool((args) => apiClient.exportAllAnalytics(args)),
+    },
   };
 }

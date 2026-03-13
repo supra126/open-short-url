@@ -89,6 +89,23 @@ services:
     depends_on:
       - backend
 
+  # --- MCP Server (optional) ---
+  # Enable with: docker compose -f docker-compose.quickstart.yml --profile mcp up -d
+  mcp:
+    image: ghcr.io/supra126/open-short-url-mcp:${IMAGE_TAG:-latest}
+    profiles: ["mcp"]
+    restart: unless-stopped
+    environment:
+      API_URL: http://backend:4101
+      API_KEY: "${MCP_API_KEY:-}"
+      MCP_TRANSPORT: http
+      MCP_PORT: 3200
+      MCP_HOST: 0.0.0.0
+    ports:
+      - "3200:3200"
+    depends_on:
+      - backend
+
 volumes:
   quickstart_postgres:
   quickstart_redis:

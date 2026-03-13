@@ -106,6 +106,24 @@ services:
     depends_on:
       - backend
 
+  # --- MCP Server (Model Context Protocol) ---
+  # Optional: Enable AI assistant integration
+  # Requires an API key from the backend
+  mcp:
+    image: ghcr.io/supra126/open-short-url-mcp:${IMAGE_TAG:-latest}
+    profiles: ["mcp"]
+    restart: unless-stopped
+    environment:
+      API_URL: http://backend:4101
+      API_KEY: ${MCP_API_KEY:-}
+      MCP_TRANSPORT: http
+      MCP_PORT: 3200
+      MCP_HOST: 0.0.0.0
+    ports:
+      - "${MCP_PORT:-3200}:3200"
+    depends_on:
+      - backend
+
   # --- Caddy (SSL reverse proxy) ---
   # Activate with: docker compose --profile ssl up -d
   caddy:
