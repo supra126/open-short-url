@@ -21,13 +21,15 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
           registry-url: https://registry.npmjs.org
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm --filter @open-short-url/mcp build
-      - run: pnpm --filter @open-short-url/mcp publish --provenance --access public --no-git-checks
+      - name: Publish to npm
+        working-directory: packages/mcp
+        run: pnpm publish --no-git-checks --provenance --access public
 
   build:
     runs-on: ubuntu-latest
