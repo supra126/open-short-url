@@ -1,4 +1,4 @@
-name: Build & Publish Docker Images
+name: Release
 
 on:
   release:
@@ -9,6 +9,26 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  publish-npm:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @open-short-url/mcp build
+      - run: pnpm --filter @open-short-url/mcp publish --provenance --access public --no-git-checks
+
   build:
     runs-on: ubuntu-latest
     permissions:
