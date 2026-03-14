@@ -38,17 +38,16 @@ COPY packages/mcp/ packages/mcp/
 WORKDIR /app/packages/mcp
 RUN pnpm build
 
-# --- Stage 3: Deploy bundle ---
+# --- Stage 3: Deploy bundle (resolve pnpm symlinks) ---
 FROM node:22-slim AS deployer
 
 RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 
 WORKDIR /app
-
 COPY --from=builder /app ./
 
-WORKDIR /app/packages/mcp
-RUN pnpm deploy --prod /deploy
+RUN echo "inject-workspace-packages=true" >> /app/.npmrc
+RUN pnpm --filter @open-short-url/mcp deploy --prod /deploy
 
 # --- Stage 4: Production ---
 FROM node:22-slim AS runner

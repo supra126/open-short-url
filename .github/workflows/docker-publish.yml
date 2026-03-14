@@ -29,7 +29,7 @@ jobs:
       - run: pnpm --filter @open-short-url/mcp build
       - name: Publish to npm
         working-directory: packages/mcp
-        run: pnpm publish --no-git-checks --provenance --access public
+        run: pnpm publish --no-git-checks --provenance --access public || true
 
   build:
     runs-on: ubuntu-latest
