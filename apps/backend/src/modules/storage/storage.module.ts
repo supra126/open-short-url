@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit, Inject } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { StorageService } from './storage.service';
 import { IStorageProvider } from './interfaces/storage-provider.interface';
@@ -25,4 +25,15 @@ import { S3StorageProvider } from './providers/s3-storage.provider';
   ],
   exports: [StorageService],
 })
-export class StorageModule {}
+export class StorageModule implements OnModuleInit {
+  constructor(
+    @Inject('STORAGE_PROVIDER')
+    private readonly storageProvider: IStorageProvider
+  ) {}
+
+  async onModuleInit(): Promise<void> {
+    if (this.storageProvider.onModuleInit) {
+      await this.storageProvider.onModuleInit();
+    }
+  }
+}

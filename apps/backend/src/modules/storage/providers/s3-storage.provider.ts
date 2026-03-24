@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   S3Client,
@@ -9,6 +9,9 @@ import {
   GetObjectCommand,
   ListObjectsV2Command,
   CopyObjectCommand,
+  CreateBucketCommand,
+  HeadBucketCommand,
+  type BucketLocationConstraint,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { Readable } from 'stream';
@@ -30,7 +33,7 @@ import {
  * Supports AWS S3, Cloudflare R2, MinIO
  */
 @Injectable()
-export class S3StorageProvider implements IStorageProvider {
+export class S3StorageProvider implements IStorageProvider, OnModuleInit {
   private readonly logger = new Logger(S3StorageProvider.name);
   private readonly s3Client: S3Client;
   private readonly endpoint?: string;
@@ -38,6 +41,7 @@ export class S3StorageProvider implements IStorageProvider {
   private readonly publicUrl?: string;
   private readonly globalPrefix?: string;
   private readonly isR2: boolean;
+  private readonly defaultBucket: string;
 
   private readonly MAX_DELETE_OBJECTS = 1000;
 
@@ -48,6 +52,8 @@ export class S3StorageProvider implements IStorageProvider {
     this.globalPrefix = this.configService.get<string>('S3_GLOBAL_PREFIX');
 
     this.isR2 = this.endpoint?.includes('r2.cloudflarestorage.com') || false;
+
+    this.defaultBucket = this.configService.get<string>('S3_BUCKET', '');
 
     this.s3Client = new S3Client({
       region: this.region,
@@ -75,6 +81,59 @@ export class S3StorageProvider implements IStorageProvider {
       this.logger.warn(
         'Detected Cloudflare R2: ACL will be ignored. All files will use Pre-signed URLs for access.'
       );
+    }
+  }
+
+  async onModuleInit(): Promise<void> {
+    if (!this.defaultBucket) return;
+
+    try {
+      await this.s3Client.send(
+        new HeadBucketCommand({ Bucket: this.defaultBucket })
+      );
+      this.logger.log(`Bucket "${this.defaultBucket}" exists`);
+    } catch (error: any) {
+      if (
+        error.name === 'NotFound' ||
+        error.$metadata?.httpStatusCode === 404
+      ) {
+        await this.createBucket();
+      } else {
+        this.logger.error(
+          `Failed to verify bucket "${this.defaultBucket}": ${error.message}`
+        );
+        throw error;
+      }
+    }
+  }
+
+  private async createBucket(): Promise<void> {
+    const params: CreateBucketCommand['input'] = {
+      Bucket: this.defaultBucket,
+    };
+
+    if (!this.endpoint && this.region !== 'us-east-1') {
+      params.CreateBucketConfiguration = {
+        LocationConstraint: this.region as BucketLocationConstraint,
+      };
+    }
+
+    try {
+      await this.s3Client.send(new CreateBucketCommand(params));
+      this.logger.log(`Bucket "${this.defaultBucket}" created`);
+    } catch (createError: any) {
+      if (
+        createError.name === 'BucketAlreadyOwnedByYou' ||
+        createError.name === 'BucketAlreadyExists'
+      ) {
+        this.logger.log(`Bucket "${this.defaultBucket}" already exists`);
+        return;
+      }
+      this.logger.error(
+        `Failed to create bucket "${this.defaultBucket}"`,
+        createError instanceof Error ? createError.stack : undefined
+      );
+      throw createError;
     }
   }
 

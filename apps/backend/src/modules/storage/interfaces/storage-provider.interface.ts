@@ -68,6 +68,7 @@ export interface GetObjectResult {
 }
 
 export interface IStorageProvider {
+  onModuleInit?(): Promise<void>;
   upload(options: UploadOptions): Promise<UploadResult>;
   delete(options: DeleteOptions): Promise<void>;
   deleteMany(bucket: string, keys: string[]): Promise<void>;
