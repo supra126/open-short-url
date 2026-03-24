@@ -18,6 +18,8 @@ export interface CreateUrlRequest {
   utmCampaign?: string;
   utmTerm?: string;
   utmContent?: string;
+  utmId?: string;
+  utmSourcePlatform?: string;
 }
 
 export interface UpdateUrlRequest {
@@ -32,6 +34,8 @@ export interface UpdateUrlRequest {
   utmCampaign?: string;
   utmTerm?: string;
   utmContent?: string;
+  utmId?: string;
+  utmSourcePlatform?: string;
 }
 
 export interface UrlResponse {
@@ -52,6 +56,8 @@ export interface UrlResponse {
   utmCampaign?: string;
   utmTerm?: string;
   utmContent?: string;
+  utmId?: string;
+  utmSourcePlatform?: string;
 }
 
 export interface UrlListResponse {
@@ -100,6 +106,8 @@ export type BulkUpdateOperation =
       utmCampaign?: string;
       utmTerm?: string;
       utmContent?: string;
+      utmId?: string;
+      utmSourcePlatform?: string;
     };
 
 export interface BulkUpdateUrlRequest {
@@ -181,6 +189,8 @@ export interface RecentClick {
   utmSource?: string;
   utmMedium?: string;
   utmCampaign?: string;
+  utmId?: string;
+  utmSourcePlatform?: string;
 }
 
 export interface RecentClicksResponse {

@@ -10,12 +10,12 @@ Open Short URL provides detailed analytics for all your short URLs, including cl
 
 ### Click Statistics
 
-| Metric | Description |
-|--------|-------------|
-| **Total Clicks** | All clicks recorded |
-| **Unique Visitors** | Distinct visitors (by IP) |
+| Metric                 | Description               |
+| ---------------------- | ------------------------- |
+| **Total Clicks**       | All clicks recorded       |
+| **Unique Visitors**    | Distinct visitors (by IP) |
 | **Average Clicks/Day** | Daily average over period |
-| **Growth Rate** | Click growth percentage |
+| **Growth Rate**        | Click growth percentage   |
 
 ### Geographic Data
 
@@ -26,23 +26,27 @@ Track where your visitors come from:
 - **City** - City-level granularity
 
 Each location shows:
+
 - Click count
 - Percentage of total traffic
 
 ### Device & Browser
 
 **Device Types:**
+
 - Desktop
 - Mobile
 - Tablet
 - Unknown
 
 **Operating Systems:**
+
 - Windows, macOS, Linux
 - iOS, Android
 - ChromeOS, and more
 
 **Browsers:**
+
 - Chrome, Safari, Firefox
 - Edge, Opera
 - And others
@@ -50,6 +54,7 @@ Each location shows:
 ### Traffic Sources
 
 **Referrer Tracking:**
+
 - Direct traffic
 - Social media referrals
 - Search engine traffic
@@ -59,13 +64,15 @@ Each location shows:
 
 Track marketing campaigns with UTM data:
 
-| Parameter | Purpose |
-|-----------|---------|
-| `utm_source` | Traffic source (e.g., newsletter) |
-| `utm_medium` | Medium (e.g., email, cpc) |
-| `utm_campaign` | Campaign name |
-| `utm_term` | Paid search keywords |
-| `utm_content` | Content variation |
+| Parameter             | Purpose                           |
+| --------------------- | --------------------------------- |
+| `utm_source`          | Traffic source (e.g., newsletter) |
+| `utm_medium`          | Medium (e.g., email, cpc)         |
+| `utm_campaign`        | Campaign name                     |
+| `utm_term`            | Paid search keywords              |
+| `utm_content`         | Content variation                 |
+| `utm_id`              | Campaign ID (GA4 recommended)     |
+| `utm_source_platform` | Ad platform (GA4 recommended)     |
 
 ## Analytics Dashboard
 
@@ -84,6 +91,7 @@ GET /api/analytics/urls/{id}
 | `includeBots` | Include bot traffic | false |
 
 **Response includes:**
+
 - Overview statistics
 - Daily click trends
 - Geographic breakdown
@@ -118,6 +126,7 @@ GET /api/analytics/urls/{id}/recent-clicks?limit=20&includeBots=false
 ```
 
 **Response includes per click:**
+
 ```json
 {
   "id": "click_123",
@@ -136,6 +145,7 @@ GET /api/analytics/urls/{id}/recent-clicks?limit=20&includeBots=false
 ```
 
 **Limits:**
+
 - Default: 20 records
 - Maximum: 100 records
 
@@ -146,16 +156,19 @@ Automatic detection and filtering of bot traffic:
 ### Bot Analytics
 
 **Single URL:**
+
 ```
 GET /api/analytics/urls/{id}/bots
 ```
 
 **All URLs:**
+
 ```
 GET /api/analytics/bots
 ```
 
 **Response includes:**
+
 - Total bot clicks
 - Bot percentage
 - Bot name distribution (Googlebot, Bingbot, etc.)
@@ -165,6 +178,7 @@ GET /api/analytics/bots
 By default, bot traffic is excluded from analytics. Use `includeBots=true` to include it.
 
 **Detected Bot Types:**
+
 - Search engine crawlers (Googlebot, Bingbot)
 - Social media bots (FacebookBot, TwitterBot)
 - Monitoring services
@@ -179,6 +193,7 @@ Analytics supports up to **365 days** of historical data.
 ### Relative Ranges
 
 Common preset ranges:
+
 - Last 7 days
 - Last 30 days
 - Last 90 days
@@ -187,6 +202,7 @@ Common preset ranges:
 ### Timezone Support
 
 Specify timezone using IANA format:
+
 ```
 timezone=Asia/Taipei
 timezone=America/New_York
@@ -199,10 +215,10 @@ Export your analytics data for external analysis.
 
 ### Export Formats
 
-| Format | Description |
-|--------|-------------|
-| **CSV** | Spreadsheet compatible (UTF-8 BOM for Excel) |
-| **JSON** | Structured data format |
+| Format   | Description                                  |
+| -------- | -------------------------------------------- |
+| **CSV**  | Spreadsheet compatible (UTF-8 BOM for Excel) |
+| **JSON** | Structured data format                       |
 
 ### Single URL Export
 
@@ -265,10 +281,10 @@ iOS,500,33.3%
 
 ### Export Limits
 
-| Setting | Value |
-|---------|-------|
+| Setting                | Value  |
+| ---------------------- | ------ |
 | Max records per export | 10,000 |
-| Batch size | 1,000 |
+| Batch size             | 1,000  |
 
 ## A/B Test Analytics
 
@@ -279,6 +295,7 @@ GET /api/analytics/ab-tests
 ```
 
 **Response includes:**
+
 - URLs with A/B testing enabled
 - Click distribution per variant
 - Conversion comparison
@@ -294,6 +311,7 @@ GET /api/analytics/urls/{id}/routing
 ```
 
 **Response includes:**
+
 - Rule match counts
 - Traffic distribution
 - Time series trends
@@ -306,26 +324,27 @@ See [Smart Routing](/en/features/smart-routing) for details.
 
 Analytics data is cached for performance:
 
-| Data Type | Cache TTL |
-|-----------|-----------|
+| Data Type         | Cache TTL  |
+| ----------------- | ---------- |
 | Analytics summary | 30 minutes |
-| Click trends | 30 minutes |
-| Top URLs | 30 minutes |
+| Click trends      | 30 minutes |
+| Top URLs          | 30 minutes |
 
 Cache is invalidated when new clicks are recorded.
 
 ### Performance Thresholds
 
-| Setting | Value | Description |
-|---------|-------|-------------|
-| `MAX_IN_MEMORY_CLICKS` | 50,000 | Switch to DB aggregation |
-| `AGGREGATION_THRESHOLD` | 10,000 | Use GROUP BY queries |
+| Setting                 | Value  | Description              |
+| ----------------------- | ------ | ------------------------ |
+| `MAX_IN_MEMORY_CLICKS`  | 50,000 | Switch to DB aggregation |
+| `AGGREGATION_THRESHOLD` | 10,000 | Use GROUP BY queries     |
 
 ## Privacy Considerations
 
 ### Data Collection
 
 Open Short URL collects:
+
 - IP addresses (for geographic data)
 - User agent strings (for device/browser detection)
 - Referrer URLs (for traffic source analysis)

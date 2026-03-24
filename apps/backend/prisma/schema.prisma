@@ -128,11 +128,13 @@ model Url {
   expiresAt DateTime? // optional expiration
 
   // UTM Parameters
-  utmSource   String?
-  utmMedium   String?
-  utmCampaign String?
-  utmTerm     String?
-  utmContent  String?
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  utmTerm           String?
+  utmContent        String?
+  utmId             String? // GA4: Campaign ID
+  utmSourcePlatform String? // GA4: Platform (e.g., google, meta)
 
   // OG Meta (Social Preview)
   ogTitle         String?
@@ -204,11 +206,13 @@ model Click {
   city    String?
 
   // UTM Parameters (captured from actual click, not from URL settings)
-  utmSource   String?
-  utmMedium   String?
-  utmCampaign String?
-  utmTerm     String?
-  utmContent  String?
+  utmSource         String?
+  utmMedium         String?
+  utmCampaign       String?
+  utmTerm           String?
+  utmContent        String?
+  utmId             String?
+  utmSourcePlatform String?
 
   // Timestamp
   createdAt DateTime @default(now())

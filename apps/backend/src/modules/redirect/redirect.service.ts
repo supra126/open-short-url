@@ -28,6 +28,8 @@ interface ClickData {
   utmCampaign?: string;
   utmTerm?: string;
   utmContent?: string;
+  utmId?: string;
+  utmSourcePlatform?: string;
 }
 
 interface UrlVariant {
@@ -53,6 +55,8 @@ interface UrlRecord {
   utmCampaign: string | null;
   utmTerm: string | null;
   utmContent: string | null;
+  utmId: string | null;
+  utmSourcePlatform: string | null;
   variants?: UrlVariant[];
 }
 
@@ -251,6 +255,8 @@ export class RedirectService {
       utmCampaign: clickData.utmCampaign || url.utmCampaign,
       utmTerm: clickData.utmTerm || url.utmTerm,
       utmContent: clickData.utmContent || url.utmContent,
+      utmId: clickData.utmId || url.utmId,
+      utmSourcePlatform: clickData.utmSourcePlatform || url.utmSourcePlatform,
     };
 
     // Emit async event to record click (fire and forget)
@@ -287,6 +293,9 @@ export class RedirectService {
         utm_campaign: clickData.utmCampaign || url.utmCampaign,
         utm_term: clickData.utmTerm || url.utmTerm,
         utm_content: clickData.utmContent || url.utmContent,
+        utm_id: clickData.utmId || url.utmId,
+        utm_source_platform:
+          clickData.utmSourcePlatform || url.utmSourcePlatform,
       };
 
       // Append UTM parameters to redirect URL

@@ -120,6 +120,28 @@ export class CreateUrlDto {
   utmContent?: string;
 
   @ApiPropertyOptional({
+    description: 'UTM Campaign ID (GA4 recommended)',
+    example: 'abc123',
+    maxLength: 255,
+  })
+  @IsString()
+  @MaxLength(255, { message: 'UTM ID must not exceed 255 characters' })
+  @IsOptional()
+  utmId?: string;
+
+  @ApiPropertyOptional({
+    description: 'UTM Source Platform (GA4 recommended, e.g., google, meta)',
+    example: 'google',
+    maxLength: 255,
+  })
+  @IsString()
+  @MaxLength(255, {
+    message: 'UTM Source Platform must not exceed 255 characters',
+  })
+  @IsOptional()
+  utmSourcePlatform?: string;
+
+  @ApiPropertyOptional({
     description: 'OG Title for social preview',
     example: 'Check out this amazing deal!',
     maxLength: 100,

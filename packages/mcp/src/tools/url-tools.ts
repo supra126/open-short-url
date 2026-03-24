@@ -67,6 +67,15 @@ export function registerUrlTools(apiClient: ApiClient) {
             type: 'string',
             description: 'UTM content parameter (optional)',
           },
+          utmId: {
+            type: 'string',
+            description: 'UTM campaign ID - GA4 recommended (optional)',
+          },
+          utmSourcePlatform: {
+            type: 'string',
+            description:
+              'UTM source platform - GA4 recommended, e.g., google, meta (optional)',
+          },
           ogTitle: {
             type: 'string',
             description:
@@ -189,6 +198,14 @@ export function registerUrlTools(apiClient: ApiClient) {
           utmContent: {
             type: 'string',
             description: 'UTM content parameter (optional)',
+          },
+          utmId: {
+            type: 'string',
+            description: 'UTM campaign ID - GA4 recommended (optional)',
+          },
+          utmSourcePlatform: {
+            type: 'string',
+            description: 'UTM source platform - GA4 recommended (optional)',
           },
           ogTitle: {
             type: 'string',
@@ -320,6 +337,15 @@ export function registerUrlTools(apiClient: ApiClient) {
                   type: 'string',
                   description: 'UTM content (optional)',
                 },
+                utmId: {
+                  type: 'string',
+                  description: 'UTM campaign ID - GA4 recommended (optional)',
+                },
+                utmSourcePlatform: {
+                  type: 'string',
+                  description:
+                    'UTM source platform - GA4 recommended (optional)',
+                },
               },
               required: ['originalUrl'],
             },
@@ -388,6 +414,14 @@ export function registerUrlTools(apiClient: ApiClient) {
               utmContent: {
                 type: 'string',
                 description: 'UTM content (for type=utm)',
+              },
+              utmId: {
+                type: 'string',
+                description: 'UTM campaign ID (for type=utm)',
+              },
+              utmSourcePlatform: {
+                type: 'string',
+                description: 'UTM source platform (for type=utm)',
               },
             },
             required: ['type'],

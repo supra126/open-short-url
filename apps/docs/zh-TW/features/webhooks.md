@@ -34,15 +34,15 @@ flowchart LR
 
 ## 支援的事件
 
-| 事件 | 說明 |
-|-----|------|
-| `url.created` | 建立新短網址 |
-| `url.updated` | 更新短網址 |
-| `url.deleted` | 刪除短網址 |
-| `url.clicked` | 短網址被點擊 |
-| `routing.rule_created` | 建立路由規則 |
-| `routing.rule_updated` | 更新路由規則 |
-| `routing.rule_deleted` | 刪除路由規則 |
+| 事件                   | 說明             |
+| ---------------------- | ---------------- |
+| `url.created`          | 建立新短網址     |
+| `url.updated`          | 更新短網址       |
+| `url.deleted`          | 刪除短網址       |
+| `url.clicked`          | 短網址被點擊     |
+| `routing.rule_created` | 建立路由規則     |
+| `routing.rule_updated` | 更新路由規則     |
+| `routing.rule_deleted` | 刪除路由規則     |
 | `routing.rule_matched` | 路由規則匹配訪客 |
 
 ## 建立 Webhook
@@ -66,14 +66,14 @@ POST /api/webhooks
 
 **參數：**
 
-| 參數 | 說明 | 必填 | 預設值 |
-|-----|------|:----:|--------|
-| `name` | Webhook 名稱（最多 100 字元） | ✅ | - |
-| `url` | 目標 URL（公開、HTTPS） | ✅ | - |
-| `secret` | 簽章密鑰（最多 255 字元） | ❌ | - |
-| `events` | 訂閱的事件 | ✅ | - |
-| `headers` | 自訂 HTTP 標頭 | ❌ | {} |
-| `isActive` | 是否啟用 | ❌ | true |
+| 參數       | 說明                          | 必填 | 預設值 |
+| ---------- | ----------------------------- | :--: | ------ |
+| `name`     | Webhook 名稱（最多 100 字元） |  ✅  | -      |
+| `url`      | 目標 URL（公開、HTTPS）       |  ✅  | -      |
+| `secret`   | 簽章密鑰（最多 255 字元）     |  ❌  | -      |
+| `events`   | 訂閱的事件                    |  ✅  | -      |
+| `headers`  | 自訂 HTTP 標頭                |  ❌  | {}     |
+| `isActive` | 是否啟用                      |  ❌  | true   |
 
 ### 事件選擇
 
@@ -193,7 +193,9 @@ DELETE /api/webhooks/{id}
       "utmMedium": "email",
       "utmCampaign": "summer",
       "utmTerm": null,
-      "utmContent": null
+      "utmContent": null,
+      "utmId": null,
+      "utmSourcePlatform": null
     }
   }
 }
@@ -221,11 +223,11 @@ DELETE /api/webhooks/{id}
 
 ### 發送的標頭
 
-| 標頭 | 說明 |
-|-----|------|
-| `X-Webhook-Signature` | HMAC-SHA256 簽章 |
-| `X-Webhook-Event` | 事件類型 |
-| `X-Webhook-Delivery-ID` | 唯一傳送 ID |
+| 標頭                    | 說明             |
+| ----------------------- | ---------------- |
+| `X-Webhook-Signature`   | HMAC-SHA256 簽章 |
+| `X-Webhook-Event`       | 事件類型         |
+| `X-Webhook-Delivery-ID` | 唯一傳送 ID      |
 
 ### 簽章格式
 
@@ -245,10 +247,9 @@ X-Webhook-Signature: sha256=<hash>
 const crypto = require('crypto');
 
 function verifyWebhookSignature(payload, signature, secret) {
-  const expectedSignature = 'sha256=' +
-    crypto.createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+  const expectedSignature =
+    'sha256=' +
+    crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
   return crypto.timingSafeEqual(
     Buffer.from(signature),
@@ -291,17 +292,18 @@ def verify_webhook_signature(payload, signature, secret):
 
 每個 webhook 追蹤：
 
-| 指標 | 說明 |
-|-----|------|
-| `totalSent` | 嘗試傳送總數 |
-| `totalSuccess` | 成功傳送數 |
-| `totalFailed` | 失敗傳送數 |
-| `lastSentAt` | 最後傳送時間 |
-| `lastError` | 最後錯誤訊息 |
+| 指標           | 說明         |
+| -------------- | ------------ |
+| `totalSent`    | 嘗試傳送總數 |
+| `totalSuccess` | 成功傳送數   |
+| `totalFailed`  | 失敗傳送數   |
+| `lastSentAt`   | 最後傳送時間 |
+| `lastError`    | 最後錯誤訊息 |
 
 ### 重試行為
 
 失敗的傳送會自動重試：
+
 - 指數退避
 - 最多重試 3 次
 - 記錄以供除錯
@@ -366,6 +368,7 @@ POST /api/webhooks/{id}/test
 ### 1. 務必驗證簽章
 
 永遠不要在未驗證的情況下信任 webhook payload：
+
 - 務必設定 webhook 密鑰
 - 驗證每個傳入請求
 - 拒絕無效簽章
@@ -373,6 +376,7 @@ POST /api/webhooks/{id}/test
 ### 2. 快速回應
 
 盡快返回 200 OK：
+
 - 非同步處理 webhook
 - 使用訊息佇列處理繁重作業
 - 在處理前回應
@@ -380,6 +384,7 @@ POST /api/webhooks/{id}/test
 ### 3. 處理冪等性
 
 Webhook 可能會傳送多次：
+
 - 儲存已處理的傳送 ID
 - 跳過重複傳送
 - 設計 handler 為冪等
@@ -387,6 +392,7 @@ Webhook 可能會傳送多次：
 ### 4. 使用 HTTPS
 
 務必使用 HTTPS 端點：
+
 - 保護 payload 資料
 - 需要用於簽章驗證
 - 防止中間人攻擊
@@ -394,6 +400,7 @@ Webhook 可能會傳送多次：
 ### 5. 監控失敗
 
 關注傳送問題：
+
 - 定期檢查 webhook 日誌
 - 設定失敗警報
 - 調查持續性錯誤
@@ -448,9 +455,9 @@ Webhook 可能會傳送多次：
 
 ## 速率限制
 
-| 操作 | 限制 |
-|-----|------|
-| Webhook 管理 | 5 次/分鐘 |
+| 操作         | 限制             |
+| ------------ | ---------------- |
+| Webhook 管理 | 5 次/分鐘        |
 | Webhook 傳送 | 無限制（非同步） |
 
 ## Webhook 逾時

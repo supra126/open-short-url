@@ -34,15 +34,15 @@ flowchart LR
 
 ## Supported Events
 
-| Event | Description |
-|-------|-------------|
-| `url.created` | New short URL created |
-| `url.updated` | Short URL updated |
-| `url.deleted` | Short URL deleted |
-| `url.clicked` | Short URL was clicked |
-| `routing.rule_created` | Routing rule created |
-| `routing.rule_updated` | Routing rule updated |
-| `routing.rule_deleted` | Routing rule deleted |
+| Event                  | Description                    |
+| ---------------------- | ------------------------------ |
+| `url.created`          | New short URL created          |
+| `url.updated`          | Short URL updated              |
+| `url.deleted`          | Short URL deleted              |
+| `url.clicked`          | Short URL was clicked          |
+| `routing.rule_created` | Routing rule created           |
+| `routing.rule_updated` | Routing rule updated           |
+| `routing.rule_deleted` | Routing rule deleted           |
 | `routing.rule_matched` | Routing rule matched a visitor |
 
 ## Creating Webhooks
@@ -66,14 +66,14 @@ POST /api/webhooks
 
 **Parameters:**
 
-| Parameter | Description | Required | Default |
-|-----------|-------------|:--------:|---------|
-| `name` | Webhook name (max 100 chars) | ✅ | - |
-| `url` | Target URL (public, HTTPS) | ✅ | - |
-| `secret` | Signing secret (max 255 chars) | ❌ | - |
-| `events` | Events to subscribe to | ✅ | - |
-| `headers` | Custom HTTP headers | ❌ | {} |
-| `isActive` | Enable webhook | ❌ | true |
+| Parameter  | Description                    | Required | Default |
+| ---------- | ------------------------------ | :------: | ------- |
+| `name`     | Webhook name (max 100 chars)   |    ✅    | -       |
+| `url`      | Target URL (public, HTTPS)     |    ✅    | -       |
+| `secret`   | Signing secret (max 255 chars) |    ❌    | -       |
+| `events`   | Events to subscribe to         |    ✅    | -       |
+| `headers`  | Custom HTTP headers            |    ❌    | {}      |
+| `isActive` | Enable webhook                 |    ❌    | true    |
 
 ### Event Selection
 
@@ -193,7 +193,9 @@ All webhook payloads include:
       "utmMedium": "email",
       "utmCampaign": "summer",
       "utmTerm": null,
-      "utmContent": null
+      "utmContent": null,
+      "utmId": null,
+      "utmSourcePlatform": null
     }
   }
 }
@@ -221,11 +223,11 @@ Verify webhook authenticity using the signature header.
 
 ### Headers Sent
 
-| Header | Description |
-|--------|-------------|
-| `X-Webhook-Signature` | HMAC-SHA256 signature |
-| `X-Webhook-Event` | Event type |
-| `X-Webhook-Delivery-ID` | Unique delivery ID |
+| Header                  | Description           |
+| ----------------------- | --------------------- |
+| `X-Webhook-Signature`   | HMAC-SHA256 signature |
+| `X-Webhook-Event`       | Event type            |
+| `X-Webhook-Delivery-ID` | Unique delivery ID    |
 
 ### Signature Format
 
@@ -245,10 +247,9 @@ X-Webhook-Signature: sha256=<hash>
 const crypto = require('crypto');
 
 function verifyWebhookSignature(payload, signature, secret) {
-  const expectedSignature = 'sha256=' +
-    crypto.createHmac('sha256', secret)
-      .update(payload)
-      .digest('hex');
+  const expectedSignature =
+    'sha256=' +
+    crypto.createHmac('sha256', secret).update(payload).digest('hex');
 
   return crypto.timingSafeEqual(
     Buffer.from(signature),
@@ -291,17 +292,18 @@ def verify_webhook_signature(payload, signature, secret):
 
 Each webhook tracks:
 
-| Metric | Description |
-|--------|-------------|
-| `totalSent` | Total deliveries attempted |
-| `totalSuccess` | Successful deliveries |
-| `totalFailed` | Failed deliveries |
-| `lastSentAt` | Last delivery timestamp |
-| `lastError` | Last error message |
+| Metric         | Description                |
+| -------------- | -------------------------- |
+| `totalSent`    | Total deliveries attempted |
+| `totalSuccess` | Successful deliveries      |
+| `totalFailed`  | Failed deliveries          |
+| `lastSentAt`   | Last delivery timestamp    |
+| `lastError`    | Last error message         |
 
 ### Retry Behavior
 
 Failed deliveries are retried automatically:
+
 - Exponential backoff
 - Maximum 3 retry attempts
 - Logged for debugging
@@ -366,6 +368,7 @@ Sends a test payload to verify your endpoint is working:
 ### 1. Always Verify Signatures
 
 Never trust webhook payloads without verification:
+
 - Always set a webhook secret
 - Verify every incoming request
 - Reject invalid signatures
@@ -373,6 +376,7 @@ Never trust webhook payloads without verification:
 ### 2. Respond Quickly
 
 Return 200 OK as fast as possible:
+
 - Process webhooks asynchronously
 - Use message queues for heavy processing
 - Respond before doing work
@@ -380,6 +384,7 @@ Return 200 OK as fast as possible:
 ### 3. Handle Idempotency
 
 Webhooks may be delivered multiple times:
+
 - Store processed delivery IDs
 - Skip duplicate deliveries
 - Design handlers to be idempotent
@@ -387,6 +392,7 @@ Webhooks may be delivered multiple times:
 ### 4. Use HTTPS
 
 Always use HTTPS endpoints:
+
 - Protects payload data
 - Required for signature verification
 - Prevents man-in-the-middle attacks
@@ -394,6 +400,7 @@ Always use HTTPS endpoints:
 ### 5. Monitor Failures
 
 Watch for delivery issues:
+
 - Check webhook logs regularly
 - Set up alerts for failures
 - Investigate persistent errors
@@ -448,10 +455,10 @@ Feed data to your own analytics:
 
 ## Rate Limits
 
-| Operation | Limit |
-|-----------|-------|
+| Operation          | Limit             |
+| ------------------ | ----------------- |
 | Webhook management | 5 requests/minute |
-| Webhook deliveries | No limit (async) |
+| Webhook deliveries | No limit (async)  |
 
 ## Webhook Timeout
 

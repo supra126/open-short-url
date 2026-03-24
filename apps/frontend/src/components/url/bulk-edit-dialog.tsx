@@ -29,7 +29,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useBulkUpdateUrls } from '@/hooks/use-bulk-urls';
 import { useBundles } from '@/hooks/use-bundles';
 import { Loader2 } from 'lucide-react';
-import type { BulkUpdateOperation, BulkUpdateOperationType } from '@/hooks/use-bulk-urls';
+import type {
+  BulkUpdateOperation,
+  BulkUpdateOperationType,
+} from '@/hooks/use-bulk-urls';
+import { UtmSection } from './utm-section';
+import { EMPTY_UTM_VALUES, type UtmValues } from '@/lib/utm-templates';
 
 interface BulkEditDialogProps {
   open: boolean;
@@ -53,11 +58,9 @@ export function BulkEditDialog({
   const [bundleId, setBundleId] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string>('');
   const [clearExpiration, setClearExpiration] = useState(false);
-  const [utmSource, setUtmSource] = useState('');
-  const [utmMedium, setUtmMedium] = useState('');
-  const [utmCampaign, setUtmCampaign] = useState('');
-  const [utmTerm, setUtmTerm] = useState('');
-  const [utmContent, setUtmContent] = useState('');
+  const [utmValues, setUtmValues] = useState<UtmValues>({
+    ...EMPTY_UTM_VALUES,
+  });
 
   // Fetch bundles for bundle selection
   const { data: bundlesData } = useBundles({ status: 'ACTIVE' });
@@ -89,11 +92,13 @@ export function BulkEditDialog({
       case 'utm':
         operation = {
           type: 'utm',
-          utmSource: utmSource || undefined,
-          utmMedium: utmMedium || undefined,
-          utmCampaign: utmCampaign || undefined,
-          utmTerm: utmTerm || undefined,
-          utmContent: utmContent || undefined,
+          utmSource: utmValues.utmSource || undefined,
+          utmMedium: utmValues.utmMedium || undefined,
+          utmCampaign: utmValues.utmCampaign || undefined,
+          utmTerm: utmValues.utmTerm || undefined,
+          utmContent: utmValues.utmContent || undefined,
+          utmId: utmValues.utmId || undefined,
+          utmSourcePlatform: utmValues.utmSourcePlatform || undefined,
         };
         break;
       default:
@@ -108,13 +113,16 @@ export function BulkEditDialog({
 
       toast({
         title: t('common.success'),
-        description: t('urls.bulk.updateSuccess', { count: result.updatedCount }),
+        description: t('urls.bulk.updateSuccess', {
+          count: result.updatedCount,
+        }),
       });
 
       onSuccess();
       handleClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('urls.bulk.updateError');
+      const message =
+        error instanceof Error ? error.message : t('urls.bulk.updateError');
       toast({
         title: t('common.error'),
         description: message,
@@ -129,11 +137,7 @@ export function BulkEditDialog({
     setBundleId('');
     setExpiresAt('');
     setClearExpiration(false);
-    setUtmSource('');
-    setUtmMedium('');
-    setUtmCampaign('');
-    setUtmTerm('');
-    setUtmContent('');
+    setUtmValues({ ...EMPTY_UTM_VALUES });
     setActiveTab('status');
     onOpenChange(false);
   };
@@ -148,11 +152,18 @@ export function BulkEditDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v: string) => setActiveTab(v as BulkUpdateOperationType)}>
+        <Tabs
+          value={activeTab}
+          onValueChange={(v: string) =>
+            setActiveTab(v as BulkUpdateOperationType)
+          }
+        >
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="status">{t('urls.bulk.tabStatus')}</TabsTrigger>
             <TabsTrigger value="bundle">{t('urls.bulk.tabBundle')}</TabsTrigger>
-            <TabsTrigger value="expiration">{t('urls.bulk.tabExpiration')}</TabsTrigger>
+            <TabsTrigger value="expiration">
+              {t('urls.bulk.tabExpiration')}
+            </TabsTrigger>
             <TabsTrigger value="utm">{t('urls.bulk.tabUtm')}</TabsTrigger>
           </TabsList>
 
@@ -160,13 +171,20 @@ export function BulkEditDialog({
           <TabsContent value="status" className="space-y-4 pt-4">
             <div className="space-y-2">
               <Label>{t('urls.status')}</Label>
-              <Select value={status} onValueChange={(v) => setStatus(v as 'ACTIVE' | 'INACTIVE')}>
+              <Select
+                value={status}
+                onValueChange={(v) => setStatus(v as 'ACTIVE' | 'INACTIVE')}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ACTIVE">{t('urls.statusActive')}</SelectItem>
-                  <SelectItem value="INACTIVE">{t('urls.statusInactive')}</SelectItem>
+                  <SelectItem value="ACTIVE">
+                    {t('urls.statusActive')}
+                  </SelectItem>
+                  <SelectItem value="INACTIVE">
+                    {t('urls.statusInactive')}
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-sm text-muted-foreground">
@@ -181,7 +199,9 @@ export function BulkEditDialog({
               <Label>{t('urls.bulk.selectBundleLabel')}</Label>
               <Select value={bundleId} onValueChange={setBundleId}>
                 <SelectTrigger>
-                  <SelectValue placeholder={t('urls.bulk.selectBundlePlaceholder')} />
+                  <SelectValue
+                    placeholder={t('urls.bulk.selectBundlePlaceholder')}
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {bundlesData?.data.map((bundle) => (
@@ -233,48 +253,7 @@ export function BulkEditDialog({
 
           {/* UTM Tab */}
           <TabsContent value="utm" className="space-y-4 pt-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>{t('urls.utmSource')}</Label>
-                <Input
-                  value={utmSource}
-                  onChange={(e) => setUtmSource(e.target.value)}
-                  placeholder={t('urls.bulk.utmSourcePlaceholder')}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('urls.utmMedium')}</Label>
-                <Input
-                  value={utmMedium}
-                  onChange={(e) => setUtmMedium(e.target.value)}
-                  placeholder={t('urls.bulk.utmMediumPlaceholder')}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('urls.utmCampaign')}</Label>
-                <Input
-                  value={utmCampaign}
-                  onChange={(e) => setUtmCampaign(e.target.value)}
-                  placeholder={t('urls.bulk.utmCampaignPlaceholder')}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>{t('urls.utmTerm')}</Label>
-                <Input
-                  value={utmTerm}
-                  onChange={(e) => setUtmTerm(e.target.value)}
-                  placeholder={t('urls.bulk.utmTermPlaceholder')}
-                />
-              </div>
-              <div className="col-span-2 space-y-2">
-                <Label>{t('urls.utmContent')}</Label>
-                <Input
-                  value={utmContent}
-                  onChange={(e) => setUtmContent(e.target.value)}
-                  placeholder={t('urls.bulk.utmContentPlaceholder')}
-                />
-              </div>
-            </div>
+            <UtmSection values={utmValues} onChange={setUtmValues} />
             <p className="text-sm text-muted-foreground">
               {t('urls.bulk.utmHelp')}
             </p>
@@ -286,7 +265,9 @@ export function BulkEditDialog({
             {t('common.cancel')}
           </Button>
           <Button onClick={handleSubmit} disabled={bulkUpdate.isPending}>
-            {bulkUpdate.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {bulkUpdate.isPending && (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            )}
             {t('urls.bulk.applyChanges', { count: selectedIds.length })}
           </Button>
         </DialogFooter>

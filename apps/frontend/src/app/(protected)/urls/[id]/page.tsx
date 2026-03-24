@@ -325,7 +325,9 @@ export default function UrlDetailPage() {
               urlData.utmMedium ||
               urlData.utmCampaign ||
               urlData.utmTerm ||
-              urlData.utmContent) && (
+              urlData.utmContent ||
+              urlData.utmId ||
+              urlData.utmSourcePlatform) && (
               <Card>
                 <CardHeader>
                   <CardTitle>{t('urls.utmSection')}</CardTitle>
@@ -380,6 +382,26 @@ export default function UrlDetailPage() {
                         </div>
                         <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
                           {urlData.utmContent}
+                        </div>
+                      </div>
+                    )}
+                    {urlData.utmId && (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          {t('urls.utmId')}
+                        </div>
+                        <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
+                          {urlData.utmId}
+                        </div>
+                      </div>
+                    )}
+                    {urlData.utmSourcePlatform && (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          {t('urls.utmSourcePlatform')}
+                        </div>
+                        <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
+                          {urlData.utmSourcePlatform}
                         </div>
                       </div>
                     )}

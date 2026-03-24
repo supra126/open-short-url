@@ -19,6 +19,8 @@ interface ClickRecordedEvent {
     utmCampaign?: string;
     utmTerm?: string;
     utmContent?: string;
+    utmId?: string;
+    utmSourcePlatform?: string;
   };
 }
 
@@ -41,7 +43,7 @@ export class ClickRecorderService implements OnModuleDestroy {
     private urlService: UrlService,
     private cacheService: CacheService,
     private loggerService: LoggerService,
-    private clickDataEnricher: ClickDataEnricherService,
+    private clickDataEnricher: ClickDataEnricherService
   ) {}
 
   /**
@@ -74,11 +76,23 @@ export class ClickRecorderService implements OnModuleDestroy {
       // Only increment click count for real users (not bots)
       if (enriched.isBot) {
         // Bot detected - only record the click, don't increment counter
-        await this.recordClickWithEnrichedData(urlId, variantId, routingRuleId, clickData, enriched);
+        await this.recordClickWithEnrichedData(
+          urlId,
+          variantId,
+          routingRuleId,
+          clickData,
+          enriched
+        );
       } else {
         // Real user - record click and increment counters in parallel
         const operations: Promise<void>[] = [
-          this.recordClickWithEnrichedData(urlId, variantId, routingRuleId, clickData, enriched),
+          this.recordClickWithEnrichedData(
+            urlId,
+            variantId,
+            routingRuleId,
+            clickData,
+            enriched
+          ),
           this.urlService.incrementClickCount(urlId),
         ];
 
@@ -94,12 +108,13 @@ export class ClickRecorderService implements OnModuleDestroy {
       await this.clearAnalyticsCache(urlId);
     } catch (error: unknown) {
       // Log error but don't affect user experience
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
         `Failed to record click: ${errorMessage}`,
         errorStack,
-        'ClickRecorderService',
+        'ClickRecorderService'
       );
     }
   }
@@ -112,14 +127,14 @@ export class ClickRecorderService implements OnModuleDestroy {
     variantId: string | null | undefined,
     routingRuleId: string | null | undefined,
     clickData: ClickRecordedEvent['clickData'],
-    enriched: ReturnType<ClickDataEnricherService['enrich']>,
+    enriched: ReturnType<ClickDataEnricherService['enrich']>
   ): Promise<void> {
     const { ip, userAgent, referer, ...utmParams } = clickData;
 
     if (enriched.isBot) {
       this.loggerService.debug(
         `Bot detected: ${enriched.botName} - UserAgent: ${userAgent?.substring(0, 50)}...`,
-        'ClickRecorderService',
+        'ClickRecorderService'
       );
     }
 
@@ -181,10 +196,11 @@ export class ClickRecorderService implements OnModuleDestroy {
       this.scheduleCacheClearFlush();
     } catch (error: unknown) {
       // Log but don't fail - cache clearing is non-critical
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.loggerService.debug(
         `Failed to buffer analytics cache clear: ${errorMessage}`,
-        'ClickRecorderService',
+        'ClickRecorderService'
       );
     }
   }
@@ -201,10 +217,11 @@ export class ClickRecorderService implements OnModuleDestroy {
     this.cacheClearTimeout = setTimeout(() => {
       this.cacheClearTimeout = null;
       this.flushCacheClearBuffer().catch((error) => {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         this.loggerService.debug(
           `Failed to flush cache clear buffer: ${errorMessage}`,
-          'ClickRecorderService',
+          'ClickRecorderService'
         );
       });
     }, this.CACHE_CLEAR_DELAY_MS);
@@ -243,13 +260,14 @@ export class ClickRecorderService implements OnModuleDestroy {
 
       this.loggerService.debug(
         `Flushed analytics cache for ${urlIds.length} URLs and ${userIds.length} users`,
-        'ClickRecorderService',
+        'ClickRecorderService'
       );
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.loggerService.debug(
         `Failed to clear analytics cache: ${errorMessage}`,
-        'ClickRecorderService',
+        'ClickRecorderService'
       );
     }
   }

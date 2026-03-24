@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { OgMetaSection, type OgMetaValues } from './og-meta-section';
+import { UtmSection } from './utm-section';
+import { EMPTY_UTM_VALUES, type UtmValues } from '@/lib/utm-templates';
 
 export function CreateUrlForm() {
   const router = useRouter();
@@ -32,17 +34,15 @@ export function CreateUrlForm() {
     twitterCardType: 'summary_large_image',
   });
   const [stagedOgFile, setStagedOgFile] = useState<File | null>(null);
+  const [utmValues, setUtmValues] = useState<UtmValues>({
+    ...EMPTY_UTM_VALUES,
+  });
   const [formData, setFormData] = useState({
     originalUrl: '',
     customSlug: '',
     title: '',
     password: '',
     expiresAt: '',
-    utmSource: '',
-    utmMedium: '',
-    utmCampaign: '',
-    utmTerm: '',
-    utmContent: '',
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -67,11 +67,13 @@ export function CreateUrlForm() {
         expiresAt: formData.expiresAt
           ? new Date(formData.expiresAt).toISOString()
           : undefined,
-        utmSource: formData.utmSource || undefined,
-        utmMedium: formData.utmMedium || undefined,
-        utmCampaign: formData.utmCampaign || undefined,
-        utmTerm: formData.utmTerm || undefined,
-        utmContent: formData.utmContent || undefined,
+        utmSource: utmValues.utmSource || undefined,
+        utmMedium: utmValues.utmMedium || undefined,
+        utmCampaign: utmValues.utmCampaign || undefined,
+        utmTerm: utmValues.utmTerm || undefined,
+        utmContent: utmValues.utmContent || undefined,
+        utmId: utmValues.utmId || undefined,
+        utmSourcePlatform: utmValues.utmSourcePlatform || undefined,
         ogTitle: ogMeta.ogTitle || undefined,
         ogDescription: ogMeta.ogDescription || undefined,
         twitterCardType: ogMeta.twitterCardType || undefined,
@@ -199,71 +201,7 @@ export function CreateUrlForm() {
               </p>
 
               {/* UTM Parameters */}
-              <div className="space-y-4 pt-4 border-t">
-                <div>
-                  <h4 className="text-sm font-medium mb-1">
-                    {t('urls.utmSection')}
-                  </h4>
-                  <p className="text-xs text-muted-foreground">
-                    {t('urls.utmSectionDesc')}
-                  </p>
-                </div>
-
-                <Input
-                  label={t('urls.utmSource')}
-                  type="text"
-                  placeholder={t('urls.utmSourcePlaceholder')}
-                  value={formData.utmSource}
-                  onChange={handleChange('utmSource')}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('urls.utmSourceHint')}
-                </p>
-
-                <Input
-                  label={t('urls.utmMedium')}
-                  type="text"
-                  placeholder={t('urls.utmMediumPlaceholder')}
-                  value={formData.utmMedium}
-                  onChange={handleChange('utmMedium')}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('urls.utmMediumHint')}
-                </p>
-
-                <Input
-                  label={t('urls.utmCampaign')}
-                  type="text"
-                  placeholder={t('urls.utmCampaignPlaceholder')}
-                  value={formData.utmCampaign}
-                  onChange={handleChange('utmCampaign')}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('urls.utmCampaignHint')}
-                </p>
-
-                <Input
-                  label={t('urls.utmTerm')}
-                  type="text"
-                  placeholder={t('urls.utmTermPlaceholder')}
-                  value={formData.utmTerm}
-                  onChange={handleChange('utmTerm')}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('urls.utmTermHint')}
-                </p>
-
-                <Input
-                  label={t('urls.utmContent')}
-                  type="text"
-                  placeholder={t('urls.utmContentPlaceholder')}
-                  value={formData.utmContent}
-                  onChange={handleChange('utmContent')}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  {t('urls.utmContentHint')}
-                </p>
-              </div>
+              <UtmSection values={utmValues} onChange={setUtmValues} />
 
               {/* Social Preview (OG Meta) */}
               <OgMetaSection

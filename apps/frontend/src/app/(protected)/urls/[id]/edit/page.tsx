@@ -27,6 +27,8 @@ import {
   OgMetaSection,
   type OgMetaValues,
 } from '@/components/url/og-meta-section';
+import { UtmSection } from '@/components/url/utm-section';
+import { EMPTY_UTM_VALUES, type UtmValues } from '@/lib/utm-templates';
 
 export default function EditUrlPage() {
   const params = useParams();
@@ -43,22 +45,15 @@ export default function EditUrlPage() {
     status: 'ACTIVE' | 'INACTIVE' | 'EXPIRED' | '';
     password: string;
     expiresAt: string;
-    utmSource: string;
-    utmMedium: string;
-    utmCampaign: string;
-    utmTerm: string;
-    utmContent: string;
   }>({
     originalUrl: '',
     title: '',
     status: '',
     password: '',
     expiresAt: '',
-    utmSource: '',
-    utmMedium: '',
-    utmCampaign: '',
-    utmTerm: '',
-    utmContent: '',
+  });
+  const [utmValues, setUtmValues] = useState<UtmValues>({
+    ...EMPTY_UTM_VALUES,
   });
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [removePassword, setRemovePassword] = useState(false);
@@ -86,11 +81,15 @@ export default function EditUrlPage() {
         expiresAt: urlData.expiresAt
           ? new Date(urlData.expiresAt).toISOString().slice(0, 16)
           : '',
+      });
+      setUtmValues({
         utmSource: urlData.utmSource || '',
         utmMedium: urlData.utmMedium || '',
         utmCampaign: urlData.utmCampaign || '',
         utmTerm: urlData.utmTerm || '',
         utmContent: urlData.utmContent || '',
+        utmId: urlData.utmId || '',
+        utmSourcePlatform: urlData.utmSourcePlatform || '',
       });
 
       // Populate OG meta
@@ -106,7 +105,14 @@ export default function EditUrlPage() {
         urlData.expiresAt ||
         urlData.ogTitle ||
         urlData.ogDescription ||
-        urlData.ogImage
+        urlData.ogImage ||
+        urlData.utmSource ||
+        urlData.utmMedium ||
+        urlData.utmCampaign ||
+        urlData.utmTerm ||
+        urlData.utmContent ||
+        urlData.utmId ||
+        urlData.utmSourcePlatform
       ) {
         setShowAdvanced(true);
       }
@@ -140,12 +146,20 @@ export default function EditUrlPage() {
           : formData.expiresAt
             ? new Date(formData.expiresAt).toISOString()
             : undefined,
-        // Handle UTM parameters
-        utmSource: formData.utmSource || undefined,
-        utmMedium: formData.utmMedium || undefined,
-        utmCampaign: formData.utmCampaign || undefined,
-        utmTerm: formData.utmTerm || undefined,
-        utmContent: formData.utmContent || undefined,
+        // Handle UTM parameters (send null to clear existing values)
+        utmSource:
+          utmValues.utmSource || (urlData?.utmSource ? null : undefined),
+        utmMedium:
+          utmValues.utmMedium || (urlData?.utmMedium ? null : undefined),
+        utmCampaign:
+          utmValues.utmCampaign || (urlData?.utmCampaign ? null : undefined),
+        utmTerm: utmValues.utmTerm || (urlData?.utmTerm ? null : undefined),
+        utmContent:
+          utmValues.utmContent || (urlData?.utmContent ? null : undefined),
+        utmId: utmValues.utmId || (urlData?.utmId ? null : undefined),
+        utmSourcePlatform:
+          utmValues.utmSourcePlatform ||
+          (urlData?.utmSourcePlatform ? null : undefined),
         // Handle OG meta
         ogTitle: ogMeta.ogTitle || undefined,
         ogDescription: ogMeta.ogDescription || undefined,
@@ -370,88 +384,7 @@ export default function EditUrlPage() {
                   </div>
 
                   {/* UTM Parameters */}
-                  <div className="space-y-4 pt-4 border-t">
-                    <div>
-                      <h4 className="text-sm font-medium mb-1">
-                        {t('urls.utmSection')}
-                      </h4>
-                      <p className="text-xs text-muted-foreground">
-                        {t('urls.utmSectionDesc')}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="utmSource">{t('urls.utmSource')}</Label>
-                      <Input
-                        id="utmSource"
-                        type="text"
-                        placeholder={t('urls.utmSourcePlaceholder')}
-                        value={formData.utmSource}
-                        onChange={handleChange('utmSource')}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {t('urls.utmSourceHint')}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="utmMedium">{t('urls.utmMedium')}</Label>
-                      <Input
-                        id="utmMedium"
-                        type="text"
-                        placeholder={t('urls.utmMediumPlaceholder')}
-                        value={formData.utmMedium}
-                        onChange={handleChange('utmMedium')}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {t('urls.utmMediumHint')}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="utmCampaign">
-                        {t('urls.utmCampaign')}
-                      </Label>
-                      <Input
-                        id="utmCampaign"
-                        type="text"
-                        placeholder={t('urls.utmCampaignPlaceholder')}
-                        value={formData.utmCampaign}
-                        onChange={handleChange('utmCampaign')}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {t('urls.utmCampaignHint')}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="utmTerm">{t('urls.utmTerm')}</Label>
-                      <Input
-                        id="utmTerm"
-                        type="text"
-                        placeholder={t('urls.utmTermPlaceholder')}
-                        value={formData.utmTerm}
-                        onChange={handleChange('utmTerm')}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {t('urls.utmTermHint')}
-                      </p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="utmContent">{t('urls.utmContent')}</Label>
-                      <Input
-                        id="utmContent"
-                        type="text"
-                        placeholder={t('urls.utmContentPlaceholder')}
-                        value={formData.utmContent}
-                        onChange={handleChange('utmContent')}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        {t('urls.utmContentHint')}
-                      </p>
-                    </div>
-                  </div>
+                  <UtmSection values={utmValues} onChange={setUtmValues} />
 
                   {/* Social Preview (OG Meta) */}
                   <OgMetaSection

@@ -151,13 +151,38 @@ POST /api/urls
 
 **支援的參數：**
 
-| 參數          | 說明       | 範例                         |
-| ------------- | ---------- | ---------------------------- |
-| `utmSource`   | 流量來源   | newsletter、google、facebook |
-| `utmMedium`   | 行銷媒介   | email、cpc、social           |
-| `utmCampaign` | 活動名稱   | summer_sale、black_friday    |
-| `utmTerm`     | 付費關鍵字 | running+shoes                |
-| `utmContent`  | 廣告內容   | banner_ad、text_link         |
+| 參數                | 說明            | 範例                         |
+| ------------------- | --------------- | ---------------------------- |
+| `utmSource`         | 流量來源        | newsletter、google、facebook |
+| `utmMedium`         | 行銷媒介        | email、cpc、social           |
+| `utmCampaign`       | 活動名稱        | summer_sale、black_friday    |
+| `utmTerm`           | 付費關鍵字      | running+shoes                |
+| `utmContent`        | 廣告內容        | banner_ad、text_link         |
+| `utmId`             | 活動 ID（GA4）  | abc123                       |
+| `utmSourcePlatform` | 廣告平台（GA4） | google、meta                 |
+
+#### UTM 自動完成
+
+建立或編輯網址時，UTM 輸入欄位會根據全系統的歷史使用值提供自動完成建議。建議值依使用次數排序，幫助團隊維持一致的 UTM 命名規範。
+
+#### UTM 範本
+
+內建常見行銷情境的快速填入範本：
+
+| 範本          | Source       | Medium        | Platform |
+| ------------- | ------------ | ------------- | -------- |
+| Facebook 廣告 | `facebook`   | `cpc`         | `meta`   |
+| Google 廣告   | `google`     | `cpc`         | `google` |
+| Google 購物   | `google`     | `cpc`         | `google` |
+| 電子報        | `newsletter` | `email`       | —        |
+| 社群貼文      | —            | `social`      | —        |
+| 付費社群      | —            | `paid_social` | —        |
+| 聯盟行銷      | —            | `affiliate`   | —        |
+| 網紅合作      | —            | `influencer`  | —        |
+| LINE 推播     | `line`       | `social`      | —        |
+| 再行銷        | —            | `cpc`         | —        |
+
+套用範本會清空所有 UTM 欄位並填入範本值，之後可再手動調整個別欄位（如加上活動名稱）。
 
 ### 社群預覽（自訂 OG Meta）
 

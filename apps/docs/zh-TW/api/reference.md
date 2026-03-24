@@ -116,7 +116,9 @@ Content-Type: application/json
   "utmMedium": "email",              // 選填
   "utmCampaign": "summer_sale",      // 選填
   "utmTerm": "discount",             // 選填
-  "utmContent": "banner_top"         // 選填
+  "utmContent": "banner_top",        // 選填
+  "utmId": "abc123",                // 選填，GA4 建議
+  "utmSourcePlatform": "google"     // 選填，GA4 建議
 }
 ```
 
@@ -135,6 +137,33 @@ GET /api/urls?page=1&limit=10&search=keyword&status=ACTIVE
 | `status` | string | 篩選狀態：`ACTIVE`、`INACTIVE` |
 | `sortBy` | string | 排序欄位 |
 | `sortOrder` | string | `asc` 或 `desc` |
+
+### 取得 UTM 建議值
+
+```http
+GET /api/urls/utm-suggestions?field=utmSource&q=news
+```
+
+**查詢參數：**
+| 參數 | 類型 | 說明 |
+|------|------|------|
+| `field` | string | **必填。** UTM 欄位名稱：`utmSource`、`utmMedium`、`utmCampaign`、`utmTerm`、`utmContent` |
+| `q` | string | 選填前綴過濾（最多 100 字元） |
+
+**回應：**
+
+```json
+{
+  "field": "utmSource",
+  "suggestions": [
+    { "value": "facebook", "count": 12 },
+    { "value": "google", "count": 8 },
+    { "value": "newsletter", "count": 5 }
+  ]
+}
+```
+
+回傳最多 20 個不重複的值（跨全系統），依使用次數由高到低排序。
 
 ### 取得網址詳情
 

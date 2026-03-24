@@ -29,20 +29,38 @@ import { UrlBulkService } from './url-bulk.service';
 import { CreateUrlDto } from './dto/create-url.dto';
 import { UpdateUrlDto } from './dto/update-url.dto';
 import { UrlQueryDto } from './dto/url-query.dto';
-import { UrlResponseDto, UrlListResponseDto, DashboardStatsResponseDto } from './dto/url-response.dto';
+import {
+  UrlResponseDto,
+  UrlListResponseDto,
+  DashboardStatsResponseDto,
+} from './dto/url-response.dto';
 import {
   CreateVariantDto,
   UpdateVariantDto,
   VariantResponseDto,
   VariantListResponseDto,
 } from './dto/variant.dto';
-import { BulkCreateUrlDto, BulkCreateResultDto } from './dto/bulk-create-url.dto';
-import { BulkUpdateUrlDto, BulkUpdateResultDto } from './dto/bulk-update-url.dto';
-import { BulkDeleteUrlDto, BulkDeleteResultDto } from './dto/bulk-delete-url.dto';
+import {
+  BulkCreateUrlDto,
+  BulkCreateResultDto,
+} from './dto/bulk-create-url.dto';
+import {
+  BulkUpdateUrlDto,
+  BulkUpdateResultDto,
+} from './dto/bulk-update-url.dto';
+import {
+  BulkDeleteUrlDto,
+  BulkDeleteResultDto,
+} from './dto/bulk-delete-url.dto';
 import { JwtOrApiKeyAuthGuard } from '@/modules/auth/guards/jwt-or-api-key-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
-import { RequestMeta, RequestMeta as RequestMetaType } from '@/common/decorators/request-meta.decorator';
+import {
+  RequestMeta,
+  RequestMeta as RequestMetaType,
+} from '@/common/decorators/request-meta.decorator';
 import { QrCodeResponseDto } from './dto/qrcode-response.dto';
+import { UtmSuggestionsQueryDto } from './dto/utm-suggestions-query.dto';
+import { UtmSuggestionsResponseDto } from './dto/utm-suggestions-response.dto';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 
 // Maximum items per bulk request to prevent resource exhaustion
@@ -58,7 +76,7 @@ export class UrlController {
   constructor(
     private readonly urlService: UrlService,
     private readonly urlVariantService: UrlVariantService,
-    private readonly urlBulkService: UrlBulkService,
+    private readonly urlBulkService: UrlBulkService
   ) {}
 
   /**
@@ -68,11 +86,13 @@ export class UrlController {
     const maxItems = isAdmin ? MAX_BULK_ITEMS : MAX_BULK_ITEMS_USER;
     if (itemCount > maxItems) {
       throw new BadRequestException(
-        `Maximum ${maxItems} items per request. You requested ${itemCount} items.`,
+        `Maximum ${maxItems} items per request. You requested ${itemCount} items.`
       );
     }
     if (itemCount === 0) {
-      throw new BadRequestException('At least 1 item is required for bulk operations.');
+      throw new BadRequestException(
+        'At least 1 item is required for bulk operations.'
+      );
     }
   }
 
@@ -99,7 +119,8 @@ export class UrlController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid request parameters (e.g., invalid URL format, code format does not meet requirements)',
+    description:
+      'Invalid request parameters (e.g., invalid URL format, code format does not meet requirements)',
     type: ErrorResponseDto,
   })
   @ApiResponse({
@@ -122,7 +143,7 @@ export class UrlController {
   async create(
     @CurrentUser() user: User,
     @Body() createUrlDto: CreateUrlDto,
-    @RequestMeta() meta: RequestMetaType,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<UrlResponseDto> {
     return this.urlService.create(user.id, createUrlDto, meta);
   }
@@ -149,7 +170,8 @@ export class UrlController {
   })
   @ApiResponse({
     status: HttpStatus.CREATED,
-    description: 'Bulk creation completed (includes success and failure details)',
+    description:
+      'Bulk creation completed (includes success and failure details)',
     type: BulkCreateResultDto,
   })
   @ApiResponse({
@@ -165,9 +187,12 @@ export class UrlController {
   async bulkCreate(
     @CurrentUser() user: User,
     @Body() bulkCreateDto: BulkCreateUrlDto,
-    @RequestMeta() meta: RequestMetaType,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<BulkCreateResultDto> {
-    this.validateBulkItemCount(bulkCreateDto.urls.length, user.role === 'ADMIN');
+    this.validateBulkItemCount(
+      bulkCreateDto.urls.length,
+      user.role === 'ADMIN'
+    );
     return this.urlBulkService.bulkCreate(user.id, bulkCreateDto.urls, meta);
   }
 
@@ -213,15 +238,18 @@ export class UrlController {
   async bulkUpdate(
     @CurrentUser() user: User,
     @Body() bulkUpdateDto: BulkUpdateUrlDto,
-    @RequestMeta() meta: RequestMetaType,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<BulkUpdateResultDto> {
-    this.validateBulkItemCount(bulkUpdateDto.urlIds.length, user.role === 'ADMIN');
+    this.validateBulkItemCount(
+      bulkUpdateDto.urlIds.length,
+      user.role === 'ADMIN'
+    );
     return this.urlBulkService.bulkUpdate(
       user.id,
       bulkUpdateDto.urlIds,
       bulkUpdateDto.operation,
       user.role,
-      meta,
+      meta
     );
   }
 
@@ -257,10 +285,18 @@ export class UrlController {
   async bulkDelete(
     @CurrentUser() user: User,
     @Body() bulkDeleteDto: BulkDeleteUrlDto,
-    @RequestMeta() meta: RequestMetaType,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<BulkDeleteResultDto> {
-    this.validateBulkItemCount(bulkDeleteDto.urlIds.length, user.role === 'ADMIN');
-    return this.urlBulkService.bulkDelete(user.id, bulkDeleteDto.urlIds, user.role, meta);
+    this.validateBulkItemCount(
+      bulkDeleteDto.urlIds.length,
+      user.role === 'ADMIN'
+    );
+    return this.urlBulkService.bulkDelete(
+      user.id,
+      bulkDeleteDto.urlIds,
+      user.role,
+      meta
+    );
   }
 
   /**
@@ -292,12 +328,13 @@ export class UrlController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid request parameters (e.g., invalid page number or page size format)',
+    description:
+      'Invalid request parameters (e.g., invalid page number or page size format)',
     type: ErrorResponseDto,
   })
   async findAll(
     @CurrentUser() user: User,
-    @Query() queryDto: UrlQueryDto,
+    @Query() queryDto: UrlQueryDto
   ): Promise<UrlListResponseDto> {
     return this.urlService.findAll(user.id, queryDto, user.role);
   }
@@ -308,7 +345,8 @@ export class UrlController {
   @Get('stats')
   @ApiOperation({
     summary: 'Get URL statistics',
-    description: 'Get dashboard statistics including total, active, inactive, and expired URL counts.',
+    description:
+      'Get dashboard statistics including total, active, inactive, and expired URL counts.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -321,9 +359,45 @@ export class UrlController {
     type: ErrorResponseDto,
   })
   async getStats(
-    @CurrentUser() user: User,
+    @CurrentUser() user: User
   ): Promise<DashboardStatsResponseDto> {
     return this.urlService.getStats(user.id, user.role);
+  }
+
+  /**
+   * Get UTM field autocomplete suggestions
+   */
+  @Get('utm-suggestions')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Get UTM autocomplete suggestions',
+    description:
+      'Get distinct historical UTM values for autocomplete. Returns up to 20 suggestions per field.',
+  })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Suggestions retrieved successfully',
+    type: UtmSuggestionsResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.BAD_REQUEST,
+    description: 'Invalid field name',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized',
+    type: ErrorResponseDto,
+  })
+  async getUtmSuggestions(
+    @CurrentUser() _user: User,
+    @Query() queryDto: UtmSuggestionsQueryDto
+  ): Promise<UtmSuggestionsResponseDto> {
+    const suggestions = await this.urlService.getUtmSuggestions(
+      queryDto.field,
+      queryDto.q
+    );
+    return { field: queryDto.field, suggestions };
   }
 
   /**
@@ -332,7 +406,8 @@ export class UrlController {
   @Get(':id/qrcode')
   @ApiOperation({
     summary: 'Generate QR Code',
-    description: 'Generate QR Code for the specified short URL (returns Base64 Data URL format)',
+    description:
+      'Generate QR Code for the specified short URL (returns Base64 Data URL format)',
   })
   @ApiParam({
     name: 'id',
@@ -358,18 +433,16 @@ export class UrlController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Query('width') width?: number,
-    @Query('color') color?: string,
+    @Query('color') color?: string
   ): Promise<QrCodeResponseDto> {
     const qrCode = await this.urlService.generateQRCode(
       id,
       user.id,
       {
         width: width ? Number(width) : undefined,
-        color: color
-          ? { dark: color }
-          : undefined,
+        color: color ? { dark: color } : undefined,
       },
-      user.role,
+      user.role
     );
 
     return { qrCode };
@@ -405,7 +478,7 @@ export class UrlController {
   })
   async findOne(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id') id: string
   ): Promise<UrlResponseDto> {
     return this.urlService.findOne(id, user.id, user.role);
   }
@@ -416,7 +489,8 @@ export class UrlController {
   @Put(':id')
   @ApiOperation({
     summary: 'Update short URL',
-    description: 'Update short URL information, including original URL, title, status, password, etc.',
+    description:
+      'Update short URL information, including original URL, title, status, password, etc.',
   })
   @ApiParam({
     name: 'id',
@@ -447,7 +521,7 @@ export class UrlController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() updateUrlDto: UpdateUrlDto,
-    @RequestMeta() meta: RequestMetaType,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<UrlResponseDto> {
     return this.urlService.update(id, user.id, updateUrlDto, user.role, meta);
   }
@@ -483,7 +557,7 @@ export class UrlController {
   async delete(
     @CurrentUser() user: User,
     @Param('id') id: string,
-    @RequestMeta() meta: RequestMetaType,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<void> {
     return this.urlService.delete(id, user.id, user.role, meta);
   }
@@ -496,7 +570,8 @@ export class UrlController {
   @Post(':id/variants')
   @ApiOperation({
     summary: 'Create A/B testing variant',
-    description: 'Create a new variant for A/B testing. Automatically enables A/B testing mode for the URL.',
+    description:
+      'Create a new variant for A/B testing. Automatically enables A/B testing mode for the URL.',
   })
   @ApiParam({
     name: 'id',
@@ -522,9 +597,15 @@ export class UrlController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Body() createVariantDto: CreateVariantDto,
-    @RequestMeta() meta: RequestMetaType,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<VariantResponseDto> {
-    return this.urlVariantService.createVariant(id, user.id, createVariantDto, user.role, meta);
+    return this.urlVariantService.createVariant(
+      id,
+      user.id,
+      createVariantDto,
+      user.role,
+      meta
+    );
   }
 
   /**
@@ -533,7 +614,8 @@ export class UrlController {
   @Get(':id/variants')
   @ApiOperation({
     summary: 'Get all A/B testing variants',
-    description: 'Get all variants for the specified URL with click statistics.',
+    description:
+      'Get all variants for the specified URL with click statistics.',
   })
   @ApiParam({
     name: 'id',
@@ -557,7 +639,7 @@ export class UrlController {
   })
   async findAllVariants(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id') id: string
   ): Promise<VariantListResponseDto> {
     return this.urlVariantService.findAllVariants(id, user.id, user.role);
   }
@@ -598,9 +680,14 @@ export class UrlController {
   async findOneVariant(
     @CurrentUser() user: User,
     @Param('id') id: string,
-    @Param('variantId') variantId: string,
+    @Param('variantId') variantId: string
   ): Promise<VariantResponseDto> {
-    return this.urlVariantService.findOneVariant(id, variantId, user.id, user.role);
+    return this.urlVariantService.findOneVariant(
+      id,
+      variantId,
+      user.id,
+      user.role
+    );
   }
 
   /**
@@ -609,7 +696,8 @@ export class UrlController {
   @Put(':id/variants/:variantId')
   @ApiOperation({
     summary: 'Update a variant',
-    description: 'Update variant information including name, target URL, weight, and active status.',
+    description:
+      'Update variant information including name, target URL, weight, and active status.',
   })
   @ApiParam({
     name: 'id',
@@ -641,9 +729,16 @@ export class UrlController {
     @Param('id') id: string,
     @Param('variantId') variantId: string,
     @Body() updateVariantDto: UpdateVariantDto,
-    @RequestMeta() meta: RequestMetaType,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<VariantResponseDto> {
-    return this.urlVariantService.updateVariant(id, variantId, user.id, updateVariantDto, user.role, meta);
+    return this.urlVariantService.updateVariant(
+      id,
+      variantId,
+      user.id,
+      updateVariantDto,
+      user.role,
+      meta
+    );
   }
 
   /**
@@ -653,7 +748,8 @@ export class UrlController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({
     summary: 'Delete a variant',
-    description: 'Delete a variant. If this is the last variant, A/B testing mode will be disabled for the URL.',
+    description:
+      'Delete a variant. If this is the last variant, A/B testing mode will be disabled for the URL.',
   })
   @ApiParam({
     name: 'id',
@@ -683,8 +779,14 @@ export class UrlController {
     @CurrentUser() user: User,
     @Param('id') id: string,
     @Param('variantId') variantId: string,
-    @RequestMeta() meta: RequestMetaType,
+    @RequestMeta() meta: RequestMetaType
   ): Promise<void> {
-    return this.urlVariantService.deleteVariant(id, variantId, user.id, user.role, meta);
+    return this.urlVariantService.deleteVariant(
+      id,
+      variantId,
+      user.id,
+      user.role,
+      meta
+    );
   }
 }

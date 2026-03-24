@@ -18,6 +18,7 @@ import { CreateUrlDto } from './dto/create-url.dto';
 import { UpdateUrlDto } from './dto/update-url.dto';
 import { UrlQueryDto } from './dto/url-query.dto';
 import { UrlResponseDto, UrlListResponseDto } from './dto/url-response.dto';
+import type { UtmFieldName } from './dto/utm-suggestions-query.dto';
 import { buildPaginatedResponse } from '@/common/dto';
 import {
   generateCustomSlug,
@@ -146,6 +147,8 @@ export class UrlService implements OnModuleInit {
       utmCampaign,
       utmTerm,
       utmContent,
+      utmId,
+      utmSourcePlatform,
       ogTitle,
       ogDescription,
       twitterCardType,
@@ -213,6 +216,8 @@ export class UrlService implements OnModuleInit {
         utmCampaign,
         utmTerm,
         utmContent,
+        utmId,
+        utmSourcePlatform,
         ogTitle,
         ogDescription,
         twitterCardType,
@@ -332,6 +337,36 @@ export class UrlService implements OnModuleInit {
       inactiveUrls: inactive,
       expiredUrls: expired,
     };
+  }
+
+  /**
+   * Get distinct UTM field values for autocomplete suggestions
+   */
+  async getUtmSuggestions(
+    field: UtmFieldName,
+    q: string | undefined
+  ): Promise<{ value: string; count: number }[]> {
+    const where: Prisma.UrlWhereInput = {
+      [field]: {
+        not: null,
+        ...(q ? { startsWith: q, mode: 'insensitive' as const } : {}),
+      },
+    };
+
+    const results = await this.prisma.url.groupBy({
+      by: [field as Prisma.UrlScalarFieldEnum],
+      where,
+      _count: { [field]: true },
+      orderBy: { _count: { [field]: 'desc' } },
+      take: 20,
+    });
+
+    return results
+      .filter((r) => r[field] !== null)
+      .map((r) => ({
+        value: r[field] as string,
+        count: (r._count as unknown as Record<string, number>)[field],
+      }));
   }
 
   /**
@@ -788,6 +823,8 @@ export class UrlService implements OnModuleInit {
       utmCampaign: url.utmCampaign ?? undefined,
       utmTerm: url.utmTerm ?? undefined,
       utmContent: url.utmContent ?? undefined,
+      utmId: url.utmId ?? undefined,
+      utmSourcePlatform: url.utmSourcePlatform ?? undefined,
       isAbTest: url.isAbTest,
       isSmartRouting: url.isSmartRouting,
       defaultUrl: url.defaultUrl ?? undefined,

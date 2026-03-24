@@ -125,6 +125,24 @@ export class UpdateUrlDto {
   utmContent?: string;
 
   @ApiPropertyOptional({
+    description: 'UTM Campaign ID (GA4 recommended)',
+    example: 'abc123',
+  })
+  @Transform(emptyToUndefined)
+  @IsString()
+  @IsOptional()
+  utmId?: string;
+
+  @ApiPropertyOptional({
+    description: 'UTM Source Platform (GA4 recommended)',
+    example: 'google',
+  })
+  @Transform(emptyToUndefined)
+  @IsString()
+  @IsOptional()
+  utmSourcePlatform?: string;
+
+  @ApiPropertyOptional({
     description: 'OG Title for social preview',
     example: 'Check out this amazing deal!',
     maxLength: 100,

@@ -1,6 +1,6 @@
 {
   "name": "open-short-url",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "Open-source, enterprise-grade, self-hosted URL shortener with analytics, branding & smart routing",
   "private": true,
   "packageManager": "pnpm@10.30.3",

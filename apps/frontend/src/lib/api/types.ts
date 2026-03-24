@@ -1906,6 +1906,10 @@ export interface components {
              * @example banner_top
              */
             utmContent?: string;
+            /** @description UTM Campaign ID (GA4 recommended) */
+            utmId?: string;
+            /** @description UTM Source Platform (GA4 recommended) */
+            utmSourcePlatform?: string;
             /** @description OG Title for social preview */
             ogTitle?: string;
             /** @description OG Description for social preview */
@@ -1997,6 +2001,10 @@ export interface components {
              * @example banner_top
              */
             utmContent?: string;
+            /** @description UTM Campaign ID (GA4) */
+            utmId?: string;
+            /** @description UTM Source Platform (GA4) */
+            utmSourcePlatform?: string;
             /**
              * @description Whether A/B testing is enabled
              * @example false
@@ -2209,6 +2217,10 @@ export interface components {
              * @example banner_top
              */
             utmContent?: string;
+            /** @description UTM Campaign ID (GA4 recommended) */
+            utmId?: string;
+            /** @description UTM Source Platform (GA4 recommended) */
+            utmSourcePlatform?: string;
             /** @description OG Title for social preview */
             ogTitle?: string;
             /** @description OG Description for social preview */
@@ -2865,6 +2877,10 @@ export interface components {
              * @example banner_ad
              */
             utmContent?: string;
+            /** @description UTM Campaign ID (GA4) */
+            utmId?: string;
+            /** @description UTM Source Platform (GA4) */
+            utmSourcePlatform?: string;
             /**
              * @description Is this click from a bot
              * @example false
@@ -4081,6 +4097,10 @@ export interface components {
             utmTerm?: string;
             /** @description UTM Content */
             utmContent?: string;
+            /** @description UTM Campaign ID (GA4) */
+            utmId?: string;
+            /** @description UTM Source Platform (GA4) */
+            utmSourcePlatform?: string;
         };
         /**
          * @description Condition type enum values

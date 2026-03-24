@@ -129,13 +129,15 @@ When a link expires, it automatically transitions to `EXPIRED` status and return
 
 Automatically append UTM parameters for marketing campaign tracking:
 
-| Parameter      | Description        | Example                     |
-| -------------- | ------------------ | --------------------------- |
-| `utm_source`   | Traffic source     | `newsletter`, `google`      |
-| `utm_medium`   | Marketing medium   | `email`, `cpc`, `social`    |
-| `utm_campaign` | Campaign name      | `summer_sale_2025`          |
-| `utm_term`     | Paid keywords      | `running+shoes`             |
-| `utm_content`  | Content identifier | `banner_top`, `link_footer` |
+| Parameter             | Description        | Example                     |
+| --------------------- | ------------------ | --------------------------- |
+| `utm_source`          | Traffic source     | `newsletter`, `google`      |
+| `utm_medium`          | Marketing medium   | `email`, `cpc`, `social`    |
+| `utm_campaign`        | Campaign name      | `summer_sale_2025`          |
+| `utm_term`            | Paid keywords      | `running+shoes`             |
+| `utm_content`         | Content identifier | `banner_top`, `link_footer` |
+| `utm_id`              | Campaign ID (GA4)  | `abc123`                    |
+| `utm_source_platform` | Ad platform (GA4)  | `google`, `meta`            |
 
 **Example:**
 
@@ -143,6 +145,29 @@ Automatically append UTM parameters for marketing campaign tracking:
 Short URL: https://s.yourdomain.com/promo
 Redirects to: https://shop.example.com/sale?utm_source=newsletter&utm_medium=email&utm_campaign=summer_sale
 ```
+
+### UTM Autocomplete
+
+When creating or editing URLs, the UTM input fields provide autocomplete suggestions based on historical values used across the system. Suggestions are sorted by popularity (usage count), helping teams maintain consistent UTM naming conventions.
+
+### UTM Templates
+
+Built-in templates for common marketing scenarios allow quick filling of UTM fields:
+
+| Template         | Source       | Medium        | Platform |
+| ---------------- | ------------ | ------------- | -------- |
+| Facebook Ads     | `facebook`   | `cpc`         | `meta`   |
+| Google Ads       | `google`     | `cpc`         | `google` |
+| Google Shopping  | `google`     | `cpc`         | `google` |
+| Email Newsletter | `newsletter` | `email`       | —        |
+| Social Post      | —            | `social`      | —        |
+| Paid Social      | —            | `paid_social` | —        |
+| Affiliate        | —            | `affiliate`   | —        |
+| Influencer       | —            | `influencer`  | —        |
+| LINE             | `line`       | `social`      | —        |
+| Retargeting      | —            | `cpc`         | —        |
+
+Applying a template resets all UTM fields and fills in the template values. You can then manually adjust individual fields (e.g., add a campaign name).
 
 ## Social Preview (Custom OG Meta)
 

@@ -37,7 +37,7 @@ export class UrlBulkService {
     private cacheService: CacheService,
     private eventEmitter: EventEmitter2,
     private auditLogService: AuditLogService,
-    private urlService: UrlService,
+    private urlService: UrlService
   ) {}
 
   /**
@@ -46,7 +46,7 @@ export class UrlBulkService {
   private async processBatch<T, R>(
     items: T[],
     processor: (item: T, index: number) => Promise<R>,
-    batchSize: number = 10,
+    batchSize: number = 10
   ): Promise<
     Array<
       | { status: 'fulfilled'; value: R; index: number }
@@ -90,7 +90,7 @@ export class UrlBulkService {
   async bulkCreate(
     userId: string,
     urls: BulkCreateUrlDto['urls'],
-    meta?: RequestMeta,
+    meta?: RequestMeta
   ): Promise<BulkCreateResultDto> {
     const results: BulkCreateResultDto = {
       total: urls.length,
@@ -150,7 +150,7 @@ export class UrlBulkService {
 
     // Step 3: Process valid URLs in batches with controlled concurrency
     const validUrls = urlsWithValidation.filter(
-      (item) => !item.preValidationError,
+      (item) => !item.preValidationError
     );
 
     const settledResults = await this.processBatch(
@@ -161,7 +161,7 @@ export class UrlBulkService {
           skipAuditLog: true,
         });
       },
-      10, // Process 10 URLs concurrently
+      10 // Process 10 URLs concurrently
     );
 
     for (const result of settledResults) {
@@ -204,7 +204,7 @@ export class UrlBulkService {
     urlIds: string[],
     operation: BulkUpdateOperation,
     userRole?: 'ADMIN' | 'USER',
-    meta?: RequestMeta,
+    meta?: RequestMeta
   ): Promise<BulkUpdateResultDto> {
     // Early validation: check for empty or invalid input
     if (!urlIds || urlIds.length === 0) {
@@ -213,7 +213,7 @@ export class UrlBulkService {
 
     // Filter out any invalid IDs (null, undefined, empty strings)
     const validInputIds = urlIds.filter(
-      (id) => id && typeof id === 'string' && id.trim().length > 0,
+      (id) => id && typeof id === 'string' && id.trim().length > 0
     );
     if (validInputIds.length === 0) {
       throw new BadRequestException('No valid URL IDs provided');
@@ -245,7 +245,7 @@ export class UrlBulkService {
       const unauthorizedUrls = urls.filter((url) => url.userId !== userId);
       if (unauthorizedUrls.length > 0) {
         throw new ForbiddenException(
-          `You do not have permission to update ${unauthorizedUrls.length} URL(s)`,
+          `You do not have permission to update ${unauthorizedUrls.length} URL(s)`
         );
       }
     }
@@ -282,7 +282,7 @@ export class UrlBulkService {
           select: { urlId: true },
         });
         const existingUrlIds = new Set(
-          existingBundleUrls.map((bu) => bu.urlId),
+          existingBundleUrls.map((bu) => bu.urlId)
         );
 
         // Filter out already-added URLs
@@ -322,6 +322,9 @@ export class UrlBulkService {
           utmData.utmTerm = operation.utmTerm;
         if (operation.utmContent !== undefined)
           utmData.utmContent = operation.utmContent;
+        if (operation.utmId !== undefined) utmData.utmId = operation.utmId;
+        if (operation.utmSourcePlatform !== undefined)
+          utmData.utmSourcePlatform = operation.utmSourcePlatform;
 
         await tx.url.updateMany({
           where: { id: { in: validIds } },
@@ -354,7 +357,7 @@ export class UrlBulkService {
       await this.bulkClearUrlCache(urls);
     } catch (error) {
       this.logger.error(
-        `Failed to clear cache for bulk updated URLs: ${error}`,
+        `Failed to clear cache for bulk updated URLs: ${error}`
       );
       this.eventEmitter.emit('cache.clear.failed', {
         operation: 'bulkUpdate',
@@ -377,7 +380,7 @@ export class UrlBulkService {
     userId: string,
     urlIds: string[],
     userRole?: 'ADMIN' | 'USER',
-    meta?: RequestMeta,
+    meta?: RequestMeta
   ): Promise<BulkDeleteResultDto> {
     // Early validation: check for empty or invalid input
     if (!urlIds || urlIds.length === 0) {
@@ -386,7 +389,7 @@ export class UrlBulkService {
 
     // Filter out any invalid IDs (null, undefined, empty strings)
     const validInputIds = urlIds.filter(
-      (id) => id && typeof id === 'string' && id.trim().length > 0,
+      (id) => id && typeof id === 'string' && id.trim().length > 0
     );
     if (validInputIds.length === 0) {
       throw new BadRequestException('No valid URL IDs provided');
@@ -419,7 +422,7 @@ export class UrlBulkService {
       const unauthorizedUrls = urls.filter((url) => url.userId !== userId);
       if (unauthorizedUrls.length > 0) {
         throw new ForbiddenException(
-          `You do not have permission to delete ${unauthorizedUrls.length} URL(s)`,
+          `You do not have permission to delete ${unauthorizedUrls.length} URL(s)`
         );
       }
     }
@@ -462,7 +465,7 @@ export class UrlBulkService {
       await this.bulkClearUrlCache(urls);
     } catch (error) {
       this.logger.error(
-        `Failed to clear cache for bulk deleted URLs: ${error}`,
+        `Failed to clear cache for bulk deleted URLs: ${error}`
       );
       this.eventEmitter.emit('cache.clear.failed', {
         operation: 'bulkDelete',
@@ -489,7 +492,7 @@ export class UrlBulkService {
         // Log but don't throw - this is fire-and-forget
         this.logger.error(
           `Failed to emit url.deleted events: ${error instanceof Error ? error.message : String(error)}`,
-          error instanceof Error ? error.stack : undefined,
+          error instanceof Error ? error.stack : undefined
         );
       }
     });
@@ -517,14 +520,14 @@ export class UrlBulkService {
    * Bulk clear URL cache with batching to prevent Redis overload
    */
   private async bulkClearUrlCache(
-    urls: { id: string; slug: string }[],
+    urls: { id: string; slug: string }[]
   ): Promise<void> {
     const BATCH_SIZE = 50;
 
     for (let i = 0; i < urls.length; i += BATCH_SIZE) {
       const batch = urls.slice(i, i + BATCH_SIZE);
       await Promise.all(
-        batch.map((url) => this.clearUrlCache(url.id, url.slug)),
+        batch.map((url) => this.clearUrlCache(url.id, url.slug))
       );
 
       // Add small delay between batches to prevent Redis overload

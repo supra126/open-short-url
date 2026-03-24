@@ -248,6 +248,8 @@ export class RedirectController {
     @Query('utm_campaign') utmCampaign?: string,
     @Query('utm_term') utmTerm?: string,
     @Query('utm_content') utmContent?: string,
+    @Query('utm_id') utmId?: string,
+    @Query('utm_source_platform') utmSourcePlatform?: string,
     @Query('error') error?: string,
     @Req() request?: FastifyRequest,
     @Res() reply?: FastifyReply
@@ -292,6 +294,8 @@ export class RedirectController {
       utmCampaign,
       utmTerm,
       utmContent,
+      utmId,
+      utmSourcePlatform,
     };
 
     try {
@@ -324,6 +328,9 @@ export class RedirectController {
         if (utmCampaign) utmParams.append('utm_campaign', utmCampaign);
         if (utmTerm) utmParams.append('utm_term', utmTerm);
         if (utmContent) utmParams.append('utm_content', utmContent);
+        if (utmId) utmParams.append('utm_id', utmId);
+        if (utmSourcePlatform)
+          utmParams.append('utm_source_platform', utmSourcePlatform);
 
         const html = generatePasswordPage({
           slug,
@@ -422,6 +429,8 @@ export class RedirectController {
     @Query('utm_campaign') utmCampaign?: string,
     @Query('utm_term') utmTerm?: string,
     @Query('utm_content') utmContent?: string,
+    @Query('utm_id') utmId?: string,
+    @Query('utm_source_platform') utmSourcePlatform?: string,
     @Ip() clientIp?: string,
     @Req() request?: FastifyRequest,
     @Res() reply?: FastifyReply
@@ -462,6 +471,8 @@ export class RedirectController {
       utmCampaign,
       utmTerm,
       utmContent,
+      utmId,
+      utmSourcePlatform,
     };
 
     try {
@@ -567,6 +578,9 @@ export class RedirectController {
         if (utmCampaign) utmParams.append('utm_campaign', utmCampaign);
         if (utmTerm) utmParams.append('utm_term', utmTerm);
         if (utmContent) utmParams.append('utm_content', utmContent);
+        if (utmId) utmParams.append('utm_id', utmId);
+        if (utmSourcePlatform)
+          utmParams.append('utm_source_platform', utmSourcePlatform);
 
         // Add error parameter
         utmParams.append('error', 'invalid_password');

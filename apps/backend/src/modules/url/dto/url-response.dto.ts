@@ -108,6 +108,18 @@ export class UrlResponseDto {
   })
   utmContent?: string;
 
+  @ApiPropertyOptional({
+    description: 'UTM Campaign ID (GA4)',
+    example: 'abc123',
+  })
+  utmId?: string;
+
+  @ApiPropertyOptional({
+    description: 'UTM Source Platform (GA4)',
+    example: 'google',
+  })
+  utmSourcePlatform?: string;
+
   @ApiProperty({
     description: 'Whether A/B testing is enabled',
     example: false,

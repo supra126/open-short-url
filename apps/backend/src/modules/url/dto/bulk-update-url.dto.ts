@@ -69,7 +69,8 @@ export class BulkUpdateExpirationDto {
   type!: 'expiration';
 
   @ApiPropertyOptional({
-    description: 'New expiration date (ISO 8601 format), null to remove expiration',
+    description:
+      'New expiration date (ISO 8601 format), null to remove expiration',
     example: '2025-12-31T23:59:59Z',
     type: 'string',
     format: 'date-time',
@@ -121,6 +122,23 @@ export class BulkUpdateUtmDto {
   @MaxLength(255, { message: 'UTM Content must not exceed 255 characters' })
   @IsOptional()
   utmContent?: string;
+
+  @ApiPropertyOptional({ description: 'UTM Campaign ID (GA4)', maxLength: 255 })
+  @IsString()
+  @MaxLength(255, { message: 'UTM ID must not exceed 255 characters' })
+  @IsOptional()
+  utmId?: string;
+
+  @ApiPropertyOptional({
+    description: 'UTM Source Platform (GA4)',
+    maxLength: 255,
+  })
+  @IsString()
+  @MaxLength(255, {
+    message: 'UTM Source Platform must not exceed 255 characters',
+  })
+  @IsOptional()
+  utmSourcePlatform?: string;
 }
 
 /**
@@ -158,7 +176,7 @@ function transformOperation(value: unknown): BulkUpdateOperation {
       return plainToInstance(BulkUpdateUtmDto, value);
     default:
       throw new BadRequestException(
-        `Invalid operation type: ${type}. Must be one of: status, bundle, expiration, utm`,
+        `Invalid operation type: ${type}. Must be one of: status, bundle, expiration, utm`
       );
   }
 }
@@ -175,7 +193,9 @@ export class BulkUpdateUrlDto {
   @IsArray()
   @IsString({ each: true })
   @ArrayMinSize(1, { message: 'At least 1 URL ID is required' })
-  @ArrayMaxSize(100, { message: 'Maximum 100 URLs per batch for security reasons' })
+  @ArrayMaxSize(100, {
+    message: 'Maximum 100 URLs per batch for security reasons',
+  })
   urlIds!: string[];
 
   @ApiProperty({

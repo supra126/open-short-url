@@ -28,8 +28,10 @@ export type UpdateUserRoleDto = components['schemas']['UpdateUserRoleDto'];
 export type UpdateUserStatusDto = components['schemas']['UpdateUserStatusDto'];
 export type ResetPasswordDto = components['schemas']['ResetPasswordDto'];
 export type UpdateUserNameDto = components['schemas']['UpdateUserNameDto'];
-export type OidcAccountProviderDto = components['schemas']['OidcAccountProviderDto'];
-export type OidcAccountResponseDto = components['schemas']['OidcAccountResponseDto'];
+export type OidcAccountProviderDto =
+  components['schemas']['OidcAccountProviderDto'];
+export type OidcAccountResponseDto =
+  components['schemas']['OidcAccountResponseDto'];
 
 // ==================== URL Types ====================
 export type CreateUrlDto = components['schemas']['CreateUrlDto'];
@@ -38,7 +40,8 @@ export type UrlResponseDto = components['schemas']['UrlResponseDto'];
 export type UrlListResponseDto = components['schemas']['UrlListResponseDto'];
 export type UrlStatus = components['schemas']['UrlStatus'];
 export type QrCodeResponseDto = components['schemas']['QrCodeResponseDto'];
-export type DashboardStatsResponseDto = components['schemas']['DashboardStatsResponseDto'];
+export type DashboardStatsResponseDto =
+  components['schemas']['DashboardStatsResponseDto'];
 export type TopPerformingUrlDto = components['schemas']['TopPerformingUrlDto'];
 
 // ==================== Variant (A/B Testing) Types ====================
@@ -46,30 +49,43 @@ export type CreateVariantDto = components['schemas']['CreateVariantDto'];
 export type UpdateVariantDto = components['schemas']['UpdateVariantDto'];
 export type VariantResponseDto = components['schemas']['VariantResponseDto'];
 export type VariantStatsDto = components['schemas']['VariantStatsDto'];
-export type VariantListResponseDto = components['schemas']['VariantListResponseDto'];
+export type VariantListResponseDto =
+  components['schemas']['VariantListResponseDto'];
 
 // ==================== Smart Routing Types ====================
 // Condition and Routing types from OpenAPI
 export type TimeRangeDto = components['schemas']['TimeRangeDto'];
 export type ConditionItemDto = components['schemas']['ConditionItemDto'];
-export type RoutingConditionsDto = components['schemas']['RoutingConditionsDto'];
-export type CreateRoutingRuleDto = components['schemas']['CreateRoutingRuleDto'];
-export type UpdateRoutingRuleDto = components['schemas']['UpdateRoutingRuleDto'];
-export type RoutingRuleResponseDto = components['schemas']['RoutingRuleResponseDto'];
+export type RoutingConditionsDto =
+  components['schemas']['RoutingConditionsDto'];
+export type CreateRoutingRuleDto =
+  components['schemas']['CreateRoutingRuleDto'];
+export type UpdateRoutingRuleDto =
+  components['schemas']['UpdateRoutingRuleDto'];
+export type RoutingRuleResponseDto =
+  components['schemas']['RoutingRuleResponseDto'];
 export type RoutingRuleStatDto = components['schemas']['RoutingRuleStatDto'];
-export type RoutingRulesListResponseDto = components['schemas']['RoutingRulesListResponseDto'];
-export type UpdateSmartRoutingSettingsDto = components['schemas']['UpdateSmartRoutingSettingsDto'];
-export type SmartRoutingSettingsResponseDto = components['schemas']['SmartRoutingSettingsResponseDto'];
-export type CreateFromTemplateDto = components['schemas']['CreateFromTemplateDto'];
+export type RoutingRulesListResponseDto =
+  components['schemas']['RoutingRulesListResponseDto'];
+export type UpdateSmartRoutingSettingsDto =
+  components['schemas']['UpdateSmartRoutingSettingsDto'];
+export type SmartRoutingSettingsResponseDto =
+  components['schemas']['SmartRoutingSettingsResponseDto'];
+export type CreateFromTemplateDto =
+  components['schemas']['CreateFromTemplateDto'];
 export type RoutingTemplateDto = components['schemas']['RoutingTemplateDto'];
-export type TemplateListResponseDto = components['schemas']['TemplateListResponseDto'];
+export type TemplateListResponseDto =
+  components['schemas']['TemplateListResponseDto'];
 
 // Routing Analytics types from OpenAPI
 export type RoutingRuleStat = components['schemas']['RoutingRuleStat'];
-export type RoutingRuleTimeSeriesDataPoint = components['schemas']['RoutingRuleTimeSeriesDataPoint'];
+export type RoutingRuleTimeSeriesDataPoint =
+  components['schemas']['RoutingRuleTimeSeriesDataPoint'];
 export type RoutingRuleGeoStat = components['schemas']['RoutingRuleGeoStat'];
-export type RoutingRuleDeviceStat = components['schemas']['RoutingRuleDeviceStat'];
-export type RoutingAnalyticsResponseDto = components['schemas']['RoutingAnalyticsResponseDto'];
+export type RoutingRuleDeviceStat =
+  components['schemas']['RoutingRuleDeviceStat'];
+export type RoutingAnalyticsResponseDto =
+  components['schemas']['RoutingAnalyticsResponseDto'];
 
 // Derived types for convenience (extracted from ConditionItemDto)
 export type ConditionType = ConditionItemDto['type'];
@@ -83,14 +99,17 @@ export type DayOfWeek = components['schemas']['DayOfWeek'];
 // ==================== Bulk Operation Types ====================
 // Bulk Create types from OpenAPI
 export type BulkCreateUrlDto = components['schemas']['BulkCreateUrlDto'];
-export type BulkCreateSuccessItem = components['schemas']['BulkCreateSuccessItem'];
-export type BulkCreateFailureItem = components['schemas']['BulkCreateFailureItem'];
+export type BulkCreateSuccessItem =
+  components['schemas']['BulkCreateSuccessItem'];
+export type BulkCreateFailureItem =
+  components['schemas']['BulkCreateFailureItem'];
 export type BulkCreateResultDto = components['schemas']['BulkCreateResultDto'];
 
 // Bulk Update types from OpenAPI
 export type BulkUpdateStatusDto = components['schemas']['BulkUpdateStatusDto'];
 export type BulkAddToBundleDto = components['schemas']['BulkAddToBundleDto'];
-export type BulkUpdateExpirationDto = components['schemas']['BulkUpdateExpirationDto'];
+export type BulkUpdateExpirationDto =
+  components['schemas']['BulkUpdateExpirationDto'];
 export type BulkUpdateUtmDto = components['schemas']['BulkUpdateUtmDto'];
 export type BulkUpdateUrlDto = components['schemas']['BulkUpdateUrlDto'];
 export type BulkUpdateResultDto = components['schemas']['BulkUpdateResultDto'];
@@ -109,7 +128,8 @@ export type BulkUpdateOperation =
 export type BulkUpdateOperationType = BulkUpdateOperation['type'];
 
 // ==================== Analytics Types ====================
-export type AnalyticsResponseDto = components['schemas']['AnalyticsResponseDto'];
+export type AnalyticsResponseDto =
+  components['schemas']['AnalyticsResponseDto'];
 export type TimeSeriesDataPoint = components['schemas']['TimeSeriesDataPoint'];
 export type GeoLocationStat = components['schemas']['GeoLocationStat'];
 export type DeviceStat = components['schemas']['DeviceStat'];
@@ -117,25 +137,33 @@ export type RefererStat = components['schemas']['RefererStat'];
 export type UtmStat = components['schemas']['UtmStat'];
 export type OverviewStats = components['schemas']['OverviewStats'];
 export type RecentClickDto = components['schemas']['RecentClickDto'];
-export type RecentClicksResponseDto = components['schemas']['RecentClicksResponseDto'];
+export type RecentClicksResponseDto =
+  components['schemas']['RecentClicksResponseDto'];
 export type BotTypeStat = components['schemas']['BotTypeStat'];
-export type BotAnalyticsResponseDto = components['schemas']['BotAnalyticsResponseDto'];
-export type UserBotAnalyticsResponseDto = components['schemas']['UserBotAnalyticsResponseDto'];
-export type TopPerformingVariant = components['schemas']['TopPerformingVariant'];
-export type AbTestAnalyticsResponseDto = components['schemas']['AbTestAnalyticsResponseDto'];
+export type BotAnalyticsResponseDto =
+  components['schemas']['BotAnalyticsResponseDto'];
+export type UserBotAnalyticsResponseDto =
+  components['schemas']['UserBotAnalyticsResponseDto'];
+export type TopPerformingVariant =
+  components['schemas']['TopPerformingVariant'];
+export type AbTestAnalyticsResponseDto =
+  components['schemas']['AbTestAnalyticsResponseDto'];
 
 // ==================== API Key Types ====================
 export type CreateApiKeyDto = components['schemas']['CreateApiKeyDto'];
 export type ApiKeyResponseDto = components['schemas']['ApiKeyResponseDto'];
-export type CreateApiKeyResponseDto = components['schemas']['CreateApiKeyResponseDto'];
-export type ApiKeyListResponseDto = components['schemas']['ApiKeyListResponseDto'];
+export type CreateApiKeyResponseDto =
+  components['schemas']['CreateApiKeyResponseDto'];
+export type ApiKeyListResponseDto =
+  components['schemas']['ApiKeyListResponseDto'];
 
 // ==================== Bundle Types ====================
 export type CreateBundleDto = components['schemas']['CreateBundleDto'];
 export type UpdateBundleDto = components['schemas']['UpdateBundleDto'];
 export type BundleUrlDto = components['schemas']['BundleUrlDto'];
 export type BundleResponseDto = components['schemas']['BundleResponseDto'];
-export type BundleListResponseDto = components['schemas']['BundleListResponseDto'];
+export type BundleListResponseDto =
+  components['schemas']['BundleListResponseDto'];
 export type TopUrlDto = components['schemas']['TopUrlDto'];
 export type ClickTrendDataPoint = components['schemas']['ClickTrendDataPoint'];
 export type BundleStatsDto = components['schemas']['BundleStatsDto'];
@@ -147,37 +175,60 @@ export type UpdateUrlOrderDto = components['schemas']['UpdateUrlOrderDto'];
 export type CreateWebhookDto = components['schemas']['CreateWebhookDto'];
 export type UpdateWebhookDto = components['schemas']['UpdateWebhookDto'];
 export type WebhookResponseDto = components['schemas']['WebhookResponseDto'];
-export type WebhookListResponseDto = components['schemas']['WebhookListResponseDto'];
-export type WebhookLogResponseDto = components['schemas']['WebhookLogResponseDto'];
-export type WebhookLogsListResponseDto = components['schemas']['WebhookLogsListResponseDto'];
-export type WebhookTestResponseDto = components['schemas']['WebhookTestResponseDto'];
+export type WebhookListResponseDto =
+  components['schemas']['WebhookListResponseDto'];
+export type WebhookLogResponseDto =
+  components['schemas']['WebhookLogResponseDto'];
+export type WebhookLogsListResponseDto =
+  components['schemas']['WebhookLogsListResponseDto'];
+export type WebhookTestResponseDto =
+  components['schemas']['WebhookTestResponseDto'];
 
 // ==================== Redirect Types ====================
 export type VerifyPasswordDto = components['schemas']['VerifyPasswordDto'];
-export type RedirectInfoResponseDto = components['schemas']['RedirectInfoResponseDto'];
-export type VerifyPasswordResponseDto = components['schemas']['VerifyPasswordResponseDto'];
+export type RedirectInfoResponseDto =
+  components['schemas']['RedirectInfoResponseDto'];
+export type VerifyPasswordResponseDto =
+  components['schemas']['VerifyPasswordResponseDto'];
 
 // ==================== OIDC / SSO Types ====================
-export type OidcProviderPublicDto = components['schemas']['OidcProviderPublicDto'];
-export type OidcProviderResponseDto = components['schemas']['OidcProviderResponseDto'];
-export type CreateOidcProviderDto = components['schemas']['CreateOidcProviderDto'];
-export type UpdateOidcProviderDto = components['schemas']['UpdateOidcProviderDto'];
+export type OidcProviderPublicDto =
+  components['schemas']['OidcProviderPublicDto'];
+export type OidcProviderResponseDto =
+  components['schemas']['OidcProviderResponseDto'];
+export type CreateOidcProviderDto =
+  components['schemas']['CreateOidcProviderDto'];
+export type UpdateOidcProviderDto =
+  components['schemas']['UpdateOidcProviderDto'];
 
 // ==================== Settings Types ====================
-export type UpdateSystemSettingDto = components['schemas']['UpdateSystemSettingDto'];
+export type UpdateSystemSettingDto =
+  components['schemas']['UpdateSystemSettingDto'];
 
 // ==================== Common Types ====================
 export type SuccessResponseDto = components['schemas']['SuccessResponseDto'];
 export type ErrorResponseDto = components['schemas']['ErrorResponseDto'];
-export type SystemSettingsResponseDto = components['schemas']['SystemSettingsResponseDto'];
+export type SystemSettingsResponseDto =
+  components['schemas']['SystemSettingsResponseDto'];
 
 // ==================== Audit Log Types ====================
 export type AuditLogUserDto = components['schemas']['AuditLogUserDto'];
 export type AuditLogDto = components['schemas']['AuditLogDto'];
-export type AuditLogListResponseDto = components['schemas']['AuditLogListResponseDto'];
+export type AuditLogListResponseDto =
+  components['schemas']['AuditLogListResponseDto'];
 
 // AuditAction type derived from AuditLogDto
 export type AuditAction = AuditLogDto['action'];
+
+// ==================== UTM Types ====================
+export type UtmFieldName =
+  | 'utmSource'
+  | 'utmMedium'
+  | 'utmCampaign'
+  | 'utmTerm'
+  | 'utmContent'
+  | 'utmId'
+  | 'utmSourcePlatform';
 
 // ==================== Query Parameter Types ====================
 // These types are exported from OpenAPI generated schemas

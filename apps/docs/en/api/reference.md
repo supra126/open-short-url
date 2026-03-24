@@ -116,7 +116,9 @@ Content-Type: application/json
   "utmMedium": "email",              // Optional
   "utmCampaign": "summer_sale",      // Optional
   "utmTerm": "discount",             // Optional
-  "utmContent": "banner_top"         // Optional
+  "utmContent": "banner_top",        // Optional
+  "utmId": "abc123",                // Optional, GA4 recommended
+  "utmSourcePlatform": "google"     // Optional, GA4 recommended
 }
 ```
 
@@ -135,6 +137,33 @@ GET /api/urls?page=1&limit=10&search=keyword&status=ACTIVE
 | `status` | string | Filter by status: `ACTIVE`, `INACTIVE` |
 | `sortBy` | string | Sort field |
 | `sortOrder` | string | `asc` or `desc` |
+
+### Get UTM Suggestions
+
+```http
+GET /api/urls/utm-suggestions?field=utmSource&q=news
+```
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `field` | string | **Required.** UTM field name: `utmSource`, `utmMedium`, `utmCampaign`, `utmTerm`, `utmContent` |
+| `q` | string | Optional prefix filter (max 100 chars) |
+
+**Response:**
+
+```json
+{
+  "field": "utmSource",
+  "suggestions": [
+    { "value": "facebook", "count": 12 },
+    { "value": "google", "count": 8 },
+    { "value": "newsletter", "count": 5 }
+  ]
+}
+```
+
+Returns up to 20 distinct values across all users, sorted by usage count (most popular first).
 
 ### Get URL Details
 
