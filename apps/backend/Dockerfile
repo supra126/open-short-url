@@ -49,6 +49,7 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 COPY --from=builder /app/apps/backend/dist ./apps/backend/dist
+COPY --from=builder /app/apps/backend/public ./apps/backend/public
 COPY --from=builder /app/apps/backend/prisma ./apps/backend/prisma
 COPY --from=builder /app/apps/backend/scripts ./apps/backend/scripts
 COPY --from=builder /app/apps/backend/package.json ./apps/backend/

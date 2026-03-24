@@ -61,28 +61,26 @@ export class UrlService implements OnModuleInit {
     private distributedLockService: DistributedLockService,
     private configService: ConfigService,
     private eventEmitter: EventEmitter2,
-    private auditLogService: AuditLogService,
+    private auditLogService: AuditLogService
   ) {
     // Parse environment variables with defaults
     const thresholdsStr = this.configService.get<string>(
       'SLUG_LENGTH_THRESHOLDS',
-      '1000,50000,500000',
+      '1000,50000,500000'
     );
     const lengthsStr = this.configService.get<string>(
       'SLUG_LENGTHS',
-      '4,5,6,7',
+      '4,5,6,7'
     );
 
     this.slugLengthThresholds = thresholdsStr
       .split(',')
       .map((t) => parseInt(t.trim(), 10));
-    this.slugLengths = lengthsStr
-      .split(',')
-      .map((l) => parseInt(l.trim(), 10));
+    this.slugLengths = lengthsStr.split(',').map((l) => parseInt(l.trim(), 10));
 
     if (this.slugLengthThresholds.length !== this.slugLengths.length - 1) {
       this.logger.warn(
-        'SLUG_LENGTH_THRESHOLDS and SLUG_LENGTHS configuration mismatch. Using defaults.',
+        'SLUG_LENGTH_THRESHOLDS and SLUG_LENGTHS configuration mismatch. Using defaults.'
       );
       this.slugLengthThresholds = [1000, 50000, 500000];
       this.slugLengths = [4, 5, 6, 7];
@@ -98,12 +96,15 @@ export class UrlService implements OnModuleInit {
     this.urlCount = 0;
     this.logger.log('URL Service initializing...');
     this.logger.log(
-      `Dynamic slug length strategy: Thresholds=${this.slugLengthThresholds.join(',')}, Lengths=${this.slugLengths.join(',')}`,
+      `Dynamic slug length strategy: Thresholds=${this.slugLengthThresholds.join(',')}, Lengths=${this.slugLengths.join(',')}`
     );
 
     // Load URL count asynchronously without blocking initialization
     this.loadUrlCount().catch((error) => {
-      this.logger.error('Failed to load URL count during initialization', error);
+      this.logger.error(
+        'Failed to load URL count during initialization',
+        error
+      );
     });
   }
 
@@ -132,7 +133,7 @@ export class UrlService implements OnModuleInit {
     userId: string,
     createUrlDto: CreateUrlDto,
     meta?: RequestMeta,
-    options?: { skipAuditLog?: boolean },
+    options?: { skipAuditLog?: boolean }
   ): Promise<UrlResponseDto> {
     const {
       originalUrl,
@@ -145,6 +146,9 @@ export class UrlService implements OnModuleInit {
       utmCampaign,
       utmTerm,
       utmContent,
+      ogTitle,
+      ogDescription,
+      twitterCardType,
     } = createUrlDto;
 
     // Generate or validate slug
@@ -162,7 +166,7 @@ export class UrlService implements OnModuleInit {
         lockResource,
         3000, // 3 seconds TTL
         2, // max 2 retries
-        50, // 50ms retry delay
+        50 // 50ms retry delay
       );
 
       try {
@@ -180,7 +184,7 @@ export class UrlService implements OnModuleInit {
         if (lockResult.acquired) {
           await this.distributedLockService.release(
             lockResource,
-            lockResult.lockId,
+            lockResult.lockId
           );
         }
       }
@@ -209,6 +213,9 @@ export class UrlService implements OnModuleInit {
         utmCampaign,
         utmTerm,
         utmContent,
+        ogTitle,
+        ogDescription,
+        twitterCardType,
       },
     });
 
@@ -247,9 +254,16 @@ export class UrlService implements OnModuleInit {
   async findAll(
     userId: string,
     queryDto: UrlQueryDto,
-    userRole?: 'ADMIN' | 'USER',
+    userRole?: 'ADMIN' | 'USER'
   ): Promise<UrlListResponseDto> {
-    const { page = 1, pageSize = 10, search, status, sortBy, sortOrder } = queryDto;
+    const {
+      page = 1,
+      pageSize = 10,
+      search,
+      status,
+      sortBy,
+      sortOrder,
+    } = queryDto;
 
     // Build query conditions
     const where: Prisma.UrlWhereInput = {
@@ -285,7 +299,7 @@ export class UrlService implements OnModuleInit {
       urls.map((url) => this.mapToResponse(url)),
       total,
       page,
-      pageSize,
+      pageSize
     );
   }
 
@@ -294,7 +308,7 @@ export class UrlService implements OnModuleInit {
    */
   async getStats(
     userId: string,
-    userRole?: 'ADMIN' | 'USER',
+    userRole?: 'ADMIN' | 'USER'
   ): Promise<{
     totalUrls: number;
     activeUrls: number;
@@ -306,7 +320,9 @@ export class UrlService implements OnModuleInit {
     const [total, active, inactive, expired] = await Promise.all([
       this.prisma.url.count({ where }),
       this.prisma.url.count({ where: { ...where, status: UrlStatus.ACTIVE } }),
-      this.prisma.url.count({ where: { ...where, status: UrlStatus.INACTIVE } }),
+      this.prisma.url.count({
+        where: { ...where, status: UrlStatus.INACTIVE },
+      }),
       this.prisma.url.count({ where: { ...where, status: UrlStatus.EXPIRED } }),
     ]);
 
@@ -324,14 +340,15 @@ export class UrlService implements OnModuleInit {
   async findOne(
     id: string,
     userId: string,
-    userRole?: 'ADMIN' | 'USER',
+    userRole?: 'ADMIN' | 'USER'
   ): Promise<UrlResponseDto> {
-    // Try to get from cache first
-    const cacheKey = `${this.CACHE_PREFIX}${id}`;
-    const cached = await this.cacheService.get<Url>(cacheKey);
-
-    if (cached && (userRole === 'ADMIN' || cached.userId === userId)) {
-      return this.mapToResponse(cached);
+    // Try to get from cache first (skip cache for admin to include user info)
+    if (userRole !== 'ADMIN') {
+      const cacheKey = `${this.CACHE_PREFIX}${id}`;
+      const cached = await this.cacheService.get<Url>(cacheKey);
+      if (cached && cached.userId === userId) {
+        return this.mapToResponse(cached);
+      }
     }
 
     // Query from database
@@ -341,16 +358,29 @@ export class UrlService implements OnModuleInit {
         // ADMIN can view any URL, USER only their own
         ...(userRole !== 'ADMIN' && { userId }),
       },
+      ...(userRole === 'ADMIN' && {
+        include: { user: { select: { name: true, email: true } } },
+      }),
     });
 
     if (!url) {
       throw new NotFoundException(ERROR_MESSAGES.URL_NOT_FOUND);
     }
 
-    // Cache the result
-    await this.cacheUrl(url);
+    // Cache the result (skip for admin queries which include joined user data)
+    if (userRole !== 'ADMIN') {
+      await this.cacheUrl(url);
+    }
 
-    return this.mapToResponse(url);
+    const response = this.mapToResponse(url);
+
+    // Add creator info for admin
+    if (userRole === 'ADMIN' && (url as any).user) {
+      response.createdByName = (url as any).user.name ?? undefined;
+      response.createdByEmail = (url as any).user.email;
+    }
+
+    return response;
   }
 
   /**
@@ -410,7 +440,7 @@ export class UrlService implements OnModuleInit {
     userId: string,
     updateUrlDto: UpdateUrlDto,
     userRole?: 'ADMIN' | 'USER',
-    meta?: RequestMeta,
+    meta?: RequestMeta
   ): Promise<UrlResponseDto> {
     // Check if URL exists and belongs to the user (or user is ADMIN)
     const existing = await this.prisma.url.findFirst({
@@ -425,7 +455,7 @@ export class UrlService implements OnModuleInit {
       throw new NotFoundException(ERROR_MESSAGES.URL_NOT_FOUND);
     }
 
-    const { password, expiresAt, ...restDto } = updateUrlDto;
+    const { password, expiresAt, ogImage, ...restDto } = updateUrlDto;
 
     // Process password
     let hashedPassword: string | null | undefined = undefined;
@@ -446,6 +476,7 @@ export class UrlService implements OnModuleInit {
         ...restDto,
         ...(hashedPassword !== undefined && { password: hashedPassword }),
         ...(expirationDate !== undefined && { expiresAt: expirationDate }),
+        ...(ogImage !== undefined && { ogImage }),
       },
     });
 
@@ -454,6 +485,13 @@ export class UrlService implements OnModuleInit {
 
     // Emit url.updated event for webhooks
     this.eventEmitter.emit('url.updated', url);
+
+    // Clean up old OG image after successful DB update
+    if (ogImage === null && existing.ogImage) {
+      this.eventEmitter.emit('og-image.cleanup', {
+        ogImageKey: existing.ogImage,
+      });
+    }
 
     // Audit log
     await this.auditLogService.create({
@@ -487,7 +525,7 @@ export class UrlService implements OnModuleInit {
     id: string,
     userId: string,
     userRole?: 'ADMIN' | 'USER',
-    meta?: RequestMeta,
+    meta?: RequestMeta
   ): Promise<void> {
     // Check if URL exists and belongs to the user (or user is ADMIN)
     const existing = await this.prisma.url.findFirst({
@@ -520,6 +558,13 @@ export class UrlService implements OnModuleInit {
       originalUrl: existing.originalUrl,
       userId: existing.userId,
     });
+
+    // Emit event for OG image cleanup (if exists)
+    if (existing.ogImage) {
+      this.eventEmitter.emit('og-image.cleanup', {
+        ogImageKey: existing.ogImage,
+      });
+    }
 
     // Audit log
     await this.auditLogService.create({
@@ -593,7 +638,7 @@ export class UrlService implements OnModuleInit {
       lockResource,
       lockTtlMs,
       2, // max 2 retries
-      50, // 50ms retry delay
+      50 // 50ms retry delay
     );
 
     try {
@@ -610,7 +655,7 @@ export class UrlService implements OnModuleInit {
         if (!existing) {
           if (!lockResult.acquired) {
             this.logger.debug(
-              `Slug generated without lock (Redis unavailable or lock contention): ${slug}`,
+              `Slug generated without lock (Redis unavailable or lock contention): ${slug}`
             );
           }
           return slug;
@@ -626,12 +671,12 @@ export class UrlService implements OnModuleInit {
 
       if (existing) {
         throw new ConflictException(
-          'Unable to generate unique short URL code, please try again later',
+          'Unable to generate unique short URL code, please try again later'
         );
       }
 
       this.logger.warn(
-        `Used fallback slug length ${fallbackLength} after ${maxAttempts} collision attempts`,
+        `Used fallback slug length ${fallbackLength} after ${maxAttempts} collision attempts`
       );
 
       return longSlug;
@@ -640,7 +685,7 @@ export class UrlService implements OnModuleInit {
       if (lockResult.acquired) {
         await this.distributedLockService.release(
           lockResource,
-          lockResult.lockId,
+          lockResult.lockId
         );
       }
     }
@@ -674,7 +719,7 @@ export class UrlService implements OnModuleInit {
     // Log cache strategy for hot URLs
     if (url.clickCount >= this.HOT_URL_THRESHOLD) {
       this.logger.debug(
-        `Hot URL cached: ${url.slug} (${url.clickCount} clicks) with TTL ${ttl}s`,
+        `Hot URL cached: ${url.slug} (${url.clickCount} clicks) with TTL ${ttl}s`
       );
     }
   }
@@ -695,13 +740,15 @@ export class UrlService implements OnModuleInit {
   /**
    * Bulk clear URL cache with batching to prevent Redis overload
    */
-  private async bulkClearUrlCache(urls: { id: string; slug: string }[]): Promise<void> {
+  private async bulkClearUrlCache(
+    urls: { id: string; slug: string }[]
+  ): Promise<void> {
     const BATCH_SIZE = 50;
 
     for (let i = 0; i < urls.length; i += BATCH_SIZE) {
       const batch = urls.slice(i, i + BATCH_SIZE);
       await Promise.all(
-        batch.map((url) => this.clearUrlCache(url.id, url.slug)),
+        batch.map((url) => this.clearUrlCache(url.id, url.slug))
       );
 
       // Add small delay between batches to prevent Redis overload
@@ -716,6 +763,15 @@ export class UrlService implements OnModuleInit {
    */
   private mapToResponse(url: Url): UrlResponseDto {
     const shortUrlDomain = this.configService.get<string>('SHORT_URL_DOMAIN');
+
+    // Build OG image proxy URL
+    let ogImageUrl: string | undefined;
+    if (url.ogImage) {
+      const backendUrl = shortUrlDomain || '';
+      const cacheBust = url.updatedAt ? new Date(url.updatedAt).getTime() : '';
+      ogImageUrl = `${backendUrl}/api/og-images/${encodeURIComponent(url.ogImage)}?v=${cacheBust}`;
+    }
+
     return {
       id: url.id,
       slug: url.slug,
@@ -735,6 +791,11 @@ export class UrlService implements OnModuleInit {
       isAbTest: url.isAbTest,
       isSmartRouting: url.isSmartRouting,
       defaultUrl: url.defaultUrl ?? undefined,
+      ogTitle: url.ogTitle ?? undefined,
+      ogDescription: url.ogDescription ?? undefined,
+      ogImage: url.ogImage ?? undefined,
+      ogImageUrl,
+      twitterCardType: url.twitterCardType ?? undefined,
       createdAt: url.createdAt,
       updatedAt: url.updatedAt,
     };
@@ -751,7 +812,7 @@ export class UrlService implements OnModuleInit {
       margin?: number;
       color?: { dark?: string; light?: string };
     },
-    userRole?: 'ADMIN' | 'USER',
+    userRole?: 'ADMIN' | 'USER'
   ): Promise<string> {
     // Check if URL exists and belongs to the user (or user is ADMIN)
     const url = await this.prisma.url.findFirst({

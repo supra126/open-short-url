@@ -1906,6 +1906,14 @@ export interface components {
              * @example banner_top
              */
             utmContent?: string;
+            /** @description OG Title for social preview */
+            ogTitle?: string;
+            /** @description OG Description for social preview */
+            ogDescription?: string;
+            /** @description OG Image S3 key */
+            ogImage?: string;
+            /** @description Twitter card type */
+            twitterCardType?: string;
         };
         /**
          * @description Status
@@ -2004,6 +2012,20 @@ export interface components {
              * @example https://example.com/default
              */
             defaultUrl?: string;
+            /** @description OG Title for social preview */
+            ogTitle?: string;
+            /** @description OG Description for social preview */
+            ogDescription?: string;
+            /** @description OG Image S3 key */
+            ogImage?: string;
+            /** @description OG Image proxy URL */
+            ogImageUrl?: string;
+            /** @description Twitter card type */
+            twitterCardType?: string;
+            /** @description Created by user name (admin only) */
+            createdByName?: string;
+            /** @description Created by user email (admin only) */
+            createdByEmail?: string;
             /**
              * Format: date-time
              * @description Creation timestamp (ISO 8601 format)
@@ -2187,6 +2209,14 @@ export interface components {
              * @example banner_top
              */
             utmContent?: string;
+            /** @description OG Title for social preview */
+            ogTitle?: string;
+            /** @description OG Description for social preview */
+            ogDescription?: string;
+            /** @description OG Image S3 key (set to null to remove) */
+            ogImage?: string | null;
+            /** @description Twitter card type */
+            twitterCardType?: string;
         };
         CreateVariantDto: {
             /**

@@ -14,10 +14,10 @@ Deploy Open Short URL on your own infrastructure without Docker.
 ## System Requirements
 
 | Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| CPU | 1 core | 2+ cores |
-| RAM | 1 GB | 2+ GB |
-| Storage | 10 GB | 20+ GB |
+| --------- | ------- | ----------- |
+| CPU       | 1 core  | 2+ cores    |
+| RAM       | 1 GB    | 2+ GB       |
+| Storage   | 10 GB   | 20+ GB      |
 
 ## Installation Steps
 
@@ -137,6 +137,21 @@ Edit `apps/frontend/.env`:
 ```bash
 NEXT_PUBLIC_API_URL="https://api.your-domain.com"
 NEXT_PUBLIC_SHORT_URL_DOMAIN="https://s.your-domain.com"
+```
+
+**Object Storage (optional, for OG image upload):**
+
+```bash
+# Add to apps/backend/.env
+
+# MinIO (self-hosted)
+S3_REGION=auto
+S3_ENDPOINT="http://localhost:9000"
+S3_ACCESS_KEY_ID="minioadmin"
+S3_SECRET_ACCESS_KEY="minioadmin"
+S3_BUCKET="open-short-url"
+
+# Or use Cloudflare R2 / AWS S3 - see Configuration docs
 ```
 
 ### 6. Run Database Migrations

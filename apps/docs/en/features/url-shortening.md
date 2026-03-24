@@ -50,14 +50,18 @@ Short:    https://s.yourdomain.com/abc123
 
 ### Available Options
 
-| Option | Description | Required |
-|--------|-------------|:--------:|
-| `originalUrl` | The URL to shorten | ✅ |
-| `customSlug` | Custom short code (3-50 chars) | ❌ |
-| `title` | Descriptive title (max 255 chars) | ❌ |
-| `password` | Password protection (4-128 chars) | ❌ |
-| `expiresAt` | Expiration date (ISO 8601) | ❌ |
-| UTM parameters | Campaign tracking | ❌ |
+| Option            | Description                                            | Required |
+| ----------------- | ------------------------------------------------------ | :------: |
+| `originalUrl`     | The URL to shorten                                     |    ✅    |
+| `customSlug`      | Custom short code (3-50 chars)                         |    ❌    |
+| `title`           | Descriptive title (max 255 chars)                      |    ❌    |
+| `password`        | Password protection (4-128 chars)                      |    ❌    |
+| `expiresAt`       | Expiration date (ISO 8601)                             |    ❌    |
+| UTM parameters    | Campaign tracking                                      |    ❌    |
+| `ogTitle`         | Social preview title (max 100 chars)                   |    ❌    |
+| `ogDescription`   | Social preview description (max 200 chars)             |    ❌    |
+| `twitterCardType` | Twitter card type (`summary` or `summary_large_image`) |    ❌    |
+| OG Image          | Social preview image (upload via API)                  |    ❌    |
 
 ### Custom Slugs
 
@@ -70,6 +74,7 @@ https://s.yourdomain.com/join-us
 ```
 
 **Slug Requirements:**
+
 - Length: 3-50 characters
 - Allowed characters: `a-z`, `A-Z`, `0-9`, `_`, `-`
 - Must be unique
@@ -78,10 +83,10 @@ https://s.yourdomain.com/join-us
 
 When no custom slug is provided, the system generates one automatically using a dynamic length strategy:
 
-| URL Count | Slug Length |
-|-----------|-------------|
-| < 1,000 | 4 characters |
-| < 50,000 | 5 characters |
+| URL Count | Slug Length  |
+| --------- | ------------ |
+| < 1,000   | 4 characters |
+| < 50,000  | 5 characters |
 | < 500,000 | 6 characters |
 | ≥ 500,000 | 7 characters |
 
@@ -97,6 +102,7 @@ Password: ********
 ```
 
 **Features:**
+
 - Visitors must enter password to access
 - Passwords are securely hashed (bcrypt)
 - Optional Cloudflare Turnstile protection against bots
@@ -106,6 +112,7 @@ Password: ********
 Set time-based expiration for campaigns or temporary links:
 
 **Expiration Types:**
+
 - **Specific date/time** - Link expires at exact moment
 - **No expiration** - Link remains active indefinitely
 
@@ -122,19 +129,74 @@ When a link expires, it automatically transitions to `EXPIRED` status and return
 
 Automatically append UTM parameters for marketing campaign tracking:
 
-| Parameter | Description | Example |
-|-----------|-------------|---------|
-| `utm_source` | Traffic source | `newsletter`, `google` |
-| `utm_medium` | Marketing medium | `email`, `cpc`, `social` |
-| `utm_campaign` | Campaign name | `summer_sale_2025` |
-| `utm_term` | Paid keywords | `running+shoes` |
-| `utm_content` | Content identifier | `banner_top`, `link_footer` |
+| Parameter      | Description        | Example                     |
+| -------------- | ------------------ | --------------------------- |
+| `utm_source`   | Traffic source     | `newsletter`, `google`      |
+| `utm_medium`   | Marketing medium   | `email`, `cpc`, `social`    |
+| `utm_campaign` | Campaign name      | `summer_sale_2025`          |
+| `utm_term`     | Paid keywords      | `running+shoes`             |
+| `utm_content`  | Content identifier | `banner_top`, `link_footer` |
 
 **Example:**
+
 ```
 Short URL: https://s.yourdomain.com/promo
 Redirects to: https://shop.example.com/sale?utm_source=newsletter&utm_medium=email&utm_campaign=summer_sale
 ```
+
+## Social Preview (Custom OG Meta)
+
+Customize how your short URLs appear when shared on social media platforms like Facebook, Twitter/X, LINE, Discord, Slack, and LinkedIn.
+
+### How It Works
+
+When a social media crawler visits your short URL, the system detects the crawler's User-Agent and returns a custom HTML page with Open Graph meta tags instead of redirecting. Regular users are redirected normally.
+
+### Configurable Fields
+
+| Field             | Description                                      | Limit                      |
+| ----------------- | ------------------------------------------------ | -------------------------- |
+| `ogTitle`         | Preview title                                    | 100 characters             |
+| `ogDescription`   | Preview description                              | 200 characters             |
+| OG Image          | Preview image                                    | 10MB (jpg, png, webp, gif) |
+| `twitterCardType` | `summary` (small image) or `summary_large_image` | -                          |
+
+### OG Image Upload
+
+Images are uploaded to S3-compatible storage and automatically optimized:
+
+- **Resized** to max 1200×630 pixels (maintains aspect ratio, no upscale)
+- **Converted** to WebP format (except GIF which keeps original format)
+- **Compressed** at quality 80 for optimal file size
+- **EXIF metadata stripped** for privacy
+
+```http
+POST /api/og-images/upload/{urlId}
+Content-Type: multipart/form-data
+Authorization: Bearer <token>
+
+file: image.jpg
+```
+
+**Response:**
+
+```json
+{
+  "statusCode": 201,
+  "data": {
+    "key": "og-images/clxxx123/1711234567890.webp",
+    "proxyUrl": "/api/og-images/og-images%2Fclxxx123%2F1711234567890.webp"
+  }
+}
+```
+
+### Supported Crawlers
+
+Facebook, Twitter/X, LinkedIn, Discord, Slack, Telegram, WhatsApp, LINE, Pinterest, VK.
+
+::: tip
+OG meta is only returned to crawlers when at least one OG field (title, description, or image) is configured. URLs without OG settings redirect all visitors normally.
+:::
 
 ## QR Codes
 
@@ -171,10 +233,12 @@ POST /api/urls/bulk
 ```
 
 **Limits:**
+
 - Admin users: up to 100 URLs per request
 - Regular users: up to 50 URLs per request
 
 **Response includes:**
+
 - `success` - Successfully created URLs
 - `failed` - Failed items with error details
 
@@ -219,11 +283,13 @@ Bulk delete also removes all associated click records.
 ### CSV Import/Export
 
 **Export URLs:**
+
 ```
 GET /api/urls/export?format=csv
 ```
 
 **Import URLs:**
+
 ```
 POST /api/urls/import
 Content-Type: multipart/form-data
@@ -232,6 +298,7 @@ file: urls.csv
 ```
 
 **CSV Format:**
+
 ```csv
 originalUrl,customSlug,title,password,expiresAt,utmSource,utmMedium,utmCampaign
 https://example.com/page1,my-page,My Page,,,newsletter,email,summer
@@ -289,6 +356,7 @@ GET /api/urls/stats
 ```
 
 **Response:**
+
 ```json
 {
   "total": 150,
@@ -309,11 +377,11 @@ GET /api/urls/stats
 
 ## API Rate Limits
 
-| Operation | Limit |
-|-----------|-------|
-| Bulk create | 5 requests/minute |
-| Bulk update | 5 requests/minute |
-| Bulk delete | 5 requests/minute |
+| Operation          | Limit               |
+| ------------------ | ------------------- |
+| Bulk create        | 5 requests/minute   |
+| Bulk update        | 5 requests/minute   |
+| Bulk delete        | 5 requests/minute   |
 | Regular operations | 100 requests/minute |
 
 ## Next Steps

@@ -48,15 +48,45 @@ class ApiClient {
   }
 
   /**
+   * Build request options for methods with body (POST/PUT/PATCH)
+   * Handles FormData vs JSON serialization
+   */
+  private buildBodyRequest(
+    method: string,
+    data?: ApiRequestBody,
+    config?: RequestInit
+  ): RequestInit {
+    const hasBody = data !== undefined && data !== null;
+    const isFormData = hasBody && data instanceof FormData;
+    return {
+      method,
+      headers: isFormData
+        ? {}
+        : hasBody
+          ? this.getHeaders()
+          : this.getHeadersWithoutContentType(),
+      ...(hasBody && { body: isFormData ? data : JSON.stringify(data) }),
+      credentials: 'include' as RequestCredentials,
+      ...config,
+    };
+  }
+
+  /**
    * Handle response
    */
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      let errorData: { message?: string; errors?: Record<string, string[]>; [key: string]: unknown } = { message: 'An error occurred' };
+      let errorData: {
+        message?: string;
+        errors?: Record<string, string[]>;
+        [key: string]: unknown;
+      } = { message: 'An error occurred' };
 
       try {
         const text = await response.text();
-        errorData = text ? JSON.parse(text) as typeof errorData : { message: 'An error occurred' };
+        errorData = text
+          ? (JSON.parse(text) as typeof errorData)
+          : { message: 'An error occurred' };
       } catch {
         errorData = { message: 'An error occurred' };
       }
@@ -77,14 +107,21 @@ class ApiClient {
       // Backend will clear the httpOnly cookie by sending Set-Cookie header
       if (response.status === 401) {
         const url = new URL(response.url);
-        const shouldRedirect = !NO_REDIRECT_401_PATHS.some(path => url.pathname.includes(path));
+        const shouldRedirect = !NO_REDIRECT_401_PATHS.some((path) =>
+          url.pathname.includes(path)
+        );
 
         if (shouldRedirect && typeof window !== 'undefined') {
           // Prevent infinite redirect loop - don't redirect if already on login page
           const currentPath = window.location.pathname;
           if (currentPath === '/login') {
             // Already on login page - likely a configuration issue, don't redirect
-            ErrorHandler.log(new Error('401 error on login page - possible configuration issue'), 'API Client');
+            ErrorHandler.log(
+              new Error(
+                '401 error on login page - possible configuration issue'
+              ),
+              'API Client'
+            );
             throw error;
           }
 
@@ -165,14 +202,10 @@ class ApiClient {
     data?: ApiRequestBody,
     config?: RequestInit
   ): Promise<T> {
-    const hasBody = data !== undefined && data !== null;
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'POST',
-      headers: hasBody ? this.getHeaders() : this.getHeadersWithoutContentType(),
-      ...(hasBody && { body: JSON.stringify(data) }),
-      credentials: 'include',
-      ...config,
-    });
+    const response = await fetch(
+      `${this.baseUrl}${endpoint}`,
+      this.buildBodyRequest('POST', data, config)
+    );
     return this.handleResponse<T>(response);
   }
 
@@ -184,14 +217,10 @@ class ApiClient {
     data?: ApiRequestBody,
     config?: RequestInit
   ): Promise<T> {
-    const hasBody = data !== undefined && data !== null;
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'PUT',
-      headers: hasBody ? this.getHeaders() : this.getHeadersWithoutContentType(),
-      ...(hasBody && { body: JSON.stringify(data) }),
-      credentials: 'include',
-      ...config,
-    });
+    const response = await fetch(
+      `${this.baseUrl}${endpoint}`,
+      this.buildBodyRequest('PUT', data, config)
+    );
     return this.handleResponse<T>(response);
   }
 
@@ -203,14 +232,10 @@ class ApiClient {
     data?: ApiRequestBody,
     config?: RequestInit
   ): Promise<T> {
-    const hasBody = data !== undefined && data !== null;
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      method: 'PATCH',
-      headers: hasBody ? this.getHeaders() : this.getHeadersWithoutContentType(),
-      ...(hasBody && { body: JSON.stringify(data) }),
-      credentials: 'include',
-      ...config,
-    });
+    const response = await fetch(
+      `${this.baseUrl}${endpoint}`,
+      this.buildBodyRequest('PATCH', data, config)
+    );
     return this.handleResponse<T>(response);
   }
 
@@ -238,7 +263,9 @@ class ApiClient {
     const hasBody = data !== undefined && data !== null;
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       method: 'DELETE',
-      headers: hasBody ? this.getHeaders() : this.getHeadersWithoutContentType(),
+      headers: hasBody
+        ? this.getHeaders()
+        : this.getHeadersWithoutContentType(),
       ...(hasBody && { body: JSON.stringify(data) }),
       credentials: 'include',
       ...restConfig,

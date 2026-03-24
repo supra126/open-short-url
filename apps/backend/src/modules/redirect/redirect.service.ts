@@ -65,8 +65,38 @@ export class RedirectService {
     private urlService: UrlService,
     private routingService: RoutingService,
     private routingEvaluator: RoutingEvaluatorService,
-    private clickDataEnricher: ClickDataEnricherService,
+    private clickDataEnricher: ClickDataEnricherService
   ) {}
+
+  /**
+   * Get OG meta data for a URL (used by crawler interception)
+   */
+  async getUrlOgMeta(slug: string): Promise<{
+    ogTitle?: string;
+    ogDescription?: string;
+    ogImage?: string;
+    twitterCardType?: string;
+    originalUrl: string;
+    hasOgMeta: boolean;
+  } | null> {
+    try {
+      const url = (await this.urlService.findBySlug(slug)) as any;
+      // Skip OG for password-protected URLs to avoid leaking originalUrl
+      if (url.password) return null;
+
+      const hasOgMeta = !!(url.ogTitle || url.ogDescription || url.ogImage);
+      return {
+        ogTitle: url.ogTitle || undefined,
+        ogDescription: url.ogDescription || undefined,
+        ogImage: url.ogImage || undefined,
+        twitterCardType: url.twitterCardType || undefined,
+        originalUrl: url.originalUrl,
+        hasOgMeta,
+      };
+    } catch {
+      return null;
+    }
+  }
 
   /**
    * Get redirect information
@@ -91,7 +121,10 @@ export class RedirectService {
     }
 
     // Calculate total weight of all variants
-    const variantsWeight = variants.reduce((sum, variant) => sum + variant.weight, 0);
+    const variantsWeight = variants.reduce(
+      (sum, variant) => sum + variant.weight,
+      0
+    );
 
     // Control group (original URL) gets the remaining weight (100 - variants weight)
     // If variants weight >= 100, control group gets 0 weight
@@ -146,13 +179,15 @@ export class RedirectService {
   async redirectWithPassword(
     slug: string,
     password: string,
-    clickData: ClickData,
+    clickData: ClickData
   ): Promise<string> {
     const url = (await this.urlService.findBySlug(slug)) as UrlRecord;
 
     // Check if password required
     if (!url.password) {
-      throw new BadRequestException('This short URL does not require a password');
+      throw new BadRequestException(
+        'This short URL does not require a password'
+      );
     }
 
     // Verify password
@@ -168,7 +203,10 @@ export class RedirectService {
    * Process redirect with routing, A/B testing, and click tracking
    * Shared logic between redirect() and redirectWithPassword()
    */
-  private async processRedirect(url: UrlRecord, clickData: ClickData): Promise<string> {
+  private async processRedirect(
+    url: UrlRecord,
+    clickData: ClickData
+  ): Promise<string> {
     // Determine target URL based on routing priority:
     // 1. Smart Routing (if enabled and matches)
     // 2. A/B Testing (if enabled)
@@ -183,7 +221,9 @@ export class RedirectService {
       if (routingResult.matched) {
         targetUrl = routingResult.targetUrl!;
         matchedRoutingRuleId = routingResult.ruleId!;
-        this.logger.debug(`Smart Routing matched rule: ${routingResult.ruleId} for URL ${url.id}`);
+        this.logger.debug(
+          `Smart Routing matched rule: ${routingResult.ruleId} for URL ${url.id}`
+        );
       } else if (url.defaultUrl) {
         // Use defaultUrl if no routing rules match
         targetUrl = url.defaultUrl;
@@ -191,7 +231,12 @@ export class RedirectService {
     }
 
     // Priority 2: A/B Testing (only if Smart Routing didn't match)
-    if (!matchedRoutingRuleId && url.isAbTest && url.variants && url.variants.length > 0) {
+    if (
+      !matchedRoutingRuleId &&
+      url.isAbTest &&
+      url.variants &&
+      url.variants.length > 0
+    ) {
       selectedVariant = this.selectVariant(url.variants);
       if (selectedVariant) {
         targetUrl = selectedVariant.targetUrl;
@@ -227,7 +272,11 @@ export class RedirectService {
    * @param url The URL record with preset UTM parameters
    * @param clickData The click data with dynamic UTM parameters
    */
-  private buildRedirectUrl(targetUrl: string, url: UrlRecord, clickData: ClickData): string {
+  private buildRedirectUrl(
+    targetUrl: string,
+    url: UrlRecord,
+    clickData: ClickData
+  ): string {
     try {
       const redirectUrl = new URL(targetUrl);
 
@@ -262,7 +311,7 @@ export class RedirectService {
    */
   private async evaluateSmartRouting(
     urlId: string,
-    clickData: ClickData,
+    clickData: ClickData
   ): Promise<{
     matched: boolean;
     targetUrl?: string;
@@ -294,7 +343,10 @@ export class RedirectService {
       });
 
       // Evaluate routing rules
-      const result = await this.routingService.evaluateRules(urlId, visitorContext);
+      const result = await this.routingService.evaluateRules(
+        urlId,
+        visitorContext
+      );
 
       if (result.rule && result.targetUrl) {
         // Increment match count (buffered, will be flushed periodically)
@@ -328,7 +380,7 @@ export class RedirectService {
     } catch (error) {
       this.logger.error(
         `Error evaluating smart routing for URL ${urlId}: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : undefined,
+        error instanceof Error ? error.stack : undefined
       );
       return { matched: false, fallbackReason: 'EVALUATION_ERROR' };
     }

@@ -13,13 +13,13 @@
 
 整個服務由四個容器組成：
 
-| 服務 | 說明 | 連接埠 |
-|------|------|--------|
-| **frontend** | Next.js 前端應用 | 4100 |
-| **backend** | NestJS 後端 API | 4101 |
-| **postgres** | PostgreSQL 17-alpine 資料庫 | 5432 |
-| **redis** | Redis 7-alpine 快取 | 6379 |
-| **caddy** | Caddy 反向代理（選用，`--profile ssl`） | 80, 443 |
+| 服務         | 說明                                    | 連接埠  |
+| ------------ | --------------------------------------- | ------- |
+| **frontend** | Next.js 前端應用                        | 4100    |
+| **backend**  | NestJS 後端 API                         | 4101    |
+| **postgres** | PostgreSQL 17-alpine 資料庫             | 5432    |
+| **redis**    | Redis 7-alpine 快取                     | 6379    |
+| **caddy**    | Caddy 反向代理（選用，`--profile ssl`） | 80, 443 |
 
 後端容器啟動時會自動執行 `prisma migrate deploy` 和 `seed-if-empty`，無需手動執行資料庫遷移或建立管理員帳號。
 
@@ -121,13 +121,14 @@ docker compose up -d
 這就完成了。後端會自動執行資料庫遷移並建立初始管理員帳號。
 
 ::: tip 預設管理員帳號
+
 - **Email：** `admin@example.com`
 - **密碼：** 由 `.env.docker` 中的 `ADMIN_INITIAL_PASSWORD` 決定
 - 若未設定 `ADMIN_INITIAL_PASSWORD`，系統會隨機產生密碼並印在後端 log 中：
   ```bash
   docker compose logs backend | grep -A2 "Admin credentials"
   ```
-:::
+  :::
 
 ### 4. 驗證服務
 
@@ -140,6 +141,7 @@ docker compose logs backend
 ```
 
 服務就緒後即可存取：
+
 - 前端：`http://localhost:4100`
 - 後端 API：`http://localhost:4101`
 
@@ -170,9 +172,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - '${POSTGRES_PORT:-5432}:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -193,9 +195,13 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - '${REDIS_PORT:-6379}:6379'
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep -q PONG"]
+      test:
+        [
+          'CMD-SHELL',
+          'redis-cli ${REDIS_PASSWORD:+-a "$REDIS_PASSWORD"} ping | grep -q PONG',
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -222,7 +228,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4100}
       TRUSTED_PROXY: ${TRUSTED_PROXY:-true}
     ports:
-      - "${BACKEND_PORT:-4101}:4101"
+      - '${BACKEND_PORT:-4101}:4101'
     depends_on:
       postgres:
         condition: service_healthy
@@ -243,7 +249,7 @@ services:
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
       NEXT_PUBLIC_DOCS_URL: ${NEXT_PUBLIC_DOCS_URL:-https://supra126.github.io/open-short-url/}
     ports:
-      - "${FRONTEND_PORT:-4100}:4100"
+      - '${FRONTEND_PORT:-4100}:4100'
     depends_on:
       - backend
 
@@ -282,6 +288,7 @@ pnpm dev
 ```
 
 `docker-compose.dev.yml` 預設使用以下設定：
+
 - PostgreSQL：`postgres:postgres@localhost:5432/open_short_url`
 - Redis：`localhost:6379`（無密碼）
 
@@ -293,57 +300,64 @@ pnpm dev
 
 #### 基礎設施
 
-| 變數 | 說明 | 預設值 |
-|------|------|--------|
-| `POSTGRES_DB` | 資料庫名稱 | `open_short_url` |
-| `POSTGRES_USER` | 資料庫使用者 | `postgres` |
-| `POSTGRES_PASSWORD` | 資料庫密碼 | `postgres` |
-| `POSTGRES_PORT` | PostgreSQL 主機連接埠 | `5432` |
-| `REDIS_PASSWORD` | Redis 密碼（留空表示無密碼） | （空） |
-| `REDIS_PORT` | Redis 主機連接埠 | `6379` |
-| `BACKEND_PORT` | 後端主機連接埠 | `4101` |
-| `FRONTEND_PORT` | 前端主機連接埠 | `4100` |
+| 變數                | 說明                         | 預設值           |
+| ------------------- | ---------------------------- | ---------------- |
+| `POSTGRES_DB`       | 資料庫名稱                   | `open_short_url` |
+| `POSTGRES_USER`     | 資料庫使用者                 | `postgres`       |
+| `POSTGRES_PASSWORD` | 資料庫密碼                   | `postgres`       |
+| `POSTGRES_PORT`     | PostgreSQL 主機連接埠        | `5432`           |
+| `REDIS_PASSWORD`    | Redis 密碼（留空表示無密碼） | （空）           |
+| `REDIS_PORT`        | Redis 主機連接埠             | `6379`           |
+| `BACKEND_PORT`      | 後端主機連接埠               | `4101`           |
+| `FRONTEND_PORT`     | 前端主機連接埠               | `4100`           |
 
 #### 後端（必填）
 
-| 變數 | 說明 | 範例 |
-|------|------|------|
-| `JWT_SECRET` | JWT 簽名密鑰 | `openssl rand -base64 32` |
-| `ADMIN_INITIAL_PASSWORD` | 初始管理員密碼 | `your-strong-password` |
-| `SHORT_URL_DOMAIN` | 短網址網域 | `https://s.example.com` |
-| `FRONTEND_URL` | 前端 URL | `https://app.example.com` |
-| `CORS_ORIGIN` | CORS 允許來源 | `https://app.example.com` |
+| 變數                     | 說明           | 範例                      |
+| ------------------------ | -------------- | ------------------------- |
+| `JWT_SECRET`             | JWT 簽名密鑰   | `openssl rand -base64 32` |
+| `ADMIN_INITIAL_PASSWORD` | 初始管理員密碼 | `your-strong-password`    |
+| `SHORT_URL_DOMAIN`       | 短網址網域     | `https://s.example.com`   |
+| `FRONTEND_URL`           | 前端 URL       | `https://app.example.com` |
+| `CORS_ORIGIN`            | CORS 允許來源  | `https://app.example.com` |
 
 #### 後端（選填）
 
-| 變數 | 說明 | 預設值 |
-|------|------|--------|
-| `JWT_EXPIRES_IN` | JWT 過期時間 | `7d` |
-| `COOKIE_DOMAIN` | Cookie 網域 | （空） |
-| `TRUSTED_PROXY` | 是否在反向代理後方 | `true` |
-| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile 密鑰 | （空） |
-| `THROTTLE_TTL` | 速率限制時間窗口（秒） | `60` |
-| `THROTTLE_LIMIT` | 速率限制次數 | `10` |
-| `SMTP_HOST` | SMTP 伺服器主機名稱 | （空） |
-| `SMTP_PORT` | SMTP 伺服器連接埠 | `587` |
-| `SMTP_USER` | SMTP 使用者名稱 | （空） |
-| `SMTP_PASSWORD` | SMTP 密碼 | （空） |
-| `SMTP_FROM` | SMTP 寄件人地址 | （空） |
+| 變數                   | 說明                      | 預設值              |
+| ---------------------- | ------------------------- | ------------------- |
+| `JWT_EXPIRES_IN`       | JWT 過期時間              | `7d`                |
+| `COOKIE_DOMAIN`        | Cookie 網域               | （空）              |
+| `TRUSTED_PROXY`        | 是否在反向代理後方        | `true`              |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile 密鑰 | （空）              |
+| `THROTTLE_TTL`         | 速率限制時間窗口（秒）    | `60`                |
+| `THROTTLE_LIMIT`       | 速率限制次數              | `10`                |
+| `SMTP_HOST`            | SMTP 伺服器主機名稱       | （空）              |
+| `SMTP_PORT`            | SMTP 伺服器連接埠         | `587`               |
+| `SMTP_USER`            | SMTP 使用者名稱           | （空）              |
+| `SMTP_PASSWORD`        | SMTP 密碼                 | （空）              |
+| `SMTP_FROM`            | SMTP 寄件人地址           | （空）              |
+| `S3_REGION`            | S3 區域                   | `auto`              |
+| `S3_ENDPOINT`          | S3 相容端點（MinIO/R2）   | `http://minio:9000` |
+| `S3_ACCESS_KEY_ID`     | S3 存取金鑰               | `minioadmin`        |
+| `S3_SECRET_ACCESS_KEY` | S3 秘密金鑰               | `minioadmin`        |
+| `S3_BUCKET`            | S3 儲存桶名稱             | `open-short-url`    |
+| `S3_PUBLIC_URL`        | CDN 公開 URL              | （空）              |
+| `S3_GLOBAL_PREFIX`     | 金鑰前綴                  | （空）              |
 
 #### 前端
 
 這些變數用於設定 Next.js 前端。從原始碼建置時，它們作為 Docker build args 傳入。使用預建 GHCR 映像檔時，容器啟動時會透過 entrypoint 腳本自動替換，無需重新建置。
 
-| 變數 | 說明 | 預設值 |
-|------|------|--------|
-| `NEXT_PUBLIC_API_URL` | 後端 API 位址 | `http://localhost:4101` |
-| `NEXT_PUBLIC_SHORT_URL_DOMAIN` | 短網址網域 | `http://localhost:4101` |
-| `NEXT_PUBLIC_LOCALE` | 介面語言 | `en` |
-| `NEXT_PUBLIC_BRAND_NAME` | 品牌名稱 | `Open Short URL` |
-| `NEXT_PUBLIC_BRAND_ICON_URL` | 品牌圖示 URL | （空） |
-| `NEXT_PUBLIC_BRAND_DESCRIPTION` | 品牌描述 | （空） |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile 站點金鑰 | （空） |
-| `NEXT_PUBLIC_DOCS_URL` | 文件連結 URL | `https://supra126.github.io/open-short-url/` |
+| 變數                             | 說明               | 預設值                                       |
+| -------------------------------- | ------------------ | -------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`            | 後端 API 位址      | `http://localhost:4101`                      |
+| `NEXT_PUBLIC_SHORT_URL_DOMAIN`   | 短網址網域         | `http://localhost:4101`                      |
+| `NEXT_PUBLIC_LOCALE`             | 介面語言           | `en`                                         |
+| `NEXT_PUBLIC_BRAND_NAME`         | 品牌名稱           | `Open Short URL`                             |
+| `NEXT_PUBLIC_BRAND_ICON_URL`     | 品牌圖示 URL       | （空）                                       |
+| `NEXT_PUBLIC_BRAND_DESCRIPTION`  | 品牌描述           | （空）                                       |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile 站點金鑰 | （空）                                       |
+| `NEXT_PUBLIC_DOCS_URL`           | 文件連結 URL       | `https://supra126.github.io/open-short-url/` |
 
 ### 產生安全密鑰
 
@@ -367,6 +381,7 @@ docker compose --profile ssl up -d
 ```
 
 就這樣。Caddy 會讀取 `.env.docker` 中的 `SHORT_URL_DOMAIN` 和 `FRONTEND_URL`，自動完成：
+
 - 為兩個網域申請 Let's Encrypt 憑證
 - HTTP 自動重導向至 HTTPS
 - 憑證自動續期
@@ -378,10 +393,11 @@ docker compose --profile ssl up -d
 :::
 
 ::: warning 前置條件
+
 - 連接埠 80 和 443 必須開放且未被其他程式佔用
 - 你的網域必須指向伺服器的公開 IP（DNS A 記錄）
 - Cloudflare 使用者：請使用僅 DNS 模式（灰雲），不要使用代理模式（橙雲）
-:::
+  :::
 
 ### 外部反向代理
 
@@ -480,37 +496,37 @@ services:
     container_name: traefik
     restart: unless-stopped
     command:
-      - "--api.dashboard=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - '--api.dashboard=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.websecure.address=:443'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.letsencrypt.acme.email=your-email@example.com'
+      - '--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json'
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_letsencrypt:/letsencrypt
 
   frontend:
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`your-domain.com`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.frontend.loadbalancer.server.port=4100"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.frontend.rule=Host(`your-domain.com`)'
+      - 'traefik.http.routers.frontend.entrypoints=websecure'
+      - 'traefik.http.routers.frontend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.frontend.loadbalancer.server.port=4100'
 
   backend:
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api.your-domain.com`) || Host(`s.your-domain.com`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.backend.loadbalancer.server.port=4101"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.backend.rule=Host(`api.your-domain.com`) || Host(`s.your-domain.com`)'
+      - 'traefik.http.routers.backend.entrypoints=websecure'
+      - 'traefik.http.routers.backend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.backend.loadbalancer.server.port=4101'
 
 volumes:
   traefik_letsencrypt:
@@ -608,10 +624,10 @@ docker compose logs --tail=100 backend
 services:
   backend:
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 ```
 
 ## 備份與還原
@@ -690,6 +706,7 @@ docker compose up -d
 ### 常見問題
 
 **容器無法啟動：**
+
 ```bash
 # 檢查日誌
 docker compose logs backend
@@ -699,6 +716,7 @@ docker compose ps
 ```
 
 **資料庫連線失敗：**
+
 ```bash
 # 檢查 postgres 是否健康
 docker compose exec postgres pg_isready -U postgres
@@ -708,6 +726,7 @@ docker compose exec backend nc -zv postgres 5432
 ```
 
 **權限被拒：**
+
 ```bash
 # 修復 volume 權限
 sudo chown -R 1000:1000 ./data

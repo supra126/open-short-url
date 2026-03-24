@@ -158,7 +158,7 @@ Redis is **completely optional**. The system works perfectly without it — when
 - [x] Smart Routing (conditional redirects based on device, location, time)
 - [x] Docker containerization with multi-platform images
 - [x] Quick deploy (Vercel, Render, Railway, DigitalOcean, Fly, ...)
-- [ ] Open Graph / Social Preview Customization
+- [x] Open Graph / Social Preview Customization
 - [ ] Deep Linking (App Links / Universal Links)
 - [ ] Retargeting Pixel Integration
 

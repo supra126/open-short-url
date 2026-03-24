@@ -7,6 +7,9 @@ import {
   IsDateString,
   MinLength,
   MaxLength,
+  ValidateIf,
+  Equals,
+  IsIn,
 } from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
 import { UrlStatus } from '@prisma/client';
@@ -24,7 +27,10 @@ export class UpdateUrlDto {
     example: 'https://example.com/new-url',
   })
   @IsUrl({}, { message: 'Please enter a valid URL' })
-  @IsSafeUrl({ message: 'URL must be a public address. Internal network addresses are not allowed.' })
+  @IsSafeUrl({
+    message:
+      'URL must be a public address. Internal network addresses are not allowed.',
+  })
   @IsOptional()
   originalUrl?: string;
 
@@ -62,7 +68,8 @@ export class UpdateUrlDto {
   password?: string | null;
 
   @ApiPropertyOptional({
-    description: 'Expiration time (ISO 8601 format, set to null to remove expiration)',
+    description:
+      'Expiration time (ISO 8601 format, set to null to remove expiration)',
     example: '2025-12-31T23:59:59Z',
     type: 'string',
     format: 'date-time',
@@ -116,4 +123,51 @@ export class UpdateUrlDto {
   @IsString()
   @IsOptional()
   utmContent?: string;
+
+  @ApiPropertyOptional({
+    description: 'OG Title for social preview',
+    example: 'Check out this amazing deal!',
+    maxLength: 100,
+  })
+  @Transform(emptyToUndefined)
+  @IsString()
+  @MaxLength(100, { message: 'OG Title must not exceed 100 characters' })
+  @IsOptional()
+  ogTitle?: string;
+
+  @ApiPropertyOptional({
+    description: 'OG Description for social preview',
+    example: 'Limited time offer - 50% off everything',
+    maxLength: 200,
+  })
+  @Transform(emptyToUndefined)
+  @IsString()
+  @MaxLength(200, { message: 'OG Description must not exceed 200 characters' })
+  @IsOptional()
+  ogDescription?: string;
+
+  @ApiPropertyOptional({
+    description: 'Set to null to remove OG image (use upload endpoint to set)',
+    type: 'string',
+    nullable: true,
+  })
+  @ValidateIf((o) => o.ogImage !== undefined)
+  @Equals(null, {
+    message:
+      'ogImage can only be set to null (use upload endpoint to set image)',
+  })
+  @IsOptional()
+  ogImage?: null;
+
+  @ApiPropertyOptional({
+    description: 'Twitter card type',
+    enum: ['summary', 'summary_large_image'],
+    example: 'summary_large_image',
+  })
+  @Transform(emptyToUndefined)
+  @IsIn(['summary', 'summary_large_image'], {
+    message: 'Twitter card type must be summary or summary_large_image',
+  })
+  @IsOptional()
+  twitterCardType?: string;
 }

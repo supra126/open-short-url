@@ -8,15 +8,30 @@ import { t } from '@/lib/i18n';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCreateUrl, type CreateUrlDto } from '@/hooks/use-url';
+import { useUploadOgImage } from '@/hooks/use-og-image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { OgMetaSection, type OgMetaValues } from './og-meta-section';
 
 export function CreateUrlForm() {
   const router = useRouter();
   const createUrl = useCreateUrl();
+  const uploadOgImage = useUploadOgImage();
   const { toast } = useToast();
+  const [ogMeta, setOgMeta] = useState<OgMetaValues>({
+    ogTitle: '',
+    ogDescription: '',
+    twitterCardType: 'summary_large_image',
+  });
+  const [stagedOgFile, setStagedOgFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     originalUrl: '',
     customSlug: '',
@@ -49,15 +64,38 @@ export function CreateUrlForm() {
         customSlug: formData.customSlug || undefined,
         title: formData.title || undefined,
         password: formData.password || undefined,
-        expiresAt: formData.expiresAt ? new Date(formData.expiresAt).toISOString() : undefined,
+        expiresAt: formData.expiresAt
+          ? new Date(formData.expiresAt).toISOString()
+          : undefined,
         utmSource: formData.utmSource || undefined,
         utmMedium: formData.utmMedium || undefined,
         utmCampaign: formData.utmCampaign || undefined,
         utmTerm: formData.utmTerm || undefined,
         utmContent: formData.utmContent || undefined,
+        ogTitle: ogMeta.ogTitle || undefined,
+        ogDescription: ogMeta.ogDescription || undefined,
+        twitterCardType: ogMeta.twitterCardType || undefined,
       };
 
       const result = await createUrl.mutateAsync(data);
+
+      // Step 2: Upload OG image if staged
+      if (stagedOgFile) {
+        try {
+          await uploadOgImage.mutateAsync({
+            urlId: result.id,
+            file: stagedOgFile,
+          });
+        } catch {
+          // Non-blocking: URL was created, image upload failed
+          toast({
+            title: t('common.error'),
+            description:
+              'OG image upload failed, you can upload it later from the edit page.',
+            variant: 'destructive',
+          });
+        }
+      }
 
       // Display success message and navigate to details page
       toast({
@@ -66,7 +104,8 @@ export function CreateUrlForm() {
       });
       router.push(`/urls/${result.id}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('urls.createError');
+      const message =
+        err instanceof Error ? err.message : t('urls.createError');
       toast({
         title: t('common.error'),
         description: message,
@@ -75,17 +114,16 @@ export function CreateUrlForm() {
     }
   };
 
-  const handleChange = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [field]: e.target.value });
-  };
+  const handleChange =
+    (field: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
+      setFormData({ ...formData, [field]: e.target.value });
+    };
 
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>{t('urls.createTitle')}</CardTitle>
-        <CardDescription>
-          {t('urls.createDescription')}
-        </CardDescription>
+        <CardDescription>{t('urls.createDescription')}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -126,7 +164,8 @@ export function CreateUrlForm() {
               size="sm"
               onClick={() => setShowAdvanced(!showAdvanced)}
             >
-              {showAdvanced ? t('urls.hideAdvanced') : t('urls.showAdvanced')}{t('urls.advancedOptions')}
+              {showAdvanced ? t('urls.hideAdvanced') : t('urls.showAdvanced')}
+              {t('urls.advancedOptions')}
             </Button>
           </div>
 
@@ -142,7 +181,9 @@ export function CreateUrlForm() {
                 maxLength={128}
               />
               <p className="text-xs text-muted-foreground mt-1">
-                {formData.password && formData.password.length > 0 && formData.password.length < 4
+                {formData.password &&
+                formData.password.length > 0 &&
+                formData.password.length < 4
                   ? t('urls.passwordTooShort')
                   : t('urls.passwordHint')}
               </p>
@@ -160,8 +201,12 @@ export function CreateUrlForm() {
               {/* UTM Parameters */}
               <div className="space-y-4 pt-4 border-t">
                 <div>
-                  <h4 className="text-sm font-medium mb-1">{t('urls.utmSection')}</h4>
-                  <p className="text-xs text-muted-foreground">{t('urls.utmSectionDesc')}</p>
+                  <h4 className="text-sm font-medium mb-1">
+                    {t('urls.utmSection')}
+                  </h4>
+                  <p className="text-xs text-muted-foreground">
+                    {t('urls.utmSectionDesc')}
+                  </p>
                 </div>
 
                 <Input
@@ -219,6 +264,13 @@ export function CreateUrlForm() {
                   {t('urls.utmContentHint')}
                 </p>
               </div>
+
+              {/* Social Preview (OG Meta) */}
+              <OgMetaSection
+                value={ogMeta}
+                onChange={setOgMeta}
+                onImageStaged={setStagedOgFile}
+              />
             </div>
           )}
 

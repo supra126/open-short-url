@@ -7,6 +7,7 @@ import {
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
 import fastifyCookie from '@fastify/cookie';
+import fastifyMultipart from '@fastify/multipart';
 import fastifyStatic from '@fastify/static';
 import helmet from '@fastify/helmet';
 import { join } from 'path';
@@ -26,6 +27,11 @@ async function bootstrap() {
 
   // Cookie parser
   await app.register(fastifyCookie);
+
+  // Multipart file upload (before static files)
+  await app.register(fastifyMultipart, {
+    limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  });
 
   // Static files (before helmet to allow SVG favicon)
   await app.register(fastifyStatic, {
@@ -104,12 +110,12 @@ async function bootstrap() {
 
   loggerService.log(
     `🚀 Application is running on: http://localhost:${port}`,
-    'Bootstrap',
+    'Bootstrap'
   );
   if (swaggerEnabled) {
     loggerService.log(
       `📚 Swagger documentation: http://localhost:${port}/api`,
-      'Bootstrap',
+      'Bootstrap'
     );
   }
 }

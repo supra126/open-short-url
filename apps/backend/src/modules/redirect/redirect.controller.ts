@@ -60,8 +60,27 @@ import {
 } from './dto/redirect-response.dto';
 import { ErrorResponseDto } from '@/common/dto/error-response.dto';
 import { generatePasswordPage } from './templates/password-page.template';
+import { generateOgPage } from './templates/og-page.template';
 import { TurnstileService } from '@/modules/turnstile/turnstile.service';
 import { PasswordRateLimiterService } from '@/common/services';
+
+/**
+ * Social media crawler User-Agent patterns
+ * Only includes crawlers that unfurl link previews
+ */
+const SOCIAL_CRAWLER_PATTERNS = [
+  /facebookexternalhit/i,
+  /facebot/i,
+  /Twitterbot/i,
+  /LinkedInBot/i,
+  /Discordbot/i,
+  /Slackbot/i,
+  /TelegramBot/i,
+  /WhatsApp/i,
+  /\bLine\/\d/i,
+  /vkShare/i,
+  /Pinterestbot/i,
+];
 
 @ApiTags('Redirect')
 @Controller()
@@ -70,7 +89,7 @@ export class RedirectController {
     private readonly redirectService: RedirectService,
     private readonly configService: ConfigService,
     private readonly turnstileService: TurnstileService,
-    private readonly passwordRateLimiter: PasswordRateLimiterService,
+    private readonly passwordRateLimiter: PasswordRateLimiterService
   ) {}
 
   /**
@@ -96,7 +115,8 @@ export class RedirectController {
   @Get('robots.txt')
   @ApiOperation({
     summary: 'Get robots.txt',
-    description: 'Returns the robots.txt file for search engine crawlers. This is a public endpoint.',
+    description:
+      'Returns the robots.txt file for search engine crawlers. This is a public endpoint.',
   })
   @ApiResponse({
     status: HttpStatus.OK,
@@ -139,7 +159,10 @@ export class RedirectController {
     description: 'Short URL not found',
     type: ErrorResponseDto,
   })
-  async getInfo(@Param('slug') slug: string, @Req() _request?: FastifyRequest): Promise<RedirectInfoResponseDto> {
+  async getInfo(
+    @Param('slug') slug: string,
+    @Req() _request?: FastifyRequest
+  ): Promise<RedirectInfoResponseDto> {
     // Validate slug - reject reserved paths and API routes
     this.validateSlug(slug);
     const info = await this.redirectService.getRedirectInfo(slug);
@@ -231,6 +254,33 @@ export class RedirectController {
   ) {
     // Validate slug - reject empty or reserved paths and API routes
     this.validateSlug(slug);
+
+    // Social crawler interception: return OG HTML if configured
+    const userAgent = request?.headers['user-agent'] || '';
+    if (this.isSocialCrawler(userAgent)) {
+      const ogMeta = await this.redirectService.getUrlOgMeta(slug);
+      if (ogMeta?.hasOgMeta) {
+        const shortUrlDomain = this.configService.get<string>(
+          'SHORT_URL_DOMAIN',
+          ''
+        );
+        let ogImageUrl: string | undefined;
+        if (ogMeta.ogImage) {
+          ogImageUrl = `${shortUrlDomain}/api/og-images/${encodeURIComponent(ogMeta.ogImage)}`;
+        }
+
+        const html = generateOgPage({
+          ogTitle: ogMeta.ogTitle || slug,
+          ogDescription: ogMeta.ogDescription,
+          ogImageUrl,
+          twitterCardType: ogMeta.twitterCardType,
+          originalUrl: ogMeta.originalUrl,
+          shortUrl: `${shortUrlDomain}/${slug}`,
+        });
+
+        return reply?.type('text/html; charset=utf-8').code(200).send(html);
+      }
+    }
 
     // Extract click data
     const clickData = {
@@ -495,7 +545,10 @@ export class RedirectController {
 </html>`;
 
       return reply
-        ?.header('Content-Security-Policy', `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; frame-ancestors 'none'`)
+        ?.header(
+          'Content-Security-Policy',
+          `default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'; frame-ancestors 'none'`
+        )
         .header('X-Content-Type-Options', 'nosniff')
         .header('X-Frame-Options', 'DENY')
         .type('text/html; charset=utf-8')
@@ -528,6 +581,14 @@ export class RedirectController {
       // Throw other errors
       throw err;
     }
+  }
+
+  /**
+   * Check if the User-Agent belongs to a social media crawler
+   */
+  private isSocialCrawler(userAgent: string): boolean {
+    if (!userAgent) return false;
+    return SOCIAL_CRAWLER_PATTERNS.some((pattern) => pattern.test(userAgent));
   }
 
   /**
@@ -576,7 +637,9 @@ export class RedirectController {
 
     // Check if we're behind a trusted proxy
     // TRUSTED_PROXY can be 'true', '1', or a comma-separated list of trusted proxy IPs
-    const trustedProxy = this.configService.get<string>('TRUSTED_PROXY', '').trim();
+    const trustedProxy = this.configService
+      .get<string>('TRUSTED_PROXY', '')
+      .trim();
     const isTrustedProxy =
       trustedProxy === 'true' ||
       trustedProxy === '1' ||
@@ -613,7 +676,7 @@ export class RedirectController {
    */
   private isRequestFromTrustedProxy(
     requestIp: string | undefined,
-    trustedProxyConfig: string,
+    trustedProxyConfig: string
   ): boolean {
     if (!requestIp || !trustedProxyConfig) return false;
 
@@ -674,7 +737,8 @@ export class RedirectController {
     }
 
     // Validate IPv6 (simplified - accepts valid IPv6 formats)
-    const ipv6Regex = /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^[0-9a-fA-F]{1,4}::(?:[0-9a-fA-F]{1,4}:){0,5}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,2}:(?:[0-9a-fA-F]{1,4}:){0,4}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,3}:(?:[0-9a-fA-F]{1,4}:){0,3}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,4}:(?:[0-9a-fA-F]{1,4}:){0,2}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,5}:(?:[0-9a-fA-F]{1,4}:)?[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^::$|^::1$/;
+    const ipv6Regex =
+      /^(?:[0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::(?:[0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^[0-9a-fA-F]{1,4}::(?:[0-9a-fA-F]{1,4}:){0,5}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,2}:(?:[0-9a-fA-F]{1,4}:){0,4}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,3}:(?:[0-9a-fA-F]{1,4}:){0,3}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,4}:(?:[0-9a-fA-F]{1,4}:){0,2}[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,5}:(?:[0-9a-fA-F]{1,4}:)?[0-9a-fA-F]{1,4}$|^(?:[0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}$|^::$|^::1$/;
     if (ipv6Regex.test(cleanIp)) {
       return cleanIp;
     }

@@ -45,6 +45,24 @@ services:
       timeout: 5s
       retries: 5
 
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - quickstart_minio:/data
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   backend:
     image: ghcr.io/supra126/open-short-url-backend:${IMAGE_TAG:-latest}
     restart: unless-stopped
@@ -63,12 +81,20 @@ services:
       FRONTEND_URL: http://localhost:4100
       CORS_ORIGIN: http://localhost:4100
       TRUSTED_PROXY: 'true'
+      # S3 Storage (MinIO)
+      S3_REGION: auto
+      S3_ENDPOINT: http://minio:9000
+      S3_ACCESS_KEY_ID: minioadmin
+      S3_SECRET_ACCESS_KEY: minioadmin
+      S3_BUCKET: open-short-url
     ports:
       - '4101:4101'
     depends_on:
       postgres:
         condition: service_healthy
       redis:
+        condition: service_healthy
+      minio:
         condition: service_healthy
 
   frontend:
@@ -109,3 +135,4 @@ services:
 volumes:
   quickstart_postgres:
   quickstart_redis:
+  quickstart_minio:

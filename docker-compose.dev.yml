@@ -1,5 +1,5 @@
 # ============================================================
-# Open Short URL - Development (PostgreSQL + Redis only)
+# Open Short URL - Development (PostgreSQL + Redis + MinIO)
 # ============================================================
 # Usage:
 #   docker compose -f docker-compose.dev.yml up -d
@@ -17,9 +17,9 @@ services:
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - '5432:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -30,9 +30,27 @@ services:
     volumes:
       - redis_dev_data:/data
     ports:
-      - "6379:6379"
+      - '6379:6379'
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    volumes:
+      - minio_dev_data:/data
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -40,3 +58,4 @@ services:
 volumes:
   postgres_dev_data:
   redis_dev_data:
+  minio_dev_data:

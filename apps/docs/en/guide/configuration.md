@@ -17,8 +17,8 @@ These variables must be set for the application to function.
 
 #### Environment
 
-| Variable | Description | Example |
-|----------|-------------|---------|
+| Variable   | Description      | Example      |
+| ---------- | ---------------- | ------------ |
 | `NODE_ENV` | Environment mode | `production` |
 
 ```bash
@@ -27,8 +27,8 @@ NODE_ENV=production
 
 #### Database
 
-| Variable | Description | Example |
-|----------|-------------|---------|
+| Variable       | Description                  | Example   |
+| -------------- | ---------------------------- | --------- |
 | `DATABASE_URL` | PostgreSQL connection string | See below |
 
 ```bash
@@ -41,11 +41,11 @@ DATABASE_URL="postgresql://user:password@localhost:5432/open_short_url?schema=pu
 
 #### URLs & Domains
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `SHORT_URL_DOMAIN` | Domain for short URLs | `https://s.yourdomain.com` |
-| `FRONTEND_URL` | Frontend application URL | `https://app.yourdomain.com` |
-| `CORS_ORIGIN` | Allowed CORS origins | `https://app.yourdomain.com` |
+| Variable           | Description              | Example                      |
+| ------------------ | ------------------------ | ---------------------------- |
+| `SHORT_URL_DOMAIN` | Domain for short URLs    | `https://s.yourdomain.com`   |
+| `FRONTEND_URL`     | Frontend application URL | `https://app.yourdomain.com` |
+| `CORS_ORIGIN`      | Allowed CORS origins     | `https://app.yourdomain.com` |
 
 ```bash
 SHORT_URL_DOMAIN="https://s.yourdomain.com"
@@ -56,10 +56,10 @@ CORS_ORIGIN="https://app.yourdomain.com"
 
 #### Authentication
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `JWT_SECRET` | Secret key for JWT tokens (min 32 chars) | Random string |
-| `ADMIN_INITIAL_PASSWORD` | Initial admin account password | Strong password |
+| Variable                 | Description                              | Example         |
+| ------------------------ | ---------------------------------------- | --------------- |
+| `JWT_SECRET`             | Secret key for JWT tokens (min 32 chars) | Random string   |
+| `ADMIN_INITIAL_PASSWORD` | Initial admin account password           | Strong password |
 
 ```bash
 # Generate with: openssl rand -base64 32
@@ -68,9 +68,10 @@ ADMIN_INITIAL_PASSWORD="your-strong-admin-password"
 ```
 
 ::: warning Security
+
 - Use a cryptographically secure random string for `JWT_SECRET`
 - Change `ADMIN_INITIAL_PASSWORD` immediately after first login
-:::
+  :::
 
 ---
 
@@ -82,12 +83,12 @@ These variables are optional but strongly recommended for production.
 
 Falls back to in-memory storage if not configured (not recommended for production).
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `REDIS_HOST` | Redis server hostname | `localhost` |
-| `REDIS_PORT` | Redis server port | `6379` |
-| `REDIS_PASSWORD` | Redis password | - |
-| `REDIS_DB` | Redis database number | `0` |
+| Variable         | Description           | Default     |
+| ---------------- | --------------------- | ----------- |
+| `REDIS_HOST`     | Redis server hostname | `localhost` |
+| `REDIS_PORT`     | Redis server port     | `6379`      |
+| `REDIS_PASSWORD` | Redis password        | -           |
+| `REDIS_DB`       | Redis database number | `0`         |
 
 ```bash
 REDIS_HOST="localhost"
@@ -100,8 +101,8 @@ REDIS_DB="0"
 
 Enable if behind a reverse proxy (nginx, Cloudflare, etc.).
 
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Variable        | Description         | Default                    |
+| --------------- | ------------------- | -------------------------- |
 | `TRUSTED_PROXY` | Trust proxy headers | `false` (`true` in Docker) |
 
 ```bash
@@ -117,10 +118,10 @@ Only enable if you trust your proxy. Otherwise attackers can spoof IP addresses.
 
 Protects password-protected URLs from bots.
 
-| Variable | Description |
-|----------|-------------|
+| Variable               | Description          |
+| ---------------------- | -------------------- |
 | `TURNSTILE_SECRET_KEY` | Turnstile secret key |
-| `TURNSTILE_SITE_KEY` | Turnstile site key |
+| `TURNSTILE_SITE_KEY`   | Turnstile site key   |
 
 ```bash
 # Get keys from: https://dash.cloudflare.com/turnstile
@@ -134,8 +135,8 @@ TURNSTILE_SITE_KEY="0x..."
 
 #### Webhooks
 
-| Variable | Description |
-|----------|-------------|
+| Variable             | Description                 |
+| -------------------- | --------------------------- |
 | `WEBHOOK_SECRET_KEY` | Default webhook signing key |
 
 ```bash
@@ -151,10 +152,10 @@ These variables have sensible defaults and can be adjusted as needed.
 
 #### Server
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Backend server port | `4101` |
-| `HOST` | Server host binding | `0.0.0.0` |
+| Variable | Description         | Default   |
+| -------- | ------------------- | --------- |
+| `PORT`   | Backend server port | `4101`    |
+| `HOST`   | Server host binding | `0.0.0.0` |
 
 ```bash
 PORT=4101
@@ -163,8 +164,8 @@ HOST=0.0.0.0
 
 #### Cookie
 
-| Variable | Description | Default |
-|----------|-------------|---------|
+| Variable        | Description                            | Default       |
+| --------------- | -------------------------------------- | ------------- |
 | `COOKIE_DOMAIN` | Cookie domain for cross-subdomain auth | Auto-detected |
 
 ```bash
@@ -175,10 +176,10 @@ COOKIE_DOMAIN=.example.com
 
 #### Authentication Options
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `JWT_EXPIRES_IN` | JWT token expiration | `7d` |
-| `BCRYPT_ROUNDS` | Password hashing rounds | `10` |
+| Variable         | Description             | Default |
+| ---------------- | ----------------------- | ------- |
+| `JWT_EXPIRES_IN` | JWT token expiration    | `7d`    |
+| `BCRYPT_ROUNDS`  | Password hashing rounds | `10`    |
 
 ```bash
 JWT_EXPIRES_IN="7d"
@@ -187,10 +188,10 @@ BCRYPT_ROUNDS=10
 
 #### Rate Limiting
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `THROTTLE_TTL` | Time window (seconds) | `60` |
-| `THROTTLE_LIMIT` | Max requests per window | `10` |
+| Variable         | Description             | Default |
+| ---------------- | ----------------------- | ------- |
+| `THROTTLE_TTL`   | Time window (seconds)   | `60`    |
+| `THROTTLE_LIMIT` | Max requests per window | `10`    |
 
 ```bash
 THROTTLE_TTL=60
@@ -201,10 +202,10 @@ THROTTLE_LIMIT=10
 
 Dynamic slug length based on total URL count.
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SLUG_LENGTH_THRESHOLDS` | URL count thresholds | `1000,50000,500000` |
-| `SLUG_LENGTHS` | Slug lengths per threshold | `4,5,6,7` |
+| Variable                 | Description                | Default             |
+| ------------------------ | -------------------------- | ------------------- |
+| `SLUG_LENGTH_THRESHOLDS` | URL count thresholds       | `1000,50000,500000` |
+| `SLUG_LENGTHS`           | Slug lengths per threshold | `4,5,6,7`           |
 
 ```bash
 # count < 1000         -> 4 chars
@@ -217,10 +218,10 @@ SLUG_LENGTHS="4,5,6,7"
 
 #### Branding
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `BRAND_NAME` | Application name | `Open Short URL` |
-| `BRAND_LOGO_URL` | Logo URL | - |
+| Variable         | Description      | Default          |
+| ---------------- | ---------------- | ---------------- |
+| `BRAND_NAME`     | Application name | `Open Short URL` |
+| `BRAND_LOGO_URL` | Logo URL         | -                |
 
 ```bash
 BRAND_NAME="My Short URLs"
@@ -229,9 +230,9 @@ BRAND_LOGO_URL="https://example.com/logo.png"
 
 #### API Keys
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `MAX_API_KEYS_PER_USER` | Maximum API keys per user | `10` |
+| Variable                | Description               | Default |
+| ----------------------- | ------------------------- | ------- |
+| `MAX_API_KEYS_PER_USER` | Maximum API keys per user | `10`    |
 
 ```bash
 MAX_API_KEYS_PER_USER=10
@@ -239,14 +240,14 @@ MAX_API_KEYS_PER_USER=10
 
 #### Analytics
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `ANALYTICS_CACHE_TTL` | Cache TTL (seconds) | `300` |
-| `ANALYTICS_TOP_URLS_LIMIT` | Top URLs in overview | `10` |
-| `ANALYTICS_RECENT_CLICKS_LIMIT` | Recent clicks limit | `100` |
-| `ANALYTICS_EXPORT_MAX_RECORDS` | Max records per export | `10000` |
-| `ANALYTICS_EXPORT_BATCH_SIZE` | Export batch size | `1000` |
-| `ANALYTICS_MAX_IN_MEMORY_CLICKS` | Max in-memory clicks | `50000` |
+| Variable                          | Description              | Default |
+| --------------------------------- | ------------------------ | ------- |
+| `ANALYTICS_CACHE_TTL`             | Cache TTL (seconds)      | `300`   |
+| `ANALYTICS_TOP_URLS_LIMIT`        | Top URLs in overview     | `10`    |
+| `ANALYTICS_RECENT_CLICKS_LIMIT`   | Recent clicks limit      | `100`   |
+| `ANALYTICS_EXPORT_MAX_RECORDS`    | Max records per export   | `10000` |
+| `ANALYTICS_EXPORT_BATCH_SIZE`     | Export batch size        | `1000`  |
+| `ANALYTICS_MAX_IN_MEMORY_CLICKS`  | Max in-memory clicks     | `50000` |
 | `ANALYTICS_AGGREGATION_THRESHOLD` | DB aggregation threshold | `10000` |
 
 ```bash
@@ -254,15 +255,51 @@ ANALYTICS_CACHE_TTL=300
 ANALYTICS_EXPORT_MAX_RECORDS=10000
 ```
 
+#### Object Storage (S3 / R2 / MinIO)
+
+Required for OG image upload (social preview) feature. Supports AWS S3, Cloudflare R2, and MinIO.
+
+| Variable               | Description                                       | Default |
+| ---------------------- | ------------------------------------------------- | ------- |
+| `S3_REGION`            | S3 region                                         | `auto`  |
+| `S3_ENDPOINT`          | S3-compatible endpoint URL                        | -       |
+| `S3_ACCESS_KEY_ID`     | Access key ID                                     | -       |
+| `S3_SECRET_ACCESS_KEY` | Secret access key                                 | -       |
+| `S3_BUCKET`            | Bucket name                                       | -       |
+| `S3_PUBLIC_URL`        | CDN URL for public files (optional)               | -       |
+| `S3_GLOBAL_PREFIX`     | Key prefix for multi-project isolation (optional) | -       |
+
+```bash
+# MinIO (local / self-hosted)
+S3_REGION=auto
+S3_ENDPOINT="http://localhost:9000"
+S3_ACCESS_KEY_ID="minioadmin"
+S3_SECRET_ACCESS_KEY="minioadmin"
+S3_BUCKET="open-short-url"
+
+# Cloudflare R2
+# S3_REGION=auto
+# S3_ENDPOINT="https://<account-id>.r2.cloudflarestorage.com"
+# S3_ACCESS_KEY_ID="your-r2-access-key"
+# S3_SECRET_ACCESS_KEY="your-r2-secret-key"
+# S3_BUCKET="open-short-url"
+
+# AWS S3
+# S3_REGION="us-east-1"
+# S3_ACCESS_KEY_ID="your-aws-access-key"
+# S3_SECRET_ACCESS_KEY="your-aws-secret-key"
+# S3_BUCKET="open-short-url"
+```
+
 #### Email (SMTP)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `SMTP_HOST` | SMTP server host | - |
-| `SMTP_PORT` | SMTP server port | `587` |
-| `SMTP_USER` | SMTP username | - |
-| `SMTP_PASSWORD` | SMTP password | - |
-| `SMTP_FROM` | Default from address | - |
+| Variable        | Description          | Default |
+| --------------- | -------------------- | ------- |
+| `SMTP_HOST`     | SMTP server host     | -       |
+| `SMTP_PORT`     | SMTP server port     | `587`   |
+| `SMTP_USER`     | SMTP username        | -       |
+| `SMTP_PASSWORD` | SMTP password        | -       |
+| `SMTP_FROM`     | Default from address | -       |
 
 ```bash
 SMTP_HOST="smtp.gmail.com"
@@ -280,8 +317,8 @@ SMTP_FROM="noreply@example.com"
 
 #### Environment
 
-| Variable | Description | Example |
-|----------|-------------|---------|
+| Variable   | Description      | Example      |
+| ---------- | ---------------- | ------------ |
 | `NODE_ENV` | Environment mode | `production` |
 
 ```bash
@@ -290,9 +327,9 @@ NODE_ENV=production
 
 #### API Connection
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API URL | `https://s.yourdomain.com` |
+| Variable                       | Description      | Example                    |
+| ------------------------------ | ---------------- | -------------------------- |
+| `NEXT_PUBLIC_API_URL`          | Backend API URL  | `https://s.yourdomain.com` |
 | `NEXT_PUBLIC_SHORT_URL_DOMAIN` | Short URL domain | `https://s.yourdomain.com` |
 
 ```bash
@@ -306,8 +343,8 @@ NEXT_PUBLIC_SHORT_URL_DOMAIN="https://s.yourdomain.com"
 
 #### Cloudflare Turnstile
 
-| Variable | Description |
-|----------|-------------|
+| Variable                         | Description        |
+| -------------------------------- | ------------------ |
 | `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Turnstile site key |
 
 ```bash
@@ -316,11 +353,11 @@ NEXT_PUBLIC_TURNSTILE_SITE_KEY="1x00000000000000000000AA"
 
 #### Branding
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_BRAND_NAME` | Application name | `Open Short URL` |
-| `NEXT_PUBLIC_BRAND_ICON_URL` | Brand icon URL | - |
-| `NEXT_PUBLIC_BRAND_DESCRIPTION` | Brand description | - |
+| Variable                        | Description       | Default          |
+| ------------------------------- | ----------------- | ---------------- |
+| `NEXT_PUBLIC_BRAND_NAME`        | Application name  | `Open Short URL` |
+| `NEXT_PUBLIC_BRAND_ICON_URL`    | Brand icon URL    | -                |
+| `NEXT_PUBLIC_BRAND_DESCRIPTION` | Brand description | -                |
 
 ```bash
 NEXT_PUBLIC_BRAND_NAME="My Short URLs"
@@ -334,9 +371,9 @@ NEXT_PUBLIC_BRAND_DESCRIPTION="URL shortening made simple"
 
 #### Internationalization
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_LOCALE` | Default locale | `en` |
+| Variable             | Description    | Default |
+| -------------------- | -------------- | ------- |
+| `NEXT_PUBLIC_LOCALE` | Default locale | `en`    |
 
 ```bash
 # Available: en, zh-TW, pt-BR
@@ -349,23 +386,23 @@ AI is disabled by default. Configure at least one provider API key to enable.
 
 **Settings:**
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `AI_PROVIDER` | AI provider | - |
-| `AI_MODEL` | AI model name | - |
-| `AI_TEMPERATURE` | Response creativity (0.0-2.0) | `0.7` |
-| `AI_MAX_TOKENS` | Max tokens in response | `4096` |
-| `AI_TOP_P` | Top-p sampling (0.0-1.0) | `1.0` |
+| Variable         | Description                   | Default |
+| ---------------- | ----------------------------- | ------- |
+| `AI_PROVIDER`    | AI provider                   | -       |
+| `AI_MODEL`       | AI model name                 | -       |
+| `AI_TEMPERATURE` | Response creativity (0.0-2.0) | `0.7`   |
+| `AI_MAX_TOKENS`  | Max tokens in response        | `4096`  |
+| `AI_TOP_P`       | Top-p sampling (0.0-1.0)      | `1.0`   |
 
 **Provider API Keys:**
 
-| Variable | Provider |
-|----------|----------|
-| `OPENAI_API_KEY` | GPT-4, GPT-3.5 |
-| `ANTHROPIC_API_KEY` | Claude |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini |
-| `MISTRAL_API_KEY` | Mistral |
-| `COHERE_API_KEY` | Cohere |
+| Variable                       | Provider       |
+| ------------------------------ | -------------- |
+| `OPENAI_API_KEY`               | GPT-4, GPT-3.5 |
+| `ANTHROPIC_API_KEY`            | Claude         |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | Gemini         |
+| `MISTRAL_API_KEY`              | Mistral        |
+| `COHERE_API_KEY`               | Cohere         |
 
 ```bash
 AI_PROVIDER="anthropic"
@@ -375,10 +412,10 @@ ANTHROPIC_API_KEY="sk-ant-..."
 
 **Google Vertex AI:**
 
-| Variable | Description |
-|----------|-------------|
-| `GOOGLE_VERTEX_PROJECT` | GCP project ID |
-| `GOOGLE_VERTEX_LOCATION` | GCP region |
+| Variable                         | Description          |
+| -------------------------------- | -------------------- |
+| `GOOGLE_VERTEX_PROJECT`          | GCP project ID       |
+| `GOOGLE_VERTEX_LOCATION`         | GCP region           |
 | `GOOGLE_APPLICATION_CREDENTIALS` | Service account path |
 
 ```bash

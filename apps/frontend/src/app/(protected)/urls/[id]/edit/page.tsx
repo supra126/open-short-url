@@ -23,6 +23,10 @@ import {
 } from '@/components/ui/select';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import {
+  OgMetaSection,
+  type OgMetaValues,
+} from '@/components/url/og-meta-section';
 
 export default function EditUrlPage() {
   const params = useParams();
@@ -59,7 +63,17 @@ export default function EditUrlPage() {
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [removePassword, setRemovePassword] = useState(false);
   const [removeExpiry, setRemoveExpiry] = useState(false);
-  const isPasswordTooShort = !removePassword && !!formData.password && formData.password.length > 0 && formData.password.length < 4;
+  const [ogMeta, setOgMeta] = useState<OgMetaValues>({
+    ogTitle: '',
+    ogDescription: '',
+    twitterCardType: 'summary_large_image',
+  });
+  const [removeOgImage, setRemoveOgImage] = useState(false);
+  const isPasswordTooShort =
+    !removePassword &&
+    !!formData.password &&
+    formData.password.length > 0 &&
+    formData.password.length < 4;
 
   // Fill form when data is loaded
   useEffect(() => {
@@ -79,8 +93,21 @@ export default function EditUrlPage() {
         utmContent: urlData.utmContent || '',
       });
 
+      // Populate OG meta
+      setOgMeta({
+        ogTitle: urlData.ogTitle || '',
+        ogDescription: urlData.ogDescription || '',
+        twitterCardType: urlData.twitterCardType || 'summary_large_image',
+      });
+
       // Expand advanced options by default if they exist
-      if (urlData.hasPassword || urlData.expiresAt) {
+      if (
+        urlData.hasPassword ||
+        urlData.expiresAt ||
+        urlData.ogTitle ||
+        urlData.ogDescription ||
+        urlData.ogImage
+      ) {
         setShowAdvanced(true);
       }
     }
@@ -106,15 +133,24 @@ export default function EditUrlPage() {
         title: formData.title || undefined,
         status: formData.status || undefined,
         // Handle password
-        password: removePassword ? null : (formData.password || undefined),
+        password: removePassword ? null : formData.password || undefined,
         // Handle expiration time
-        expiresAt: removeExpiry ? null : (formData.expiresAt ? new Date(formData.expiresAt).toISOString() : undefined),
+        expiresAt: removeExpiry
+          ? null
+          : formData.expiresAt
+            ? new Date(formData.expiresAt).toISOString()
+            : undefined,
         // Handle UTM parameters
         utmSource: formData.utmSource || undefined,
         utmMedium: formData.utmMedium || undefined,
         utmCampaign: formData.utmCampaign || undefined,
         utmTerm: formData.utmTerm || undefined,
         utmContent: formData.utmContent || undefined,
+        // Handle OG meta
+        ogTitle: ogMeta.ogTitle || undefined,
+        ogDescription: ogMeta.ogDescription || undefined,
+        twitterCardType: ogMeta.twitterCardType || undefined,
+        ogImage: removeOgImage ? null : undefined,
       } as UpdateUrlDto;
 
       await updateUrl.mutateAsync({ id, data });
@@ -126,7 +162,8 @@ export default function EditUrlPage() {
 
       router.push(`/urls/${id}`);
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('urls.updateError');
+      const message =
+        err instanceof Error ? err.message : t('urls.updateError');
       toast({
         title: t('urls.updateError'),
         description: message,
@@ -148,7 +185,9 @@ export default function EditUrlPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-3xl font-display font-bold">{t('urls.editTitle')}</h1>
+          <h1 className="text-3xl font-display font-bold">
+            {t('urls.editTitle')}
+          </h1>
           <p className="text-muted-foreground mt-1">{t('urls.editDesc')}</p>
         </div>
       </div>
@@ -170,264 +209,279 @@ export default function EditUrlPage() {
       ) : (
         /* Content */
         <Card className="w-full">
-        <CardHeader>
-          <CardTitle>{t('urls.settings')}</CardTitle>
-          <CardDescription>
-            {t('urls.slugNotEditable').replace('{slug}', urlData.slug)}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="originalUrl">
-                {t('urls.originalUrlRequired')}
-              </Label>
-              <Input
-                id="originalUrl"
-                type="url"
-                placeholder={t('urls.urlPlaceholder')}
-                value={formData.originalUrl}
-                onChange={handleChange('originalUrl')}
-                required
-              />
-            </div>
+          <CardHeader>
+            <CardTitle>{t('urls.settings')}</CardTitle>
+            <CardDescription>
+              {t('urls.slugNotEditable').replace('{slug}', urlData.slug)}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="originalUrl">
+                  {t('urls.originalUrlRequired')}
+                </Label>
+                <Input
+                  id="originalUrl"
+                  type="url"
+                  placeholder={t('urls.urlPlaceholder')}
+                  value={formData.originalUrl}
+                  onChange={handleChange('originalUrl')}
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="title">{t('urls.titleOptional')}</Label>
-              <Input
-                id="title"
-                type="text"
-                placeholder={t('urls.titlePlaceholder')}
-                value={formData.title}
-                onChange={handleChange('title')}
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="title">{t('urls.titleOptional')}</Label>
+                <Input
+                  id="title"
+                  type="text"
+                  placeholder={t('urls.titlePlaceholder')}
+                  value={formData.title}
+                  onChange={handleChange('title')}
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="status">{t('urls.statusLabel')}</Label>
-              {formData.status ? (
-                <Select
-                  key={formData.status}
-                  value={formData.status}
-                  onValueChange={(value: 'ACTIVE' | 'INACTIVE' | 'EXPIRED') =>
-                    setFormData({ ...formData, status: value })
-                  }
+              <div className="space-y-2">
+                <Label htmlFor="status">{t('urls.statusLabel')}</Label>
+                {formData.status ? (
+                  <Select
+                    key={formData.status}
+                    value={formData.status}
+                    onValueChange={(value: 'ACTIVE' | 'INACTIVE' | 'EXPIRED') =>
+                      setFormData({ ...formData, status: value })
+                    }
+                  >
+                    <SelectTrigger id="status">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ACTIVE">
+                        {t('urls.statusActive')}
+                      </SelectItem>
+                      <SelectItem value="INACTIVE">
+                        {t('urls.statusInactive')}
+                      </SelectItem>
+                      <SelectItem value="EXPIRED">
+                        {t('urls.statusExpired')}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <div className="flex h-10 items-center justify-center rounded-md border border-input bg-background px-3 py-2">
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  {t('urls.inactiveHint')}
+                </p>
+              </div>
+
+              {/* Advanced Options */}
+              <div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
                 >
-                  <SelectTrigger id="status">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ACTIVE">
-                      {t('urls.statusActive')}
-                    </SelectItem>
-                    <SelectItem value="INACTIVE">
-                      {t('urls.statusInactive')}
-                    </SelectItem>
-                    <SelectItem value="EXPIRED">
-                      {t('urls.statusExpired')}
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              ) : (
-                <div className="flex h-10 items-center justify-center rounded-md border border-input bg-background px-3 py-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  {showAdvanced
+                    ? t('urls.hideAdvanced')
+                    : t('urls.showAdvanced')}
+                  {t('urls.advancedOptions')}
+                </Button>
+              </div>
+
+              {showAdvanced && (
+                <div className="space-y-4 rounded-lg border p-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">
+                        {t('urls.passwordProtection')}
+                      </Label>
+                      {urlData.hasPassword && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setRemovePassword(!removePassword)}
+                        >
+                          {removePassword
+                            ? t('urls.keepPassword')
+                            : t('urls.removePassword')}
+                        </Button>
+                      )}
+                    </div>
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder={
+                        urlData.hasPassword
+                          ? t('urls.passwordPlaceholderEdit')
+                          : t('urls.passwordPlaceholder')
+                      }
+                      value={formData.password}
+                      onChange={handleChange('password')}
+                      disabled={removePassword}
+                      minLength={4}
+                      maxLength={128}
+                    />
+                    <p
+                      className={`text-xs ${isPasswordTooShort ? 'text-destructive' : 'text-muted-foreground'}`}
+                    >
+                      {removePassword
+                        ? t('urls.passwordWillBeRemoved')
+                        : isPasswordTooShort
+                          ? t('urls.passwordTooShort')
+                          : urlData.hasPassword
+                            ? t('urls.passwordCurrentlySet')
+                            : t('urls.passwordHint')}
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="expiresAt">{t('urls.expiresAt')}</Label>
+                      {urlData.expiresAt && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setRemoveExpiry(!removeExpiry)}
+                        >
+                          {removeExpiry
+                            ? t('urls.keepExpiry')
+                            : t('urls.removeExpiry')}
+                        </Button>
+                      )}
+                    </div>
+                    <Input
+                      id="expiresAt"
+                      type="datetime-local"
+                      value={formData.expiresAt}
+                      onChange={handleChange('expiresAt')}
+                      disabled={removeExpiry}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      {removeExpiry
+                        ? t('urls.expiryWillBeRemoved')
+                        : t('urls.expiresAtHint')}
+                    </p>
+                  </div>
+
+                  {/* UTM Parameters */}
+                  <div className="space-y-4 pt-4 border-t">
+                    <div>
+                      <h4 className="text-sm font-medium mb-1">
+                        {t('urls.utmSection')}
+                      </h4>
+                      <p className="text-xs text-muted-foreground">
+                        {t('urls.utmSectionDesc')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="utmSource">{t('urls.utmSource')}</Label>
+                      <Input
+                        id="utmSource"
+                        type="text"
+                        placeholder={t('urls.utmSourcePlaceholder')}
+                        value={formData.utmSource}
+                        onChange={handleChange('utmSource')}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('urls.utmSourceHint')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="utmMedium">{t('urls.utmMedium')}</Label>
+                      <Input
+                        id="utmMedium"
+                        type="text"
+                        placeholder={t('urls.utmMediumPlaceholder')}
+                        value={formData.utmMedium}
+                        onChange={handleChange('utmMedium')}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('urls.utmMediumHint')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="utmCampaign">
+                        {t('urls.utmCampaign')}
+                      </Label>
+                      <Input
+                        id="utmCampaign"
+                        type="text"
+                        placeholder={t('urls.utmCampaignPlaceholder')}
+                        value={formData.utmCampaign}
+                        onChange={handleChange('utmCampaign')}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('urls.utmCampaignHint')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="utmTerm">{t('urls.utmTerm')}</Label>
+                      <Input
+                        id="utmTerm"
+                        type="text"
+                        placeholder={t('urls.utmTermPlaceholder')}
+                        value={formData.utmTerm}
+                        onChange={handleChange('utmTerm')}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('urls.utmTermHint')}
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="utmContent">{t('urls.utmContent')}</Label>
+                      <Input
+                        id="utmContent"
+                        type="text"
+                        placeholder={t('urls.utmContentPlaceholder')}
+                        value={formData.utmContent}
+                        onChange={handleChange('utmContent')}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        {t('urls.utmContentHint')}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Social Preview (OG Meta) */}
+                  <OgMetaSection
+                    value={ogMeta}
+                    onChange={setOgMeta}
+                    urlId={id}
+                    currentOgImageUrl={urlData.ogImageUrl}
+                    onOgImageCleared={() => setRemoveOgImage(true)}
+                  />
                 </div>
               )}
-              <p className="text-xs text-muted-foreground">
-                {t('urls.inactiveHint')}
-              </p>
-            </div>
 
-            {/* Advanced Options */}
-            <div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-              >
-                {showAdvanced ? t('urls.hideAdvanced') : t('urls.showAdvanced')}
-                {t('urls.advancedOptions')}
-              </Button>
-            </div>
-
-            {showAdvanced && (
-              <div className="space-y-4 rounded-lg border p-4">
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">
-                      {t('urls.passwordProtection')}
-                    </Label>
-                    {urlData.hasPassword && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setRemovePassword(!removePassword)}
-                      >
-                        {removePassword
-                          ? t('urls.keepPassword')
-                          : t('urls.removePassword')}
-                      </Button>
-                    )}
-                  </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder={
-                      urlData.hasPassword
-                        ? t('urls.passwordPlaceholderEdit')
-                        : t('urls.passwordPlaceholder')
-                    }
-                    value={formData.password}
-                    onChange={handleChange('password')}
-                    disabled={removePassword}
-                    minLength={4}
-                    maxLength={128}
-                  />
-                  <p className={`text-xs ${isPasswordTooShort ? 'text-destructive' : 'text-muted-foreground'}`}>
-                    {removePassword
-                      ? t('urls.passwordWillBeRemoved')
-                      : isPasswordTooShort
-                        ? t('urls.passwordTooShort')
-                        : urlData.hasPassword
-                          ? t('urls.passwordCurrentlySet')
-                          : t('urls.passwordHint')}
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="expiresAt">{t('urls.expiresAt')}</Label>
-                    {urlData.expiresAt && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setRemoveExpiry(!removeExpiry)}
-                      >
-                        {removeExpiry
-                          ? t('urls.keepExpiry')
-                          : t('urls.removeExpiry')}
-                      </Button>
-                    )}
-                  </div>
-                  <Input
-                    id="expiresAt"
-                    type="datetime-local"
-                    value={formData.expiresAt}
-                    onChange={handleChange('expiresAt')}
-                    disabled={removeExpiry}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {removeExpiry
-                      ? t('urls.expiryWillBeRemoved')
-                      : t('urls.expiresAtHint')}
-                  </p>
-                </div>
-
-                {/* UTM Parameters */}
-                <div className="space-y-4 pt-4 border-t">
-                  <div>
-                    <h4 className="text-sm font-medium mb-1">
-                      {t('urls.utmSection')}
-                    </h4>
-                    <p className="text-xs text-muted-foreground">
-                      {t('urls.utmSectionDesc')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="utmSource">{t('urls.utmSource')}</Label>
-                    <Input
-                      id="utmSource"
-                      type="text"
-                      placeholder={t('urls.utmSourcePlaceholder')}
-                      value={formData.utmSource}
-                      onChange={handleChange('utmSource')}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('urls.utmSourceHint')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="utmMedium">{t('urls.utmMedium')}</Label>
-                    <Input
-                      id="utmMedium"
-                      type="text"
-                      placeholder={t('urls.utmMediumPlaceholder')}
-                      value={formData.utmMedium}
-                      onChange={handleChange('utmMedium')}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('urls.utmMediumHint')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="utmCampaign">{t('urls.utmCampaign')}</Label>
-                    <Input
-                      id="utmCampaign"
-                      type="text"
-                      placeholder={t('urls.utmCampaignPlaceholder')}
-                      value={formData.utmCampaign}
-                      onChange={handleChange('utmCampaign')}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('urls.utmCampaignHint')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="utmTerm">{t('urls.utmTerm')}</Label>
-                    <Input
-                      id="utmTerm"
-                      type="text"
-                      placeholder={t('urls.utmTermPlaceholder')}
-                      value={formData.utmTerm}
-                      onChange={handleChange('utmTerm')}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('urls.utmTermHint')}
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="utmContent">{t('urls.utmContent')}</Label>
-                    <Input
-                      id="utmContent"
-                      type="text"
-                      placeholder={t('urls.utmContentPlaceholder')}
-                      value={formData.utmContent}
-                      onChange={handleChange('utmContent')}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      {t('urls.utmContentHint')}
-                    </p>
-                  </div>
-                </div>
+              <div className="flex gap-2">
+                <Button type="submit" disabled={updateUrl.isPending}>
+                  {updateUrl.isPending && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  {t('profile.saveChanges')}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push(`/urls/${id}`)}
+                >
+                  {t('common.cancel')}
+                </Button>
               </div>
-            )}
-
-            <div className="flex gap-2">
-              <Button type="submit" disabled={updateUrl.isPending}>
-                {updateUrl.isPending && (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                )}
-                {t('profile.saveChanges')}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push(`/urls/${id}`)}
-              >
-                {t('common.cancel')}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

@@ -34,13 +34,14 @@ docker compose up -d
 That is it. The backend container automatically runs database migrations and seeds the initial admin user on startup -- no manual steps are needed.
 
 ::: tip Default Admin Account
+
 - **Email:** `admin@example.com`
 - **Password:** the value of `ADMIN_INITIAL_PASSWORD` in your `.env.docker`
 - If `ADMIN_INITIAL_PASSWORD` is not set, a random password is generated and printed in the backend logs:
   ```bash
   docker compose logs backend | grep -A2 "Admin credentials"
   ```
-:::
+  :::
 
 ### Method 2: Use Pre-built GHCR Images
 
@@ -60,9 +61,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - '${POSTGRES_PORT:-5432}:5432'
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-postgres}']
       interval: 5s
       timeout: 5s
       retries: 5
@@ -83,9 +84,13 @@ services:
     volumes:
       - redis_data:/data
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - '${REDIS_PORT:-6379}:6379'
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli ${REDIS_PASSWORD:+-a \"$REDIS_PASSWORD\"} ping | grep -q PONG"]
+      test:
+        [
+          'CMD-SHELL',
+          'redis-cli ${REDIS_PASSWORD:+-a "$REDIS_PASSWORD"} ping | grep -q PONG',
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -112,7 +117,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:4100}
       TRUSTED_PROXY: ${TRUSTED_PROXY:-true}
     ports:
-      - "${BACKEND_PORT:-4101}:4101"
+      - '${BACKEND_PORT:-4101}:4101'
     depends_on:
       postgres:
         condition: service_healthy
@@ -133,7 +138,7 @@ services:
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ${NEXT_PUBLIC_TURNSTILE_SITE_KEY:-}
       NEXT_PUBLIC_DOCS_URL: ${NEXT_PUBLIC_DOCS_URL:-https://supra126.github.io/open-short-url/}
     ports:
-      - "${FRONTEND_PORT:-4100}:4100"
+      - '${FRONTEND_PORT:-4100}:4100'
     depends_on:
       - backend
 
@@ -174,57 +179,64 @@ Copy `.env.docker.example` to `.env.docker` and update the values. The file is o
 
 #### Infrastructure
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `POSTGRES_DB` | Database name | `open_short_url` |
-| `POSTGRES_USER` | Database user | `postgres` |
-| `POSTGRES_PASSWORD` | Database password | `postgres` |
-| `POSTGRES_PORT` | Host port for PostgreSQL | `5432` |
-| `REDIS_PASSWORD` | Redis password (empty = no auth) | _(empty)_ |
-| `REDIS_PORT` | Host port for Redis | `6379` |
-| `BACKEND_PORT` | Host port for backend | `4101` |
-| `FRONTEND_PORT` | Host port for frontend | `4100` |
+| Variable            | Description                      | Default          |
+| ------------------- | -------------------------------- | ---------------- |
+| `POSTGRES_DB`       | Database name                    | `open_short_url` |
+| `POSTGRES_USER`     | Database user                    | `postgres`       |
+| `POSTGRES_PASSWORD` | Database password                | `postgres`       |
+| `POSTGRES_PORT`     | Host port for PostgreSQL         | `5432`           |
+| `REDIS_PASSWORD`    | Redis password (empty = no auth) | _(empty)_        |
+| `REDIS_PORT`        | Host port for Redis              | `6379`           |
+| `BACKEND_PORT`      | Host port for backend            | `4101`           |
+| `FRONTEND_PORT`     | Host port for frontend           | `4100`           |
 
 #### Backend (Required)
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `JWT_SECRET` | JWT signing secret | Generate with `openssl rand -base64 32` |
-| `JWT_EXPIRES_IN` | JWT token lifetime | `7d` |
-| `ADMIN_INITIAL_PASSWORD` | Initial admin user password | `changeme-strong-admin-password` |
-| `SHORT_URL_DOMAIN` | Domain shown in shortened links | `https://s.example.com` |
-| `FRONTEND_URL` | Where the dashboard is hosted | `https://app.example.com` |
-| `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | `https://app.example.com` |
+| Variable                 | Description                            | Example                                 |
+| ------------------------ | -------------------------------------- | --------------------------------------- |
+| `JWT_SECRET`             | JWT signing secret                     | Generate with `openssl rand -base64 32` |
+| `JWT_EXPIRES_IN`         | JWT token lifetime                     | `7d`                                    |
+| `ADMIN_INITIAL_PASSWORD` | Initial admin user password            | `changeme-strong-admin-password`        |
+| `SHORT_URL_DOMAIN`       | Domain shown in shortened links        | `https://s.example.com`                 |
+| `FRONTEND_URL`           | Where the dashboard is hosted          | `https://app.example.com`               |
+| `CORS_ORIGIN`            | Allowed CORS origins (comma-separated) | `https://app.example.com`               |
 
 #### Backend (Optional)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `COOKIE_DOMAIN` | Cookie domain for cross-subdomain auth | _(empty)_ |
-| `TRUSTED_PROXY` | Set to `true` if behind nginx/cloudflare | `true` |
-| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile secret | _(empty)_ |
-| `THROTTLE_TTL` | Rate limit window in seconds | `60` |
-| `THROTTLE_LIMIT` | Max requests per window | `10` |
-| `SMTP_HOST` | SMTP server hostname | _(empty)_ |
-| `SMTP_PORT` | SMTP server port | `587` |
-| `SMTP_USER` | SMTP username | _(empty)_ |
-| `SMTP_PASSWORD` | SMTP password | _(empty)_ |
-| `SMTP_FROM` | SMTP sender address | _(empty)_ |
+| Variable               | Description                              | Default             |
+| ---------------------- | ---------------------------------------- | ------------------- |
+| `COOKIE_DOMAIN`        | Cookie domain for cross-subdomain auth   | _(empty)_           |
+| `TRUSTED_PROXY`        | Set to `true` if behind nginx/cloudflare | `true`              |
+| `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile secret              | _(empty)_           |
+| `THROTTLE_TTL`         | Rate limit window in seconds             | `60`                |
+| `THROTTLE_LIMIT`       | Max requests per window                  | `10`                |
+| `SMTP_HOST`            | SMTP server hostname                     | _(empty)_           |
+| `SMTP_PORT`            | SMTP server port                         | `587`               |
+| `SMTP_USER`            | SMTP username                            | _(empty)_           |
+| `SMTP_PASSWORD`        | SMTP password                            | _(empty)_           |
+| `SMTP_FROM`            | SMTP sender address                      | _(empty)_           |
+| `S3_REGION`            | S3 region                                | `auto`              |
+| `S3_ENDPOINT`          | S3-compatible endpoint (MinIO/R2)        | `http://minio:9000` |
+| `S3_ACCESS_KEY_ID`     | S3 access key                            | `minioadmin`        |
+| `S3_SECRET_ACCESS_KEY` | S3 secret key                            | `minioadmin`        |
+| `S3_BUCKET`            | S3 bucket name                           | `open-short-url`    |
+| `S3_PUBLIC_URL`        | CDN URL for public files                 | _(empty)_           |
+| `S3_GLOBAL_PREFIX`     | Key prefix for isolation                 | _(empty)_           |
 
 #### Frontend
 
 These variables configure the Next.js frontend. When building from source, they are passed as Docker build args. When using pre-built GHCR images, they are automatically replaced at container startup via the entrypoint script -- no rebuild needed.
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API URL | `http://localhost:4101` |
-| `NEXT_PUBLIC_SHORT_URL_DOMAIN` | Short URL domain shown in UI | `http://localhost:4101` |
-| `NEXT_PUBLIC_LOCALE` | UI locale | `en` |
-| `NEXT_PUBLIC_BRAND_NAME` | Brand name shown in UI | `Open Short URL` |
-| `NEXT_PUBLIC_BRAND_ICON_URL` | Custom brand icon URL | _(empty)_ |
-| `NEXT_PUBLIC_BRAND_DESCRIPTION` | Brand description | _(empty)_ |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key | _(empty)_ |
-| `NEXT_PUBLIC_DOCS_URL` | Documentation link URL | `https://supra126.github.io/open-short-url/` |
+| Variable                         | Description                   | Default                                      |
+| -------------------------------- | ----------------------------- | -------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`            | Backend API URL               | `http://localhost:4101`                      |
+| `NEXT_PUBLIC_SHORT_URL_DOMAIN`   | Short URL domain shown in UI  | `http://localhost:4101`                      |
+| `NEXT_PUBLIC_LOCALE`             | UI locale                     | `en`                                         |
+| `NEXT_PUBLIC_BRAND_NAME`         | Brand name shown in UI        | `Open Short URL`                             |
+| `NEXT_PUBLIC_BRAND_ICON_URL`     | Custom brand icon URL         | _(empty)_                                    |
+| `NEXT_PUBLIC_BRAND_DESCRIPTION`  | Brand description             | _(empty)_                                    |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | Cloudflare Turnstile site key | _(empty)_                                    |
+| `NEXT_PUBLIC_DOCS_URL`           | Documentation link URL        | `https://supra126.github.io/open-short-url/` |
 
 ### Generate Secure Secrets
 
@@ -248,6 +260,7 @@ docker compose --profile ssl up -d
 ```
 
 That is it. Caddy reads your `SHORT_URL_DOMAIN` and `FRONTEND_URL` from `.env.docker` and automatically:
+
 - Obtains Let's Encrypt certificates for both domains
 - Redirects HTTP to HTTPS
 - Renews certificates automatically
@@ -259,10 +272,11 @@ If you already have a reverse proxy handling SSL, use the standard `docker compo
 :::
 
 ::: warning Prerequisites
+
 - Ports 80 and 443 must be open and not used by another process
 - Your domains must point to the server's public IP (DNS A record)
 - Cloudflare users: use DNS-only mode (grey cloud), not proxied (orange cloud)
-:::
+  :::
 
 ### External Reverse Proxy
 
@@ -359,37 +373,37 @@ services:
     image: traefik:v3.0
     restart: unless-stopped
     command:
-      - "--api.dashboard=true"
-      - "--providers.docker=true"
-      - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      - "--entrypoints.websecure.address=:443"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge=true"
-      - "--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web"
-      - "--certificatesresolvers.letsencrypt.acme.email=your-email@example.com"
-      - "--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json"
+      - '--api.dashboard=true'
+      - '--providers.docker=true'
+      - '--providers.docker.exposedbydefault=false'
+      - '--entrypoints.web.address=:80'
+      - '--entrypoints.websecure.address=:443'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge=true'
+      - '--certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web'
+      - '--certificatesresolvers.letsencrypt.acme.email=your-email@example.com'
+      - '--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json'
     ports:
-      - "80:80"
-      - "443:443"
+      - '80:80'
+      - '443:443'
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik_letsencrypt:/letsencrypt
 
   frontend:
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`your-domain.com`)"
-      - "traefik.http.routers.frontend.entrypoints=websecure"
-      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.frontend.loadbalancer.server.port=4100"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.frontend.rule=Host(`your-domain.com`)'
+      - 'traefik.http.routers.frontend.entrypoints=websecure'
+      - 'traefik.http.routers.frontend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.frontend.loadbalancer.server.port=4100'
 
   backend:
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api.your-domain.com`) || Host(`s.your-domain.com`)"
-      - "traefik.http.routers.backend.entrypoints=websecure"
-      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
-      - "traefik.http.services.backend.loadbalancer.server.port=4101"
+      - 'traefik.enable=true'
+      - 'traefik.http.routers.backend.rule=Host(`api.your-domain.com`) || Host(`s.your-domain.com`)'
+      - 'traefik.http.routers.backend.entrypoints=websecure'
+      - 'traefik.http.routers.backend.tls.certresolver=letsencrypt'
+      - 'traefik.http.services.backend.loadbalancer.server.port=4101'
 
 volumes:
   traefik_letsencrypt:
@@ -487,10 +501,10 @@ docker compose logs --tail=100 backend
 services:
   backend:
     logging:
-      driver: "json-file"
+      driver: 'json-file'
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: '10m'
+        max-file: '3'
 ```
 
 ## Backup & Restore
@@ -569,6 +583,7 @@ docker compose up -d
 ### Common Issues
 
 **Container will not start:**
+
 ```bash
 # Check logs
 docker compose logs backend
@@ -578,6 +593,7 @@ docker compose ps
 ```
 
 **Database connection failed:**
+
 ```bash
 # Check if postgres is healthy
 docker compose exec postgres pg_isready -U postgres
@@ -587,6 +603,7 @@ docker compose exec backend nc -zv postgres 5432
 ```
 
 **Permission denied:**
+
 ```bash
 # Fix volume permissions
 sudo chown -R 1000:1000 ./data

@@ -126,6 +126,48 @@ export class UrlResponseDto {
   })
   defaultUrl?: string;
 
+  @ApiPropertyOptional({
+    description: 'OG Title for social preview',
+    example: 'Check out this amazing deal!',
+  })
+  ogTitle?: string;
+
+  @ApiPropertyOptional({
+    description: 'OG Description for social preview',
+    example: 'Limited time offer - 50% off everything',
+  })
+  ogDescription?: string;
+
+  @ApiPropertyOptional({
+    description: 'OG Image S3 key',
+    example: 'og-images/clxxx123/1711234567890.webp',
+  })
+  ogImage?: string;
+
+  @ApiPropertyOptional({
+    description: 'OG Image proxy URL',
+    example: '/api/og-images/og-images%2Fclxxx123%2F1711234567890.webp',
+  })
+  ogImageUrl?: string;
+
+  @ApiPropertyOptional({
+    description: 'Twitter card type',
+    example: 'summary_large_image',
+  })
+  twitterCardType?: string;
+
+  @ApiPropertyOptional({
+    description: 'Created by user name (admin only)',
+    example: 'Admin',
+  })
+  createdByName?: string;
+
+  @ApiPropertyOptional({
+    description: 'Created by user email (admin only)',
+    example: 'admin@example.com',
+  })
+  createdByEmail?: string;
+
   @ApiProperty({
     description: 'Creation timestamp (ISO 8601 format)',
     example: '2025-10-01T10:30:00.000Z',

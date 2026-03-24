@@ -67,6 +67,22 @@ export function registerUrlTools(apiClient: ApiClient) {
             type: 'string',
             description: 'UTM content parameter (optional)',
           },
+          ogTitle: {
+            type: 'string',
+            description:
+              'OG title for social media preview (optional, max 100 chars)',
+          },
+          ogDescription: {
+            type: 'string',
+            description:
+              'OG description for social media preview (optional, max 200 chars)',
+          },
+          twitterCardType: {
+            type: 'string',
+            enum: ['summary', 'summary_large_image'],
+            description:
+              'Twitter card type (optional, defaults to summary_large_image)',
+          },
         },
         required: ['originalUrl'],
       },
@@ -173,6 +189,21 @@ export function registerUrlTools(apiClient: ApiClient) {
           utmContent: {
             type: 'string',
             description: 'UTM content parameter (optional)',
+          },
+          ogTitle: {
+            type: 'string',
+            description:
+              'OG title for social media preview (optional, max 100 chars)',
+          },
+          ogDescription: {
+            type: 'string',
+            description:
+              'OG description for social media preview (optional, max 200 chars)',
+          },
+          twitterCardType: {
+            type: 'string',
+            enum: ['summary', 'summary_large_image'],
+            description: 'Twitter card type (optional)',
           },
         },
         required: ['id'],

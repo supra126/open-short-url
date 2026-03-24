@@ -134,6 +134,12 @@ model Url {
   utmTerm     String?
   utmContent  String?
 
+  // OG Meta (Social Preview)
+  ogTitle         String?
+  ogDescription   String?
+  ogImage         String? // S3 key
+  twitterCardType String? // 'summary' or 'summary_large_image'
+
   // Metadata
   metadata Json? @db.JsonB // additional metadata (JsonB for better performance)
 

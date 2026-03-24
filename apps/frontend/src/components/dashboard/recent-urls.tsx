@@ -69,13 +69,13 @@ const UrlItem = memo<{
         >
           <Copy className="h-4 w-4" />
         </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          asChild
-        >
-          <a href={shortUrl} target="_blank" rel="noopener noreferrer" title={t('common.view')}>
+        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+          <a
+            href={shortUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={t('common.view')}
+          >
             <ExternalLink className="h-4 w-4" />
           </a>
         </Button>
@@ -115,15 +115,14 @@ export const RecentUrls = memo<RecentUrlsProps>(
           });
         }
       },
-      [toast],
+      [toast]
     );
 
     // Get base URL from environment or window
     const resolvedBaseUrl =
       baseUrl ||
-      (typeof window !== 'undefined'
-        ? window.location.origin
-        : process.env.NEXT_PUBLIC_SHORT_URL_BASE || '');
+      process.env.NEXT_PUBLIC_API_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : '');
 
     return (
       <Card>
@@ -170,6 +169,6 @@ export const RecentUrls = memo<RecentUrlsProps>(
         </CardContent>
       </Card>
     );
-  },
+  }
 );
 RecentUrls.displayName = 'RecentUrls';

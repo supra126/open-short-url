@@ -40,6 +40,7 @@ Content-Type: application/json
 ```
 
 **回應：**
+
 ```json
 {
   "user": {
@@ -246,6 +247,53 @@ DELETE /api/urls/{id}/variants/{variantId}
 
 ---
 
+## OG 圖片 API
+
+### 上傳 OG 圖片
+
+上傳並優化社群媒體預覽圖片。
+
+```http
+POST /api/og-images/upload/{urlId}
+Content-Type: multipart/form-data
+Authorization: Bearer <token>
+
+file: (binary)
+```
+
+**支援格式：** JPEG、PNG、WebP、GIF（最大 10MB）
+
+**回應：**
+
+```json
+{
+  "statusCode": 201,
+  "data": {
+    "key": "og-images/clxxx123/1711234567890.webp",
+    "proxyUrl": "/api/og-images/og-images%2Fclxxx123%2F1711234567890.webp"
+  }
+}
+```
+
+圖片會自動：
+
+- 縮放至最大 1200×630px
+- 轉換為 WebP（GIF 保持原格式）
+- 品質 80 壓縮
+- 移除 EXIF 資訊
+
+### 提供 OG 圖片
+
+公開端點 — 不需要認證。供社群媒體爬蟲使用。
+
+```http
+GET /api/og-images/{encoded-key}
+```
+
+回傳圖片二進位資料，設定 `Cache-Control: public, max-age=86400, immutable`。
+
+---
+
 ## 數據分析 API
 
 ### 取得網址分析
@@ -399,6 +447,7 @@ Content-Type: application/json
 ```
 
 **回應僅顯示一次金鑰：**
+
 ```json
 {
   "id": "key_id",
@@ -438,6 +487,7 @@ Content-Type: application/json
 ```
 
 **可用事件：**
+
 - `url.created`
 - `url.updated`
 - `url.deleted`

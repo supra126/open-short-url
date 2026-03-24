@@ -40,6 +40,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "user": {
@@ -246,6 +247,53 @@ DELETE /api/urls/{id}/variants/{variantId}
 
 ---
 
+## OG Images
+
+### Upload OG Image
+
+Upload and optimize an image for social media preview.
+
+```http
+POST /api/og-images/upload/{urlId}
+Content-Type: multipart/form-data
+Authorization: Bearer <token>
+
+file: (binary)
+```
+
+**Supported formats:** JPEG, PNG, WebP, GIF (max 10MB)
+
+**Response:**
+
+```json
+{
+  "statusCode": 201,
+  "data": {
+    "key": "og-images/clxxx123/1711234567890.webp",
+    "proxyUrl": "/api/og-images/og-images%2Fclxxx123%2F1711234567890.webp"
+  }
+}
+```
+
+Images are automatically:
+
+- Resized to max 1200×630px
+- Converted to WebP (GIFs keep original format)
+- Compressed at quality 80
+- Stripped of EXIF metadata
+
+### Serve OG Image
+
+Public endpoint — no authentication required. Used by social media crawlers.
+
+```http
+GET /api/og-images/{encoded-key}
+```
+
+Returns the image binary with `Cache-Control: public, max-age=86400, immutable`.
+
+---
+
 ## Analytics
 
 ### Get URL Analytics
@@ -399,6 +447,7 @@ Content-Type: application/json
 ```
 
 **Response includes the key only once:**
+
 ```json
 {
   "id": "key_id",
@@ -438,6 +487,7 @@ Content-Type: application/json
 ```
 
 **Available Events:**
+
 - `url.created`
 - `url.updated`
 - `url.deleted`

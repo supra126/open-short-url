@@ -76,21 +76,21 @@ POST /api/urls
 
 **短碼規則：**
 
-| 限制 | 說明 |
-|-----|------|
-| 字元 | a-z、A-Z、0-9、連字號（-）、底線（_） |
-| 長度 | 3-50 字元 |
-| 唯一性 | 必須全域唯一 |
+| 限制   | 說明                                   |
+| ------ | -------------------------------------- |
+| 字元   | a-z、A-Z、0-9、連字號（-）、底線（\_） |
+| 長度   | 3-50 字元                              |
+| 唯一性 | 必須全域唯一                           |
 
 ### 自動產生短碼
 
 如未指定自訂短碼，系統會自動產生：
 
-| 設定 | 預設值 |
-|-----|--------|
-| 長度 | 6 字元 |
-| 字元 | 小寫英文字母和數字 |
-| 碰撞處理 | 自動重試 |
+| 設定     | 預設值             |
+| -------- | ------------------ |
+| 長度     | 6 字元             |
+| 字元     | 小寫英文字母和數字 |
+| 碰撞處理 | 自動重試           |
 
 ## 功能
 
@@ -151,13 +151,49 @@ POST /api/urls
 
 **支援的參數：**
 
-| 參數 | 說明 | 範例 |
-|-----|------|------|
-| `utmSource` | 流量來源 | newsletter、google、facebook |
-| `utmMedium` | 行銷媒介 | email、cpc、social |
-| `utmCampaign` | 活動名稱 | summer_sale、black_friday |
-| `utmTerm` | 付費關鍵字 | running+shoes |
-| `utmContent` | 廣告內容 | banner_ad、text_link |
+| 參數          | 說明       | 範例                         |
+| ------------- | ---------- | ---------------------------- |
+| `utmSource`   | 流量來源   | newsletter、google、facebook |
+| `utmMedium`   | 行銷媒介   | email、cpc、social           |
+| `utmCampaign` | 活動名稱   | summer_sale、black_friday    |
+| `utmTerm`     | 付費關鍵字 | running+shoes                |
+| `utmContent`  | 廣告內容   | banner_ad、text_link         |
+
+### 社群預覽（自訂 OG Meta）
+
+自訂短網址在 Facebook、Twitter/X、LINE、Discord、Slack、LinkedIn 等社群平台分享時的預覽外觀。
+
+**運作原理：**
+
+當社群媒體爬蟲造訪你的短網址時，系統會偵測爬蟲的 User-Agent，回傳包含 Open Graph meta 標籤的自訂 HTML 頁面，而非重新導向。一般使用者則正常重新導向。
+
+**可設定的欄位：**
+
+| 欄位              | 說明                                              | 限制                        |
+| ----------------- | ------------------------------------------------- | --------------------------- |
+| `ogTitle`         | 預覽標題                                          | 100 字元                    |
+| `ogDescription`   | 預覽描述                                          | 200 字元                    |
+| OG 圖片           | 預覽圖片                                          | 10MB（jpg、png、webp、gif） |
+| `twitterCardType` | `summary`（小圖）或 `summary_large_image`（大圖） | -                           |
+
+**圖片自動優化：**
+
+- 縮放至最大 1200×630 像素（維持比例、不放大）
+- 轉換為 WebP 格式（GIF 保持原格式）
+- 品質 80 壓縮
+- 移除 EXIF 隱私資訊
+
+```http
+POST /api/og-images/upload/{urlId}
+Content-Type: multipart/form-data
+Authorization: Bearer <token>
+
+file: image.jpg
+```
+
+::: tip
+只有在設定了至少一個 OG 欄位（標題、描述或圖片）時，才會對爬蟲回傳 OG 頁面。未設定的網址對所有訪客正常重新導向。
+:::
 
 ### QR Code
 
@@ -169,9 +205,9 @@ GET /api/urls/{id}/qrcode?width=300&color=%23000000
 
 **參數：**
 
-| 參數 | 說明 | 預設值 |
-|-----|------|--------|
-| `width` | 寬度（像素） | 300 |
+| 參數    | 說明             | 預設值  |
+| ------- | ---------------- | ------- |
+| `width` | 寬度（像素）     | 300     |
 | `color` | 顏色（十六進位） | #000000 |
 
 **回應：** Base64 格式的 Data URL
@@ -227,10 +263,10 @@ PATCH /api/urls/bulk
 
 **支援的操作：**
 
-| 操作 | 說明 |
-|------|------|
+| 操作     | 說明                        |
+| -------- | --------------------------- |
 | `status` | 更新狀態（ACTIVE/INACTIVE） |
-| `bundle` | 加入分組 |
+| `bundle` | 加入分組                    |
 
 ### 批量刪除
 
@@ -254,11 +290,11 @@ GET /api/urls/export?format=csv&search=campaign
 
 **參數：**
 
-| 參數 | 說明 |
-|------|------|
+| 參數     | 說明        |
+| -------- | ----------- |
 | `format` | csv 或 json |
-| `search` | 搜尋篩選 |
-| `status` | 狀態篩選 |
+| `search` | 搜尋篩選    |
+| `status` | 狀態篩選    |
 
 ## 網址管理
 
@@ -270,14 +306,14 @@ GET /api/urls?page=1&pageSize=20&search=campaign&status=ACTIVE
 
 **查詢參數：**
 
-| 參數 | 說明 | 預設值 |
-|-----|------|--------|
-| `page` | 頁碼 | 1 |
-| `pageSize` | 每頁數量 | 20 |
-| `search` | 搜尋標題、短碼、原始網址 | - |
-| `status` | 篩選狀態 | - |
-| `sortBy` | 排序欄位 | createdAt |
-| `sortOrder` | 排序方向 | desc |
+| 參數        | 說明                     | 預設值    |
+| ----------- | ------------------------ | --------- |
+| `page`      | 頁碼                     | 1         |
+| `pageSize`  | 每頁數量                 | 20        |
+| `search`    | 搜尋標題、短碼、原始網址 | -         |
+| `status`    | 篩選狀態                 | -         |
+| `sortBy`    | 排序欄位                 | createdAt |
+| `sortOrder` | 排序方向                 | desc      |
 
 ### 取得單一網址
 
@@ -306,15 +342,15 @@ DELETE /api/urls/{id}
 
 ## 網址狀態
 
-| 狀態 | 說明 |
-|-----|------|
-| `ACTIVE` | 網址運作中，重新導向正常 |
+| 狀態       | 說明                     |
+| ---------- | ------------------------ |
+| `ACTIVE`   | 網址運作中，重新導向正常 |
 | `INACTIVE` | 網址已停用，顯示停用頁面 |
 
 ## 速率限制
 
-| 操作 | 限制 |
-|-----|------|
+| 操作     | 限制       |
+| -------- | ---------- |
 | 網址建立 | 30 次/分鐘 |
 | 網址取得 | 60 次/分鐘 |
 | 批量操作 | 10 次/分鐘 |
@@ -324,6 +360,7 @@ DELETE /api/urls/{id}
 ### 1. 使用描述性短碼
 
 建立易於記憶和分享的短碼：
+
 - ✅ `summer-sale-2025`
 - ✅ `product-launch`
 - ❌ `abc123xyz`
@@ -331,6 +368,7 @@ DELETE /api/urls/{id}
 ### 2. 設定過期時間
 
 為臨時活動設定過期時間：
+
 - 促銷活動 → 設定活動結束日期
 - 一次性連結 → 設定短期過期
 - 永久連結 → 不設定過期
@@ -338,6 +376,7 @@ DELETE /api/urls/{id}
 ### 3. 追蹤活動
 
 使用 UTM 參數追蹤不同來源：
+
 - 電子報連結 → `utm_source=newsletter`
 - 社群貼文 → `utm_source=facebook`
 - 付費廣告 → `utm_source=google_ads`
@@ -345,6 +384,7 @@ DELETE /api/urls/{id}
 ### 4. 使用分組整理
 
 將相關網址整理到分組中：
+
 - 依活動分組
 - 依客戶分組
 - 依專案分組

@@ -20,6 +20,8 @@ import { BundleModule } from './modules/bundle/bundle.module';
 import { AuditLogModule } from './modules/audit-log/audit-log.module';
 import { RoutingModule } from './modules/routing/routing.module';
 import { OidcModule } from './modules/oidc/oidc.module';
+import { StorageModule } from './modules/storage/storage.module';
+import { OgImageModule } from './modules/og-image/og-image.module';
 
 @Module({
   imports: [
@@ -83,6 +85,8 @@ import { OidcModule } from './modules/oidc/oidc.module';
     AuditLogModule,
     RoutingModule,
     OidcModule,
+    StorageModule,
+    OgImageModule,
     // RedirectModule must be last to match /:slug after specific routes
     RedirectModule,
   ],

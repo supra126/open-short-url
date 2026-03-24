@@ -40,7 +40,13 @@ import { RoutingList } from '@/components/routing/routing-list';
 import { ExportButton } from '@/components/analytics/export-button';
 import Link from 'next/link';
 import { useUrl, useDeleteUrl, useGenerateQRCode } from '@/hooks/use-url';
-import { useUrlAnalytics, useRecentClicks, useBotAnalytics, type BotTypeStat, type RecentClickDto } from '@/hooks/use-analytics';
+import {
+  useUrlAnalytics,
+  useRecentClicks,
+  useBotAnalytics,
+  type BotTypeStat,
+  type RecentClickDto,
+} from '@/hooks/use-analytics';
 import { useToast } from '@/hooks/use-toast';
 import { formatDateTime, formatDate } from '@/lib/utils';
 import { useState } from 'react';
@@ -159,520 +165,611 @@ export default function UrlDetailPage() {
 
   return (
     <>
-    <div className="p-6 space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between flex-wrap gap-4">
-        <div className="flex items-center gap-4">
-          <Link href="/urls">
-            <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-3xl font-display font-bold">{t('urls.detail')}</h1>
-            <p className="text-muted-foreground mt-1">{t('urls.detailDesc')}</p>
-          </div>
-        </div>
-        {urlData && (
-          <div className="flex gap-2">
-            <Link href={`/urls/${id}/edit`}>
-              <Button variant="outline">
-                <Edit className="mr-2 h-4 w-4" />
-                {t('common.edit')}
+      <div className="p-6 space-y-6">
+        {/* Page Header */}
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-4">
+            <Link href="/urls">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-4 w-4" />
               </Button>
             </Link>
-            <Button variant="destructive" onClick={handleDeleteClick}>
-              <Trash2 className="mr-2 h-4 w-4" />
-              {t('common.delete')}
+            <div>
+              <h1 className="text-3xl font-display font-bold">
+                {t('urls.detail')}
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                {t('urls.detailDesc')}
+              </p>
+            </div>
+          </div>
+          {urlData && (
+            <div className="flex gap-2">
+              <Link href={`/urls/${id}/edit`}>
+                <Button variant="outline">
+                  <Edit className="mr-2 h-4 w-4" />
+                  {t('common.edit')}
+                </Button>
+              </Link>
+              <Button variant="destructive" onClick={handleDeleteClick}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                {t('common.delete')}
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* URL Information */}
+        {isPending ? (
+          <div className="flex h-75 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : error || !urlData ? (
+          <div className="flex h-75 flex-col items-center justify-center gap-4">
+            <p className="text-lg text-muted-foreground">
+              {t('urls.notFound')}
+            </p>
+            <Button onClick={() => router.push('/urls')}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t('urls.backToList')}
             </Button>
           </div>
-        )}
-      </div>
-
-      {/* URL Information */}
-      {isPending ? (
-        <div className="flex h-75 items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      ) : error || !urlData ? (
-        <div className="flex h-75 flex-col items-center justify-center gap-4">
-          <p className="text-lg text-muted-foreground">{t('urls.notFound')}</p>
-          <Button onClick={() => router.push('/urls')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            {t('urls.backToList')}
-          </Button>
-        </div>
-      ) : (
-      <div className="space-y-6">
-        <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('urls.shortUrlCard')}</CardTitle>
-            <CardDescription>{t('urls.shortUrlCardDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 rounded bg-muted px-3 py-2 text-sm">
-                {urlData.shortUrl}
-              </code>
-              <Button size="sm" variant="outline" onClick={handleCopyShortUrl}>
-                <Copy className="h-4 w-4" />
-              </Button>
-              <Link href={urlData.shortUrl} target="_blank">
-                <Button size="sm" variant="outline">
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('urls.originalUrlCard')}</CardTitle>
-            <CardDescription>{t('urls.originalUrlCardDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-2">
-              <code className="flex-1 truncate rounded bg-muted px-3 py-2 text-sm">
-                {urlData.originalUrl}
-              </code>
-              <Link href={urlData.originalUrl} target="_blank">
-                <Button size="sm" variant="outline">
-                  <ExternalLink className="h-4 w-4" />
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-        </div>
-
-        {/* Statistics */}
-        <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t('urls.totalClicksCard')}</CardDescription>
-            <CardTitle className="text-3xl">{urlData.clickCount}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <MousePointerClick className="mr-1 h-3 w-3" />
-              {t('urls.cumulativeVisits')}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t('urls.createdAtCard')}</CardDescription>
-            <CardTitle className="text-lg">
-              {formatDate(urlData.createdAt)}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center text-xs text-muted-foreground">
-              <Calendar className="mr-1 h-3 w-3" />
-              {formatDateTime(urlData.createdAt)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>{t('urls.slugCard')}</CardDescription>
-            <CardTitle className="text-lg">{urlData.slug}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-xs text-muted-foreground">
-              {t('urls.slugIdentifier')}
-            </div>
-          </CardContent>
-        </Card>
-        </div>
-
-        {/* UTM Parameters */}
-        {(urlData.utmSource ||
-        urlData.utmMedium ||
-        urlData.utmCampaign ||
-        urlData.utmTerm ||
-        urlData.utmContent) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>{t('urls.utmSection')}</CardTitle>
-            <CardDescription>{t('urls.utmSectionDesc')}</CardDescription>
-          </CardHeader>
-          <CardContent>
+        ) : (
+          <div className="space-y-6">
             <div className="grid gap-4 md:grid-cols-2">
-              {urlData.utmSource && (
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t('urls.utmSource')}
-                  </div>
-                  <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
-                    {urlData.utmSource}
-                  </div>
-                </div>
-              )}
-              {urlData.utmMedium && (
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t('urls.utmMedium')}
-                  </div>
-                  <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
-                    {urlData.utmMedium}
-                  </div>
-                </div>
-              )}
-              {urlData.utmCampaign && (
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t('urls.utmCampaign')}
-                  </div>
-                  <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
-                    {urlData.utmCampaign}
-                  </div>
-                </div>
-              )}
-              {urlData.utmTerm && (
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t('urls.utmTerm')}
-                  </div>
-                  <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
-                    {urlData.utmTerm}
-                  </div>
-                </div>
-              )}
-              {urlData.utmContent && (
-                <div className="space-y-1">
-                  <div className="text-sm font-medium text-muted-foreground">
-                    {t('urls.utmContent')}
-                  </div>
-                  <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
-                    {urlData.utmContent}
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-        )}
-
-        {/* QR Code */}
-        <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <QrCode className="h-5 w-5" />
-            {t('urls.qrCode')}
-          </CardTitle>
-          <CardDescription>{t('urls.qrCodeDesc')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center gap-4">
-            {!qrCode ? (
-              <div className="flex flex-col items-center gap-4">
-                <div className="flex h-64 w-64 items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/25">
-                  <div className="text-center">
-                    <QrCode className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                    <p className="mt-2 text-sm text-muted-foreground">
-                      {t('urls.qrCodeNotGenerated')}
-                    </p>
-                  </div>
-                </div>
-                <Button
-                  onClick={handleGenerateQRCode}
-                  disabled={generateQRCodeMutation.isPending}
-                >
-                  {generateQRCodeMutation.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      {t('urls.qrCodeGenerating')}
-                    </>
-                  ) : (
-                    <>
-                      <QrCode className="mr-2 h-4 w-4" />
-                      {t('urls.qrCodeGenerate')}
-                    </>
-                  )}
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-4">
-                <div className="rounded-md border-2 border-muted p-4">
-                  <img
-                    src={qrCode}
-                    alt={t('urls.qrCode')}
-                    className="h-64 w-64"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleDownloadQRCode} variant="outline">
-                    <Download className="mr-2 h-4 w-4" />
-                    {t('urls.qrCodeDownload')}
-                  </Button>
-                  <Button
-                    onClick={handleGenerateQRCode}
-                    variant="outline"
-                    disabled={generateQRCodeMutation.isPending}
-                  >
-                    {generateQRCodeMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        {t('urls.qrCodeRegenerating')}
-                      </>
-                    ) : (
-                      <>
-                        <QrCode className="mr-2 h-4 w-4" />
-                        {t('urls.qrCodeRegenerate')}
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-        </Card>
-
-        {/* Analytics Chart */}
-        <Card>
-        <CardHeader>
-          <CardTitle>{t('urls.clickTrend')}</CardTitle>
-          <CardDescription>{t('urls.clickTrendDesc')}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {analyticsData && analyticsData.timeSeries.length > 0 ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={analyticsData.timeSeries}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 12 }}
-                  tickFormatter={(value: string | number) => {
-                    const date = new Date(value);
-                    return `${date.getMonth() + 1}/${date.getDate()}`;
-                  }}
-                />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip
-                  labelFormatter={(value) => {
-                    return formatDate(String(value));
-                  }}
-                  formatter={(value) => [value ?? 0, t('urls.clicksLabel')]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="clicks"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          ) : (
-            <div className="flex h-75 items-center justify-center rounded-md border border-dashed">
-              <p className="text-sm text-muted-foreground">
-                {t('urls.noData')}
-              </p>
-            </div>
-          )}
-        </CardContent>
-        </Card>
-
-        {/* Bot Analytics */}
-        {botAnalyticsData && botAnalyticsData.totalBotClicks > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bot className="h-5 w-5" />
-                {t('bots.analyticsTitle')}
-              </CardTitle>
-              <CardDescription>
-                {t('bots.last7DaysStats').replace('{total}', String(botAnalyticsData.totalBotClicks))}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {botAnalyticsData.botTypes.map((bot: BotTypeStat) => (
-                  <div
-                    key={bot.botName}
-                    className="flex items-center justify-between rounded-md border px-4 py-2"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Bot className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{bot.botName}</span>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">{bot.clicks} {t('bots.clicksUnit')}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {bot.percentage}%
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Recent Clicks */}
-        <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>{t('urls.recentClicks')}</CardTitle>
-              <CardDescription>{t('urls.recentClicksDesc')}</CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="show-bots"
-                checked={showBots}
-                onCheckedChange={setShowBots}
-              />
-              <Label htmlFor="show-bots" className="cursor-pointer text-sm">
-                {t('bots.showBots')}
-              </Label>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {recentClicksData && recentClicksData.clicks.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b">
-                    <th className="pb-2 text-left font-medium">
-                      {t('urls.timeHeader')}
-                    </th>
-                    <th className="pb-2 text-left font-medium">
-                      {t('urls.locationHeader')}
-                    </th>
-                    <th className="pb-2 text-left font-medium">
-                      {t('urls.deviceHeader')}
-                    </th>
-                    <th className="pb-2 text-left font-medium">
-                      {t('urls.browserHeader')}
-                    </th>
-                    <th className="pb-2 text-left font-medium">
-                      {t('urls.sourceHeader')}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentClicksData.clicks.map((click: RecentClickDto) => (
-                    <tr
-                      key={click.id}
-                      className={`border-b last:border-0 ${
-                        click.isBot ? 'bg-muted/30' : ''
-                      }`}
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('urls.shortUrlCard')}</CardTitle>
+                  <CardDescription>
+                    {t('urls.shortUrlCardDesc')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 rounded bg-muted px-3 py-2 text-sm">
+                      {urlData.shortUrl}
+                    </code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCopyShortUrl}
                     >
-                      <td className="py-3 text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          {click.isBot && (
-                            <span title={click.botName}>
-                              <Bot className="h-3 w-3 text-warning" />
-                            </span>
-                          )}
-                          {formatDateTime(click.createdAt)}
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                    <Link href={urlData.shortUrl} target="_blank">
+                      <Button size="sm" variant="outline">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('urls.originalUrlCard')}</CardTitle>
+                  <CardDescription>
+                    {t('urls.originalUrlCardDesc')}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 truncate rounded bg-muted px-3 py-2 text-sm">
+                      {urlData.originalUrl}
+                    </code>
+                    <Link href={urlData.originalUrl} target="_blank">
+                      <Button size="sm" variant="outline">
+                        <ExternalLink className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Statistics */}
+            <div className="grid gap-4 md:grid-cols-3">
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>{t('urls.totalClicksCard')}</CardDescription>
+                  <CardTitle className="text-3xl">
+                    {urlData.clickCount}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center text-xs text-muted-foreground">
+                    <MousePointerClick className="mr-1 h-3 w-3" />
+                    {t('urls.cumulativeVisits')}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>{t('urls.createdAtCard')}</CardDescription>
+                  <CardTitle className="text-lg flex items-center gap-1.5">
+                    <Calendar className="h-4 w-4" />
+                    {formatDateTime(urlData.createdAt)}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {urlData.createdByEmail && (
+                    <div className="flex items-center gap-2 pt-1 border-t text-xs text-muted-foreground">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-[10px] font-medium shrink-0">
+                        {(urlData.createdByName ||
+                          urlData.createdByEmail)[0].toUpperCase()}
+                      </div>
+                      <span className="truncate">
+                        {urlData.createdByName || urlData.createdByEmail}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-2">
+                  <CardDescription>{t('urls.slugCard')}</CardDescription>
+                  <CardTitle className="text-lg">{urlData.slug}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-xs text-muted-foreground">
+                    {t('urls.slugIdentifier')}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* UTM Parameters */}
+            {(urlData.utmSource ||
+              urlData.utmMedium ||
+              urlData.utmCampaign ||
+              urlData.utmTerm ||
+              urlData.utmContent) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('urls.utmSection')}</CardTitle>
+                  <CardDescription>{t('urls.utmSectionDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {urlData.utmSource && (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          {t('urls.utmSource')}
                         </div>
-                      </td>
-                      <td className="py-3">
-                        {click.isBot ? (
-                          <span className="flex items-center gap-1 text-warning">
-                            {click.botName || t('bots.defaultBotName')}
+                        <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
+                          {urlData.utmSource}
+                        </div>
+                      </div>
+                    )}
+                    {urlData.utmMedium && (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          {t('urls.utmMedium')}
+                        </div>
+                        <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
+                          {urlData.utmMedium}
+                        </div>
+                      </div>
+                    )}
+                    {urlData.utmCampaign && (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          {t('urls.utmCampaign')}
+                        </div>
+                        <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
+                          {urlData.utmCampaign}
+                        </div>
+                      </div>
+                    )}
+                    {urlData.utmTerm && (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          {t('urls.utmTerm')}
+                        </div>
+                        <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
+                          {urlData.utmTerm}
+                        </div>
+                      </div>
+                    )}
+                    {urlData.utmContent && (
+                      <div className="space-y-1">
+                        <div className="text-sm font-medium text-muted-foreground">
+                          {t('urls.utmContent')}
+                        </div>
+                        <div className="rounded-md bg-muted px-3 py-2 text-sm font-mono">
+                          {urlData.utmContent}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Social Preview (OG Meta) */}
+            {(urlData.ogTitle ||
+              urlData.ogDescription ||
+              urlData.ogImageUrl) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>{t('urls.ogSection')}</CardTitle>
+                  <CardDescription>{t('urls.ogSectionDesc')}</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-lg border overflow-hidden bg-muted/30">
+                    {urlData.ogImageUrl && (
+                      <img
+                        src={urlData.ogImageUrl}
+                        alt="OG Preview"
+                        className="w-full max-h-64 object-cover"
+                      />
+                    )}
+                    <div className="p-4 space-y-2">
+                      {urlData.ogTitle && (
+                        <p className="font-medium">{urlData.ogTitle}</p>
+                      )}
+                      {urlData.ogDescription && (
+                        <p className="text-sm text-muted-foreground">
+                          {urlData.ogDescription}
+                        </p>
+                      )}
+                      {urlData.twitterCardType && (
+                        <div className="flex items-center gap-2 pt-1">
+                          <span className="text-xs text-muted-foreground">
+                            {t('urls.twitterCardType')}:
                           </span>
+                          <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded">
+                            {urlData.twitterCardType}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* QR Code */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <QrCode className="h-5 w-5" />
+                  {t('urls.qrCode')}
+                </CardTitle>
+                <CardDescription>{t('urls.qrCodeDesc')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-col items-center gap-4">
+                  {!qrCode ? (
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="flex h-64 w-64 items-center justify-center rounded-md border-2 border-dashed border-muted-foreground/25">
+                        <div className="text-center">
+                          <QrCode className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            {t('urls.qrCodeNotGenerated')}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={handleGenerateQRCode}
+                        disabled={generateQRCodeMutation.isPending}
+                      >
+                        {generateQRCodeMutation.isPending ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            {t('urls.qrCodeGenerating')}
+                          </>
                         ) : (
                           <>
-                            {click.country || t('urls.unknown')}
-                            {click.city && ` · ${click.city}`}
+                            <QrCode className="mr-2 h-4 w-4" />
+                            {t('urls.qrCodeGenerate')}
                           </>
                         )}
-                      </td>
-                      <td className="py-3">
-                        {click.device || t('urls.unknown')}
-                        {click.os && ` · ${click.os}`}
-                      </td>
-                      <td className="py-3">
-                        {click.browser || t('urls.unknown')}
-                      </td>
-                      <td className="py-3 max-w-50 truncate">
-                        {click.referer ? (
-                          <a
-                            href={click.referer}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-primary hover:underline"
-                          >
-                            {(() => { try { return new URL(click.referer).hostname; } catch { return click.referer; } })()}
-                          </a>
-                        ) : (
-                          <span className="text-muted-foreground">
-                            {t('urls.directVisit')}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {recentClicksData.total > 10 && (
-                <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
-                  <span className="text-sm text-muted-foreground">
-                    {t('urls.showingRecentRecords').replace(
-                      '{total}',
-                      String(recentClicksData.total)
-                    )}
-                  </span>
-                  <ExportButton
-                    urlId={id}
-                    queryParams={{ timeRange: 'last_365_days' }}
-                    includeClicks={true}
-                    variant="outline"
-                    size="sm"
-                  />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="rounded-md border-2 border-muted p-4">
+                        <img
+                          src={qrCode}
+                          alt={t('urls.qrCode')}
+                          className="h-64 w-64"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={handleDownloadQRCode}
+                          variant="outline"
+                        >
+                          <Download className="mr-2 h-4 w-4" />
+                          {t('urls.qrCodeDownload')}
+                        </Button>
+                        <Button
+                          onClick={handleGenerateQRCode}
+                          variant="outline"
+                          disabled={generateQRCodeMutation.isPending}
+                        >
+                          {generateQRCodeMutation.isPending ? (
+                            <>
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                              {t('urls.qrCodeRegenerating')}
+                            </>
+                          ) : (
+                            <>
+                              <QrCode className="mr-2 h-4 w-4" />
+                              {t('urls.qrCodeRegenerate')}
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex h-50 items-center justify-center rounded-md border border-dashed">
-              <p className="text-sm text-muted-foreground">
-                {t('urls.noVisits')}
-              </p>
-            </div>
-          )}
-        </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Smart Routing */}
-        <RoutingList urlId={id} />
+            {/* Analytics Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>{t('urls.clickTrend')}</CardTitle>
+                <CardDescription>{t('urls.clickTrendDesc')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {analyticsData && analyticsData.timeSeries.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <LineChart data={analyticsData.timeSeries}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 12 }}
+                        tickFormatter={(value: string | number) => {
+                          const date = new Date(value);
+                          return `${date.getMonth() + 1}/${date.getDate()}`;
+                        }}
+                      />
+                      <YAxis tick={{ fontSize: 12 }} />
+                      <Tooltip
+                        labelFormatter={(value) => {
+                          return formatDate(String(value));
+                        }}
+                        formatter={(value) => [
+                          value ?? 0,
+                          t('urls.clicksLabel'),
+                        ]}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="clicks"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <div className="flex h-75 items-center justify-center rounded-md border border-dashed">
+                    <p className="text-sm text-muted-foreground">
+                      {t('urls.noData')}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
-        {/* A/B Testing Variants */}
-        <VariantList urlId={id} />
+            {/* Bot Analytics */}
+            {botAnalyticsData && botAnalyticsData.totalBotClicks > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Bot className="h-5 w-5" />
+                    {t('bots.analyticsTitle')}
+                  </CardTitle>
+                  <CardDescription>
+                    {t('bots.last7DaysStats').replace(
+                      '{total}',
+                      String(botAnalyticsData.totalBotClicks)
+                    )}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {botAnalyticsData.botTypes.map((bot: BotTypeStat) => (
+                      <div
+                        key={bot.botName}
+                        className="flex items-center justify-between rounded-md border px-4 py-2"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Bot className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{bot.botName}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold">
+                            {bot.clicks} {t('bots.clicksUnit')}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {bot.percentage}%
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Recent Clicks */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{t('urls.recentClicks')}</CardTitle>
+                    <CardDescription>
+                      {t('urls.recentClicksDesc')}
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="show-bots"
+                      checked={showBots}
+                      onCheckedChange={setShowBots}
+                    />
+                    <Label
+                      htmlFor="show-bots"
+                      className="cursor-pointer text-sm"
+                    >
+                      {t('bots.showBots')}
+                    </Label>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {recentClicksData && recentClicksData.clicks.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b">
+                          <th className="pb-2 text-left font-medium">
+                            {t('urls.timeHeader')}
+                          </th>
+                          <th className="pb-2 text-left font-medium">
+                            {t('urls.locationHeader')}
+                          </th>
+                          <th className="pb-2 text-left font-medium">
+                            {t('urls.deviceHeader')}
+                          </th>
+                          <th className="pb-2 text-left font-medium">
+                            {t('urls.browserHeader')}
+                          </th>
+                          <th className="pb-2 text-left font-medium">
+                            {t('urls.sourceHeader')}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {recentClicksData.clicks.map(
+                          (click: RecentClickDto) => (
+                            <tr
+                              key={click.id}
+                              className={`border-b last:border-0 ${
+                                click.isBot ? 'bg-muted/30' : ''
+                              }`}
+                            >
+                              <td className="py-3 text-muted-foreground">
+                                <div className="flex items-center gap-2">
+                                  {click.isBot && (
+                                    <span title={click.botName}>
+                                      <Bot className="h-3 w-3 text-warning" />
+                                    </span>
+                                  )}
+                                  {formatDateTime(click.createdAt)}
+                                </div>
+                              </td>
+                              <td className="py-3">
+                                {click.isBot ? (
+                                  <span className="flex items-center gap-1 text-warning">
+                                    {click.botName || t('bots.defaultBotName')}
+                                  </span>
+                                ) : (
+                                  <>
+                                    {click.country || t('urls.unknown')}
+                                    {click.city && ` · ${click.city}`}
+                                  </>
+                                )}
+                              </td>
+                              <td className="py-3">
+                                {click.device || t('urls.unknown')}
+                                {click.os && ` · ${click.os}`}
+                              </td>
+                              <td className="py-3">
+                                {click.browser || t('urls.unknown')}
+                              </td>
+                              <td className="py-3 max-w-50 truncate">
+                                {click.referer ? (
+                                  <a
+                                    href={click.referer}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline"
+                                  >
+                                    {(() => {
+                                      try {
+                                        return new URL(click.referer).hostname;
+                                      } catch {
+                                        return click.referer;
+                                      }
+                                    })()}
+                                  </a>
+                                ) : (
+                                  <span className="text-muted-foreground">
+                                    {t('urls.directVisit')}
+                                  </span>
+                                )}
+                              </td>
+                            </tr>
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                    {recentClicksData.total > 10 && (
+                      <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
+                        <span className="text-sm text-muted-foreground">
+                          {t('urls.showingRecentRecords').replace(
+                            '{total}',
+                            String(recentClicksData.total)
+                          )}
+                        </span>
+                        <ExportButton
+                          urlId={id}
+                          queryParams={{ timeRange: 'last_365_days' }}
+                          includeClicks={true}
+                          variant="outline"
+                          size="sm"
+                        />
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="flex h-50 items-center justify-center rounded-md border border-dashed">
+                    <p className="text-sm text-muted-foreground">
+                      {t('urls.noVisits')}
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Smart Routing */}
+            <RoutingList urlId={id} />
+
+            {/* A/B Testing Variants */}
+            <VariantList urlId={id} />
+          </div>
+        )}
       </div>
-      )}
-    </div>
 
-    {/* Delete Confirmation Dialog */}
-    <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{t('urls.deleteConfirm')}</AlertDialogTitle>
-          <AlertDialogDescription>
-            {t('urls.deleteConfirmDesc')}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDeleteConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-          >
-            {t('common.delete')}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('urls.deleteConfirm')}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t('urls.deleteConfirmDesc')}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{t('common.cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {t('common.delete')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

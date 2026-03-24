@@ -13,11 +13,11 @@
 
 ## 系統需求
 
-| 元件 | 最低 | 建議 |
-|-----|------|------|
-| CPU | 1 核心 | 2+ 核心 |
-| RAM | 1 GB | 2+ GB |
-| 儲存 | 10 GB | 20+ GB |
+| 元件 | 最低   | 建議    |
+| ---- | ------ | ------- |
+| CPU  | 1 核心 | 2+ 核心 |
+| RAM  | 1 GB   | 2+ GB   |
+| 儲存 | 10 GB  | 20+ GB  |
 
 ## 安裝步驟
 
@@ -137,6 +137,21 @@ cp apps/frontend/.env.example apps/frontend/.env
 ```bash
 NEXT_PUBLIC_API_URL="https://api.your-domain.com"
 NEXT_PUBLIC_SHORT_URL_DOMAIN="https://s.your-domain.com"
+```
+
+**物件儲存設定（選填，用於 OG 圖片上傳）：**
+
+```bash
+# 加入 apps/backend/.env
+
+# MinIO（自架）
+S3_REGION=auto
+S3_ENDPOINT="http://localhost:9000"
+S3_ACCESS_KEY_ID="minioadmin"
+S3_SECRET_ACCESS_KEY="minioadmin"
+S3_BUCKET="open-short-url"
+
+# 或使用 Cloudflare R2 / AWS S3 — 請參考設定文件
 ```
 
 ### 6. 執行資料庫遷移
