@@ -38,7 +38,7 @@ export function registerAnalyticsTools(apiClient: ApiClient) {
 
     get_overview_analytics: {
       description:
-        'Get overall analytics data and statistics for all short URLs.',
+        'Get aggregate analytics across all short URLs (account-level), including click trends, geographic distribution, and device breakdowns. For a single URL, use get_url_analytics instead.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -140,7 +140,8 @@ export function registerAnalyticsTools(apiClient: ApiClient) {
     },
 
     get_user_bot_analytics: {
-      description: 'Get overall bot traffic analytics across all short URLs.',
+      description:
+        'Get aggregate bot traffic analytics across all short URLs (account-level). For a single URL, use get_bot_analytics instead.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -205,7 +206,7 @@ export function registerAnalyticsTools(apiClient: ApiClient) {
 
     export_url_analytics: {
       description:
-        'Export analytics data for a specific short URL in CSV or JSON format.',
+        'Export analytics data for a specific short URL. Returns the exported data as a string in the chosen format (CSV or JSON). Default format is CSV.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -225,12 +226,12 @@ export function registerAnalyticsTools(apiClient: ApiClient) {
           startDate: {
             type: 'string',
             description:
-              'Start date for custom range (ISO 8601 format, optional)',
+              'Start date for custom range (ISO 8601 format, required when timeRange is "custom")',
           },
           endDate: {
             type: 'string',
             description:
-              'End date for custom range (ISO 8601 format, optional)',
+              'End date for custom range (ISO 8601 format, required when timeRange is "custom")',
           },
           format: {
             type: 'string',
@@ -253,7 +254,7 @@ export function registerAnalyticsTools(apiClient: ApiClient) {
 
     export_all_analytics: {
       description:
-        'Export analytics data for all short URLs in CSV or JSON format.',
+        'Export analytics data for all short URLs. Returns the exported data as a string in the chosen format (CSV or JSON). Default format is CSV.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -272,12 +273,12 @@ export function registerAnalyticsTools(apiClient: ApiClient) {
           startDate: {
             type: 'string',
             description:
-              'Start date for custom range (ISO 8601 format, optional)',
+              'Start date for custom range (ISO 8601 format, required when timeRange is "custom")',
           },
           endDate: {
             type: 'string',
             description:
-              'End date for custom range (ISO 8601 format, optional)',
+              'End date for custom range (ISO 8601 format, required when timeRange is "custom")',
           },
           format: {
             type: 'string',

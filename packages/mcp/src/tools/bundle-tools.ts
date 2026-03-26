@@ -22,7 +22,11 @@ export function registerBundleTools(apiClient: ApiClient) {
             type: 'string',
             description: 'Bundle color code (optional, e.g., #FF5733)',
           },
-          icon: { type: 'string', description: 'Bundle icon name (optional)' },
+          icon: {
+            type: 'string',
+            description:
+              'Bundle icon name from Lucide icons (optional, e.g., link, globe, star, folder, tag)',
+          },
           urlIds: {
             type: 'array',
             items: { type: 'string' },
@@ -53,7 +57,8 @@ export function registerBundleTools(apiClient: ApiClient) {
           status: {
             type: 'string',
             enum: ['ACTIVE', 'ARCHIVED'],
-            description: 'Filter by status (optional)',
+            description:
+              'Filter by status (optional). Note: bundles use ARCHIVED (not INACTIVE like URLs)',
           },
           search: {
             type: 'string',
@@ -70,11 +75,11 @@ export function registerBundleTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Bundle ID' },
+          bundleId: { type: 'string', description: 'Bundle ID' },
         },
-        required: ['id'],
+        required: ['bundleId'],
       },
-      handler: handleTool((args) => apiClient.getBundle(args.id)),
+      handler: handleTool((args) => apiClient.getBundle(args.bundleId)),
     },
 
     update_bundle: {
@@ -83,20 +88,24 @@ export function registerBundleTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Bundle ID' },
+          bundleId: { type: 'string', description: 'Bundle ID' },
           name: { type: 'string', description: 'New bundle name (optional)' },
           description: {
             type: 'string',
             description: 'New description (optional)',
           },
           color: { type: 'string', description: 'New color code (optional)' },
-          icon: { type: 'string', description: 'New icon name (optional)' },
+          icon: {
+            type: 'string',
+            description:
+              'New Lucide icon name (optional, e.g., link, globe, star)',
+          },
         },
-        required: ['id'],
+        required: ['bundleId'],
       },
       handler: handleTool((args) => {
-        const { id, ...updateData } = args;
-        return apiClient.updateBundle(id, updateData);
+        const { bundleId, ...updateData } = args;
+        return apiClient.updateBundle(bundleId, updateData);
       }),
     },
 
@@ -106,13 +115,13 @@ export function registerBundleTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Bundle ID' },
+          bundleId: { type: 'string', description: 'Bundle ID' },
         },
-        required: ['id'],
+        required: ['bundleId'],
       },
       handler: handleTool(
-        (args) => apiClient.deleteBundle(args.id),
-        (args) => `Bundle ${args.id} has been successfully deleted`
+        (args) => apiClient.deleteBundle(args.bundleId),
+        (args) => `Bundle ${args.bundleId} has been successfully deleted`
       ),
     },
 

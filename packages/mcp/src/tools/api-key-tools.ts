@@ -34,7 +34,7 @@ export function registerApiKeyTools(apiClient: ApiClient) {
 
     list_api_keys: {
       description:
-        'List all API keys with pagination. Only shows key prefixes, not full keys.',
+        'List all API keys with pagination. Only shows key prefixes, not full keys. Sorted by createdAt (descending) by default.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -46,7 +46,11 @@ export function registerApiKeyTools(apiClient: ApiClient) {
             type: 'number',
             description: 'Items per page (optional, defaults to 10)',
           },
-          sortBy: { type: 'string', description: 'Sort field (optional)' },
+          sortBy: {
+            type: 'string',
+            enum: ['createdAt', 'name', 'lastUsedAt'],
+            description: 'Sort field (optional, defaults to createdAt)',
+          },
           sortOrder: {
             type: 'string',
             enum: ['asc', 'desc'],

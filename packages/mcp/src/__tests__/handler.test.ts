@@ -396,13 +396,13 @@ describe('Tool Handler Parameter Passing', () => {
   // --- Webhook Tools ---
 
   describe('Webhook tools', () => {
-    it('update_webhook should extract id and pass data', async () => {
+    it('update_webhook should extract webhookId and pass data', async () => {
       const { client, calls } = createMockClient();
       const { registerWebhookTools } =
         await import('../tools/webhook-tools.js');
       const tools = registerWebhookTools(client);
       await tools.update_webhook.handler({
-        id: 'wh-1',
+        webhookId: 'wh-1',
         name: 'Updated',
         isActive: false,
       });
@@ -411,12 +411,16 @@ describe('Tool Handler Parameter Passing', () => {
       expect(calls[0].args[1]).toEqual({ name: 'Updated', isActive: false });
     });
 
-    it('get_webhook_logs should extract id and pass pagination', async () => {
+    it('get_webhook_logs should extract webhookId and pass pagination', async () => {
       const { client, calls } = createMockClient();
       const { registerWebhookTools } =
         await import('../tools/webhook-tools.js');
       const tools = registerWebhookTools(client);
-      await tools.get_webhook_logs.handler({ id: 'wh-1', page: 2, limit: 20 });
+      await tools.get_webhook_logs.handler({
+        webhookId: 'wh-1',
+        page: 2,
+        limit: 20,
+      });
       expect(calls[0].method).toBe('getWebhookLogs');
       expect(calls[0].args[0]).toBe('wh-1');
       expect(calls[0].args[1]).toEqual({ page: 2, limit: 20 });
@@ -516,12 +520,12 @@ describe('Tool Handler Parameter Passing', () => {
   // --- Bundle Tools ---
 
   describe('Bundle tools', () => {
-    it('update_bundle should extract id and pass data', async () => {
+    it('update_bundle should extract bundleId and pass data', async () => {
       const { client, calls } = createMockClient();
       const { registerBundleTools } = await import('../tools/bundle-tools.js');
       const tools = registerBundleTools(client);
       await tools.update_bundle.handler({
-        id: 'b-1',
+        bundleId: 'b-1',
         name: 'Updated Bundle',
         color: '#FF0000',
       });

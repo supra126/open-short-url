@@ -64,7 +64,12 @@ const conditionsSchema = {
           },
           value: {
             description:
-              'Condition value (string, string array, or time range object with start/end/timezone)',
+              'Condition value — format depends on operator and type:\n' +
+              '• EQUALS / NOT_EQUALS / CONTAINS / STARTS_WITH / ENDS_WITH → string (e.g., "TW" for COUNTRY, "mobile" for DEVICE, "Chrome" for BROWSER)\n' +
+              '• IN / NOT_IN → string array (e.g., ["TW","US","JP"])\n' +
+              '• TIME + BETWEEN → object: { "start": "09:00", "end": "17:00", "timezone": "Asia/Taipei" }\n' +
+              '• TIME + BEFORE / AFTER → string time (e.g., "17:00")\n' +
+              '• DAY_OF_WEEK → number 0-6 (0=Sunday) or array of numbers for IN/NOT_IN',
           },
         },
         required: ['type', 'operator', 'value'],

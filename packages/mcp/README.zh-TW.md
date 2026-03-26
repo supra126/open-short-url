@@ -47,7 +47,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ## 功能特色
 
-**77 個 MCP 工具**，涵蓋 11 個模組：
+**78 個 MCP 工具**，涵蓋 11 個模組：
 
 | 模組        | 工具數 | 說明                                      |
 | ----------- | ------ | ----------------------------------------- |
@@ -56,7 +56,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 | 分析數據    | 10     | 點擊分析、趨勢、機器人偵測、數據匯出      |
 | A/B 測試    | 5      | 建立變體、流量分配、效果比較              |
 | 智慧路由    | 8      | 條件式路由規則、範本、地理/裝置定向       |
-| Webhooks    | 7      | 事件通知、傳送日誌、Webhook 測試          |
+| Webhooks    | 8      | 事件通知、傳送日誌、Webhook 測試          |
 | 使用者管理  | 11     | 建立/管理使用者、角色、2FA、OIDC 帳號     |
 | API Keys    | 4      | 建立、列表、檢視、撤銷 API 金鑰           |
 | OIDC/SSO    | 5      | 管理 OIDC/SSO 身份驗證提供者              |
@@ -167,7 +167,7 @@ MCP_TRANSPORT=http API_URL=https://your-backend.com API_KEY=ak_xxx node dist/ind
 
 ---
 
-## 可用工具列表（77 個）
+## 可用工具列表（78 個）
 
 ### URL 管理（10 個）
 
@@ -239,17 +239,18 @@ MCP_TRANSPORT=http API_URL=https://your-backend.com API_KEY=ak_xxx node dist/ind
 | `update_smart_routing_settings`     | 更新 URL 的路由設定            |
 | `list_routing_templates`            | 列出可用的路由範本             |
 
-### Webhooks（7 個）
+### Webhooks（8 個）
 
-| 工具               | 說明                       |
-| ------------------ | -------------------------- |
-| `create_webhook`   | 建立 Webhook 端點          |
-| `list_webhooks`    | 列出所有 Webhooks          |
-| `get_webhook`      | 查詢 Webhook 詳情          |
-| `update_webhook`   | 更新 Webhook 設定          |
-| `delete_webhook`   | 刪除 Webhook [DESTRUCTIVE] |
-| `get_webhook_logs` | 查看 Webhook 傳送日誌      |
-| `test_webhook`     | 發送測試 Webhook 事件      |
+| 工具                     | 說明                       |
+| ------------------------ | -------------------------- |
+| `create_webhook`         | 建立 Webhook 端點          |
+| `list_webhooks`          | 列出所有 Webhooks          |
+| `get_webhook`            | 查詢 Webhook 詳情          |
+| `update_webhook`         | 更新 Webhook 設定          |
+| `delete_webhook`         | 刪除 Webhook [DESTRUCTIVE] |
+| `get_webhook_logs`       | 查看 Webhook 傳送日誌      |
+| `test_webhook`           | 發送測試 Webhook 事件      |
+| `retry_webhook_delivery` | 重試失敗的 Webhook 傳送    |
 
 ### 使用者管理（11 個）
 

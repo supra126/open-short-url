@@ -59,7 +59,7 @@ describe('MCP Tool Registration', () => {
     expect(Object.keys(allModules.variant)).toHaveLength(5);
     expect(Object.keys(allModules.bundle)).toHaveLength(12);
     expect(Object.keys(allModules.routing)).toHaveLength(8);
-    expect(Object.keys(allModules.webhook)).toHaveLength(7);
+    expect(Object.keys(allModules.webhook)).toHaveLength(8);
     expect(Object.keys(allModules.user)).toHaveLength(11);
     expect(Object.keys(allModules.apiKey)).toHaveLength(4);
     expect(Object.keys(allModules.oidc)).toHaveLength(5);

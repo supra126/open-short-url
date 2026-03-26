@@ -47,7 +47,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 
 ## Features
 
-**77 MCP Tools** across 11 modules:
+**78 MCP Tools** across 11 modules:
 
 | Module            | Tools | Description                                                   |
 | ----------------- | ----- | ------------------------------------------------------------- |
@@ -56,7 +56,7 @@ curl -H "Authorization: Bearer YOUR_API_KEY" \
 | Analytics         | 10    | Click analysis, trends, bot detection, data export            |
 | A/B Testing       | 5     | Create variants, traffic distribution, performance comparison |
 | Smart Routing     | 8     | Conditional routing rules, templates, geo/device targeting    |
-| Webhooks          | 7     | Event notifications, delivery logs, webhook testing           |
+| Webhooks          | 8     | Event notifications, delivery logs, webhook testing           |
 | User Management   | 11    | Create/manage users, roles, 2FA, OIDC accounts                |
 | API Keys          | 4     | Create, list, view, revoke API keys                           |
 | OIDC/SSO          | 5     | Manage OIDC/SSO identity providers                            |
@@ -167,7 +167,7 @@ MCP_TRANSPORT=http API_URL=https://your-backend.com API_KEY=ak_xxx node dist/ind
 
 ---
 
-## Available Tools (77)
+## Available Tools (78)
 
 ### URL Management (10)
 
@@ -239,17 +239,18 @@ MCP_TRANSPORT=http API_URL=https://your-backend.com API_KEY=ak_xxx node dist/ind
 | `update_smart_routing_settings`     | Update routing settings for a URL             |
 | `list_routing_templates`            | List available routing templates              |
 
-### Webhooks (7)
+### Webhooks (8)
 
-| Tool               | Description                  |
-| ------------------ | ---------------------------- |
-| `create_webhook`   | Create webhook endpoint      |
-| `list_webhooks`    | List all webhooks            |
-| `get_webhook`      | Get webhook details          |
-| `update_webhook`   | Update webhook settings      |
-| `delete_webhook`   | Delete webhook [DESTRUCTIVE] |
-| `get_webhook_logs` | View webhook delivery logs   |
-| `test_webhook`     | Send test webhook event      |
+| Tool                     | Description                     |
+| ------------------------ | ------------------------------- |
+| `create_webhook`         | Create webhook endpoint         |
+| `list_webhooks`          | List all webhooks               |
+| `get_webhook`            | Get webhook details             |
+| `update_webhook`         | Update webhook settings         |
+| `delete_webhook`         | Delete webhook [DESTRUCTIVE]    |
+| `get_webhook_logs`       | View webhook delivery logs      |
+| `test_webhook`           | Send test webhook event         |
+| `retry_webhook_delivery` | Retry a failed webhook delivery |
 
 ### User Management (11)
 

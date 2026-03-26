@@ -25,7 +25,7 @@ export function registerVariantTools(apiClient: ApiClient) {
           weight: {
             type: 'number',
             description:
-              'Traffic weight (0-100, represents the percentage of traffic this variant receives)',
+              "Traffic weight as a percentage (0-100). All active variants' weights must sum to exactly 100 for proper distribution. Example: two variants with weights 50 and 50, or three with 50, 30, and 20.",
             minimum: 0,
             maximum: 100,
           },

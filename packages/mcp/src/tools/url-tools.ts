@@ -125,7 +125,8 @@ export function registerUrlTools(apiClient: ApiClient) {
           },
           sortBy: {
             type: 'string',
-            description: 'Sort field (e.g., createdAt, clickCount)',
+            enum: ['createdAt', 'clickCount', 'title'],
+            description: 'Sort field (defaults to createdAt)',
           },
           sortOrder: {
             type: 'string',
@@ -172,7 +173,8 @@ export function registerUrlTools(apiClient: ApiClient) {
           },
           expiresAt: {
             type: 'string',
-            description: 'New expiration time (optional, ISO 8601 format)',
+            description:
+              'New expiration time (optional, ISO 8601 format. Set to empty string to remove expiration)',
           },
           status: {
             type: 'string',
@@ -181,46 +183,54 @@ export function registerUrlTools(apiClient: ApiClient) {
           },
           utmSource: {
             type: 'string',
-            description: 'UTM source parameter (optional)',
+            description:
+              'UTM source parameter (optional, set to empty string to clear)',
           },
           utmMedium: {
             type: 'string',
-            description: 'UTM medium parameter (optional)',
+            description:
+              'UTM medium parameter (optional, set to empty string to clear)',
           },
           utmCampaign: {
             type: 'string',
-            description: 'UTM campaign parameter (optional)',
+            description:
+              'UTM campaign parameter (optional, set to empty string to clear)',
           },
           utmTerm: {
             type: 'string',
-            description: 'UTM term parameter (optional)',
+            description:
+              'UTM term parameter (optional, set to empty string to clear)',
           },
           utmContent: {
             type: 'string',
-            description: 'UTM content parameter (optional)',
+            description:
+              'UTM content parameter (optional, set to empty string to clear)',
           },
           utmId: {
             type: 'string',
-            description: 'UTM campaign ID - GA4 recommended (optional)',
+            description:
+              'UTM campaign ID - GA4 recommended (optional, set to empty string to clear)',
           },
           utmSourcePlatform: {
             type: 'string',
-            description: 'UTM source platform - GA4 recommended (optional)',
+            description:
+              'UTM source platform - GA4 recommended (optional, set to empty string to clear)',
           },
           ogTitle: {
             type: 'string',
             description:
-              'OG title for social media preview (optional, max 100 chars)',
+              'OG title for social media preview (optional, max 100 chars. Set to empty string to remove)',
           },
           ogDescription: {
             type: 'string',
             description:
-              'OG description for social media preview (optional, max 200 chars)',
+              'OG description for social media preview (optional, max 200 chars. Set to empty string to remove)',
           },
           twitterCardType: {
             type: 'string',
-            enum: ['summary', 'summary_large_image'],
-            description: 'Twitter card type (optional)',
+            enum: ['summary', 'summary_large_image', ''],
+            description:
+              'Twitter card type (optional. Set to empty string to remove)',
           },
         },
         required: ['id'],
@@ -249,7 +259,7 @@ export function registerUrlTools(apiClient: ApiClient) {
 
     get_url_stats: {
       description:
-        'Get dashboard statistics including total, active, inactive, and expired URL counts.',
+        'Get quick summary counts for the dashboard: total, active, inactive, and expired URL counts. For detailed analytics with trends and breakdowns, use get_overview_analytics instead.',
       inputSchema: {
         type: 'object',
         properties: {},
@@ -259,7 +269,7 @@ export function registerUrlTools(apiClient: ApiClient) {
 
     generate_qrcode: {
       description:
-        'Generate a QR code for the specified short URL (returns Base64 Data URL format).',
+        'Generate a QR code image for the specified short URL. Returns a Base64-encoded Data URL (data:image/png;base64,...) that can be directly embedded in HTML <img> tags or saved as a PNG file.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -296,7 +306,8 @@ export function registerUrlTools(apiClient: ApiClient) {
               properties: {
                 originalUrl: {
                   type: 'string',
-                  description: 'The original URL to shorten',
+                  description:
+                    'The original URL to shorten (must include http:// or https://)',
                 },
                 customSlug: {
                   type: 'string',
@@ -360,7 +371,7 @@ export function registerUrlTools(apiClient: ApiClient) {
     },
 
     bulk_update_urls: {
-      description: `Bulk update multiple short URLs with a single operation. Supported operations: status (change ACTIVE/INACTIVE), bundle (add to bundle), expiration (set/remove expiry), utm (update UTM parameters).`,
+      description: `Bulk update multiple short URLs with a single operation. Supported operations: status (change ACTIVE/INACTIVE), bundle (add to bundle), expiration (set/remove expiry), utm (update UTM parameters). Only fields relevant to the chosen operation type are used. Examples: { "type": "status", "status": "INACTIVE" }, { "type": "bundle", "bundleId": "abc123" }, { "type": "expiration", "expiresAt": "2025-12-31T23:59:59Z" }, { "type": "utm", "utmSource": "newsletter", "utmMedium": "email" }.`,
       inputSchema: {
         type: 'object',
         properties: {

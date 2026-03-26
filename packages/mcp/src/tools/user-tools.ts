@@ -31,7 +31,7 @@ export function registerUserTools(apiClient: ApiClient) {
 
     list_users: {
       description:
-        'List all users with pagination, search, and filtering (admin only).',
+        'List all users with pagination, search, and filtering (admin only). Sorted by createdAt (descending) by default.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -56,7 +56,11 @@ export function registerUserTools(apiClient: ApiClient) {
             type: 'boolean',
             description: 'Filter by active status (optional)',
           },
-          sortBy: { type: 'string', description: 'Sort field (optional)' },
+          sortBy: {
+            type: 'string',
+            enum: ['createdAt', 'email', 'name'],
+            description: 'Sort field (optional, defaults to createdAt)',
+          },
           sortOrder: {
             type: 'string',
             enum: ['asc', 'desc'],
