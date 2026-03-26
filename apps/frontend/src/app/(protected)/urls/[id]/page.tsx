@@ -23,6 +23,15 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Loading } from '@/components/ui/loading';
+import {
   ArrowLeft,
   Copy,
   ExternalLink,
@@ -202,7 +211,7 @@ export default function UrlDetailPage() {
         {/* URL Information */}
         {isPending ? (
           <div className="flex h-75 items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <Loading />
           </div>
         ) : error || !urlData ? (
           <div className="flex h-75 flex-col items-center justify-center gap-4">
@@ -650,36 +659,24 @@ export default function UrlDetailPage() {
               <CardContent>
                 {recentClicksData && recentClicksData.clicks.length > 0 ? (
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b">
-                          <th className="pb-2 text-left font-medium">
-                            {t('urls.timeHeader')}
-                          </th>
-                          <th className="pb-2 text-left font-medium">
-                            {t('urls.locationHeader')}
-                          </th>
-                          <th className="pb-2 text-left font-medium">
-                            {t('urls.deviceHeader')}
-                          </th>
-                          <th className="pb-2 text-left font-medium">
-                            {t('urls.browserHeader')}
-                          </th>
-                          <th className="pb-2 text-left font-medium">
-                            {t('urls.sourceHeader')}
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>{t('urls.timeHeader')}</TableHead>
+                          <TableHead>{t('urls.locationHeader')}</TableHead>
+                          <TableHead>{t('urls.deviceHeader')}</TableHead>
+                          <TableHead>{t('urls.browserHeader')}</TableHead>
+                          <TableHead>{t('urls.sourceHeader')}</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
                         {recentClicksData.clicks.map(
                           (click: RecentClickDto) => (
-                            <tr
+                            <TableRow
                               key={click.id}
-                              className={`border-b last:border-0 ${
-                                click.isBot ? 'bg-muted/30' : ''
-                              }`}
+                              className={click.isBot ? 'bg-muted/30' : ''}
                             >
-                              <td className="py-3 text-muted-foreground">
+                              <TableCell className="text-muted-foreground">
                                 <div className="flex items-center gap-2">
                                   {click.isBot && (
                                     <span title={click.botName}>
@@ -688,8 +685,8 @@ export default function UrlDetailPage() {
                                   )}
                                   {formatDateTime(click.createdAt)}
                                 </div>
-                              </td>
-                              <td className="py-3">
+                              </TableCell>
+                              <TableCell>
                                 {click.isBot ? (
                                   <span className="flex items-center gap-1 text-warning">
                                     {click.botName || t('bots.defaultBotName')}
@@ -700,15 +697,15 @@ export default function UrlDetailPage() {
                                     {click.city && ` · ${click.city}`}
                                   </>
                                 )}
-                              </td>
-                              <td className="py-3">
+                              </TableCell>
+                              <TableCell>
                                 {click.device || t('urls.unknown')}
                                 {click.os && ` · ${click.os}`}
-                              </td>
-                              <td className="py-3">
+                              </TableCell>
+                              <TableCell>
                                 {click.browser || t('urls.unknown')}
-                              </td>
-                              <td className="py-3 max-w-50 truncate">
+                              </TableCell>
+                              <TableCell className="max-w-50 truncate">
                                 {click.referer ? (
                                   <a
                                     href={click.referer}
@@ -729,12 +726,12 @@ export default function UrlDetailPage() {
                                     {t('urls.directVisit')}
                                   </span>
                                 )}
-                              </td>
-                            </tr>
+                              </TableCell>
+                            </TableRow>
                           )
                         )}
-                      </tbody>
-                    </table>
+                      </TableBody>
+                    </Table>
                     {recentClicksData.total > 10 && (
                       <div className="mt-4 flex flex-col items-center gap-2 sm:flex-row sm:justify-center">
                         <span className="text-sm text-muted-foreground">

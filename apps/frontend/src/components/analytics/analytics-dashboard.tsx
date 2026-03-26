@@ -41,7 +41,9 @@ const StatCard = memo<{
   <Card className="hover:shadow-md hover:-translate-y-0.5">
     <CardHeader className="pb-2">
       <CardDescription>{title}</CardDescription>
-      <CardTitle className={`text-3xl ${isPositive !== undefined ? (isPositive ? 'text-success' : 'text-destructive') : ''}`}>
+      <CardTitle
+        className={`text-3xl ${isPositive !== undefined ? (isPositive ? 'text-success' : 'text-destructive') : ''}`}
+      >
         {value}
       </CardTitle>
     </CardHeader>
@@ -85,9 +87,7 @@ const UTMProgressBar = memo<{
   const clampedPercentage = Math.min(100, Math.max(0, percentage));
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm font-medium truncate max-w-30">
-        {value}
-      </span>
+      <span className="text-sm font-medium truncate max-w-30">{value}</span>
       <div className="flex items-center gap-2">
         <div className="h-2 w-24 rounded-full bg-muted">
           <div
@@ -124,17 +124,18 @@ export function AnalyticsDashboard() {
   }, [dateRange]);
 
   const { data, isLoading, error } = useUserAnalytics(queryParams);
-  const { data: botData, isLoading: botLoading } = useUserBotAnalytics(queryParams);
-  const { data: abTestData, isLoading: abTestLoading } = useUserAbTestAnalytics(queryParams);
+  const { data: botData, isLoading: botLoading } =
+    useUserBotAnalytics(queryParams);
+  const { data: abTestData, isLoading: abTestLoading } =
+    useUserAbTestAnalytics(queryParams);
 
   // Memoize the date range change handler
-  const handleDateRangeChange = useCallback((value: {
-    timeRange: TimeRange;
-    startDate?: string;
-    endDate?: string;
-  }) => {
-    setDateRange(value);
-  }, []);
+  const handleDateRangeChange = useCallback(
+    (value: { timeRange: TimeRange; startDate?: string; endDate?: string }) => {
+      setDateRange(value);
+    },
+    []
+  );
 
   // Memoize computed values (must be called unconditionally)
   const overviewStats = useMemo(() => {
@@ -169,14 +170,29 @@ export function AnalyticsDashboard() {
   const topBrowsers = useMemo(() => data?.browsers.slice(0, 5) || [], [data]);
   const topOS = useMemo(() => data?.operatingSystems.slice(0, 5) || [], [data]);
   const topDevices = useMemo(() => data?.devices.slice(0, 5) || [], [data]);
-  const topCountries = useMemo(() => data?.countries.slice(0, 10) || [], [data]);
-  const topUTMSources = useMemo(() => data?.utmSources.slice(0, 5) || [], [data]);
-  const topUTMMediums = useMemo(() => data?.utmMediums.slice(0, 5) || [], [data]);
-  const topUTMCampaigns = useMemo(() => data?.utmCampaigns.slice(0, 5) || [], [data]);
+  const topCountries = useMemo(
+    () => data?.countries.slice(0, 10) || [],
+    [data]
+  );
+  const topUTMSources = useMemo(
+    () => data?.utmSources.slice(0, 5) || [],
+    [data]
+  );
+  const topUTMMediums = useMemo(
+    () => data?.utmMediums.slice(0, 5) || [],
+    [data]
+  );
+  const topUTMCampaigns = useMemo(
+    () => data?.utmCampaigns.slice(0, 5) || [],
+    [data]
+  );
 
   // Check if UTM data exists
   const hasUTMData = useMemo(
-    () => (data?.utmSources.length || 0) > 0 || (data?.utmMediums.length || 0) > 0 || (data?.utmCampaigns.length || 0) > 0,
+    () =>
+      (data?.utmSources.length || 0) > 0 ||
+      (data?.utmMediums.length || 0) > 0 ||
+      (data?.utmCampaigns.length || 0) > 0,
     [data]
   );
 
@@ -205,10 +221,7 @@ export function AnalyticsDashboard() {
     <div className="space-y-6">
       {/* Date Range Picker and Export Button */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <DateRangePicker
-          value={dateRange}
-          onChange={handleDateRangeChange}
-        />
+        <DateRangePicker value={dateRange} onChange={handleDateRangeChange} />
         <ExportButton queryParams={queryParams} />
       </div>
 
@@ -230,7 +243,9 @@ export function AnalyticsDashboard() {
         {/* Browsers */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('analytics.browsers.title')}</CardTitle>
+            <CardTitle className="text-lg">
+              {t('analytics.browsers.title')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -248,7 +263,7 @@ export function AnalyticsDashboard() {
         {/* Operating Systems */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('analytics.os.title')}</CardTitle>
+            <CardTitle className="text-lg">{t('analytics.os.title')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -266,7 +281,9 @@ export function AnalyticsDashboard() {
         {/* Devices */}
         <Card>
           <CardHeader>
-            <CardTitle>{t('analytics.devices.title')}</CardTitle>
+            <CardTitle className="text-lg">
+              {t('analytics.devices.title')}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -285,7 +302,7 @@ export function AnalyticsDashboard() {
       {/* Geographic Distribution */}
       <Card>
         <CardHeader>
-          <CardTitle>{t('analytics.geo.title')}</CardTitle>
+          <CardTitle className="text-lg">{t('analytics.geo.title')}</CardTitle>
           <CardDescription>{t('analytics.geo.description')}</CardDescription>
         </CardHeader>
         <CardContent>
@@ -314,7 +331,9 @@ export function AnalyticsDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-xs text-muted-foreground">
-                {t('bots.botPercentage', { percentage: botData.botPercentage.toFixed(1) })}
+                {t('bots.botPercentage', {
+                  percentage: botData.botPercentage.toFixed(1),
+                })}
               </p>
             </CardContent>
           </Card>
@@ -322,10 +341,14 @@ export function AnalyticsDashboard() {
           {/* Bot Types Distribution */}
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>{t('bots.botTypesTitle')}</CardTitle>
+              <CardTitle className="text-lg">
+                {t('bots.botTypesTitle')}
+              </CardTitle>
               <CardDescription>
                 {botData.botTypes.length > 0
-                  ? t('bots.topBots', { count: Math.min(5, botData.botTypes.length) })
+                  ? t('bots.topBots', {
+                      count: Math.min(5, botData.botTypes.length),
+                    })
                   : t('bots.noData')}
               </CardDescription>
             </CardHeader>
@@ -357,7 +380,9 @@ export function AnalyticsDashboard() {
           {data.utmSources.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>{t('analytics.utm.utmSources')}</CardTitle>
+                <CardTitle className="text-lg">
+                  {t('analytics.utm.utmSources')}
+                </CardTitle>
                 <CardDescription>
                   {t('analytics.utm.utmSourcesDesc')}
                 </CardDescription>
@@ -380,7 +405,9 @@ export function AnalyticsDashboard() {
           {data.utmMediums.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>{t('analytics.utm.utmMediums')}</CardTitle>
+                <CardTitle className="text-lg">
+                  {t('analytics.utm.utmMediums')}
+                </CardTitle>
                 <CardDescription>
                   {t('analytics.utm.utmMediumsDesc')}
                 </CardDescription>
@@ -403,7 +430,9 @@ export function AnalyticsDashboard() {
           {data.utmCampaigns.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>{t('analytics.utm.utmCampaigns')}</CardTitle>
+                <CardTitle className="text-lg">
+                  {t('analytics.utm.utmCampaigns')}
+                </CardTitle>
                 <CardDescription>
                   {t('analytics.utm.utmCampaignsDesc')}
                 </CardDescription>
@@ -435,12 +464,15 @@ export function AnalyticsDashboard() {
               <CardHeader className="pb-2">
                 <CardDescription>{t('abTests.totalUrls')}</CardDescription>
                 <CardTitle className="text-3xl">
-                  {t('abTests.totalUrlsCount', { count: abTestData.totalAbTestUrls })}
+                  {t('abTests.totalUrlsCount', {
+                    count: abTestData.totalAbTestUrls,
+                  })}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">
-                  {t('abTests.totalTestClicks')}: {formatNumber(abTestData.totalTestClicks)}
+                  {t('abTests.totalTestClicks')}:{' '}
+                  {formatNumber(abTestData.totalTestClicks)}
                 </p>
               </CardContent>
             </Card>
@@ -448,14 +480,18 @@ export function AnalyticsDashboard() {
             {/* Control Group vs Variants */}
             <Card>
               <CardHeader className="pb-2">
-                <CardDescription>{t('abTests.controlGroupClicks')}</CardDescription>
+                <CardDescription>
+                  {t('abTests.controlGroupClicks')}
+                </CardDescription>
                 <CardTitle className="text-3xl">
                   {formatNumber(abTestData.controlGroupClicks)}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">
-                  {t('abTests.controlGroupPercentage', { percentage: abTestData.controlGroupPercentage.toFixed(1) })}
+                  {t('abTests.controlGroupPercentage', {
+                    percentage: abTestData.controlGroupPercentage.toFixed(1),
+                  })}
                 </p>
               </CardContent>
             </Card>
@@ -469,7 +505,9 @@ export function AnalyticsDashboard() {
               </CardHeader>
               <CardContent>
                 <p className="text-xs text-muted-foreground">
-                  {t('abTests.variantPercentage', { percentage: abTestData.variantPercentage.toFixed(1) })}
+                  {t('abTests.variantPercentage', {
+                    percentage: abTestData.variantPercentage.toFixed(1),
+                  })}
                 </p>
               </CardContent>
             </Card>
@@ -479,31 +517,48 @@ export function AnalyticsDashboard() {
           {abTestData.topPerformingVariants.length > 0 && (
             <Card>
               <CardHeader>
-                <CardTitle>{t('abTests.topPerformingVariants')}</CardTitle>
+                <CardTitle className="text-lg">
+                  {t('abTests.topPerformingVariants')}
+                </CardTitle>
                 <CardDescription>
-                  {t('abTests.topVariants', { count: Math.min(10, abTestData.topPerformingVariants.length) })}
+                  {t('abTests.topVariants', {
+                    count: Math.min(
+                      10,
+                      abTestData.topPerformingVariants.length
+                    ),
+                  })}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {abTestData.topPerformingVariants.slice(0, 10).map((variant: TopPerformingVariant) => (
-                    <div key={`${variant.urlSlug}-${variant.variantName}`} className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{variant.variantName}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          /{variant.urlSlug}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-4 ml-4">
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{formatNumber(variant.clicks)}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {t('abTests.clickRate')}: {variant.clickThroughRate.toFixed(1)}%
+                  {abTestData.topPerformingVariants
+                    .slice(0, 10)
+                    .map((variant: TopPerformingVariant) => (
+                      <div
+                        key={`${variant.urlSlug}-${variant.variantName}`}
+                        className="flex items-center justify-between"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {variant.variantName}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            /{variant.urlSlug}
                           </p>
                         </div>
+                        <div className="flex items-center gap-4 ml-4">
+                          <div className="text-right">
+                            <p className="text-sm font-medium">
+                              {formatNumber(variant.clicks)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {t('abTests.clickRate')}:{' '}
+                              {variant.clickThroughRate.toFixed(1)}%
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
                 </div>
               </CardContent>
             </Card>

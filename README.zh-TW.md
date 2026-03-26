@@ -57,16 +57,18 @@
 
 - RESTful API 與完整文件
 - API 金鑰管理便於整合
-- Webhook 事件通知（HMAC-SHA256 簽名）
+- Webhook 事件通知（HMAC-SHA256 簽名、手動重試）
+- SSO / OIDC 單一登入（Google、GitHub 及自訂提供者）
 - A/B 測試（網址變體與流量分配）
 - 連結組合功能整理網址
+- UTM 範本與自動完成，方便行銷追蹤
 - 機器人偵測與過濾
 - 雙因素驗證（2FA）
 - 批次網址管理
 - QR Code 產生器
 - 多語言支援（英文、繁體中文、葡萄牙語）
 - **AI 智能功能**：
-  - 內建 AI 聊天助手（Anthropic Claude、OpenAI GPT、Google Gemini）
+  - 內建 AI 聊天助手（Anthropic Claude、OpenAI GPT、Google Gemini、Mistral、Cohere）
   - Model Context Protocol (MCP) server 支援外部 AI 助手
 
 專為需要完整 API 存取與零供應商鎖定的開發者打造。

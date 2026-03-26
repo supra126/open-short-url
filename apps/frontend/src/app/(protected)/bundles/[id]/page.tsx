@@ -5,7 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { t } from '@/lib/i18n';
-import { copyToClipboard, formatDate, formatNumber, formatShortDate } from '@/lib/utils';
+import {
+  copyToClipboard,
+  formatDate,
+  formatNumber,
+  formatShortDate,
+} from '@/lib/utils';
 import {
   Card,
   CardContent,
@@ -70,7 +75,13 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Loading } from '@/components/ui/loading';
 
 export default function BundleDetailPage() {
@@ -90,7 +101,11 @@ export default function BundleDetailPage() {
   // Fetch data
   const { data: bundle, isLoading, error } = useBundle(bundleId);
   const { data: stats } = useBundleStats(bundleId);
-  const { data: availableUrls } = useUrls({ page: 1, pageSize: 100, status: 'ACTIVE' });
+  const { data: availableUrls } = useUrls({
+    page: 1,
+    pageSize: 100,
+    status: 'ACTIVE',
+  });
 
   // Mutations
   const deleteMutation = useDeleteBundle();
@@ -108,7 +123,8 @@ export default function BundleDetailPage() {
       });
       router.push('/bundles');
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
+      const message =
+        error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
         description: message,
@@ -126,7 +142,8 @@ export default function BundleDetailPage() {
       });
       setArchiveDialogOpen(false);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
+      const message =
+        error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
         description: message,
@@ -143,7 +160,8 @@ export default function BundleDetailPage() {
         description: t('bundles.restoreSuccess'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
+      const message =
+        error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
         description: message,
@@ -164,7 +182,8 @@ export default function BundleDetailPage() {
       setRemoveUrlDialogOpen(false);
       setSelectedUrlId(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
+      const message =
+        error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
         description: message,
@@ -188,7 +207,8 @@ export default function BundleDetailPage() {
       setAddUrlDialogOpen(false);
       setUrlToAdd('');
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('common.tryAgainLater');
+      const message =
+        error instanceof Error ? error.message : t('common.tryAgainLater');
       toast({
         title: t('common.error'),
         description: message,
@@ -209,7 +229,7 @@ export default function BundleDetailPage() {
 
   if (error) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="p-6 space-y-6">
         <Card>
           <CardContent className="py-8 text-center">
             <p className="text-destructive">{t('common.error')}</p>
@@ -221,7 +241,7 @@ export default function BundleDetailPage() {
 
   if (isLoading || !bundle) {
     return (
-      <div className="container mx-auto py-8">
+      <div className="p-6 space-y-6">
         <div className="py-12">
           <Loading />
         </div>
@@ -231,16 +251,21 @@ export default function BundleDetailPage() {
 
   // Filter available URLs to exclude those already in the bundle
   const bundleUrlIds = bundle.urls?.map((url: BundleUrlDto) => url.id) || [];
-  const filteredAvailableUrls = availableUrls?.data.filter(
-    (url: UrlResponseDto) => !bundleUrlIds.includes(url.id)
-  ) || [];
+  const filteredAvailableUrls =
+    availableUrls?.data.filter(
+      (url: UrlResponseDto) => !bundleUrlIds.includes(url.id)
+    ) || [];
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="mb-6 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/bundles')}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => router.push('/bundles')}
+          >
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-3">
@@ -248,12 +273,16 @@ export default function BundleDetailPage() {
             <div>
               <h1 className="text-3xl font-display font-bold">{bundle.name}</h1>
               {bundle.description && (
-                <p className="text-muted-foreground mt-1">{bundle.description}</p>
+                <p className="text-muted-foreground mt-1">
+                  {bundle.description}
+                </p>
               )}
             </div>
           </div>
           <Badge variant={bundle.status === 'ACTIVE' ? 'default' : 'secondary'}>
-            {bundle.status === 'ACTIVE' ? t('bundles.active') : t('bundles.archived')}
+            {bundle.status === 'ACTIVE'
+              ? t('bundles.active')
+              : t('bundles.archived')}
           </Badge>
         </div>
 
@@ -360,7 +389,9 @@ export default function BundleDetailPage() {
                 <XAxis
                   dataKey="date"
                   tick={{ fontSize: 12 }}
-                  tickFormatter={(value: string | number) => formatShortDate(String(value))}
+                  tickFormatter={(value: string | number) =>
+                    formatShortDate(String(value))
+                  }
                 />
                 <YAxis tick={{ fontSize: 12 }} />
                 <Tooltip
@@ -420,7 +451,8 @@ export default function BundleDetailPage() {
                     </p>
                     <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                       <span>
-                        {t('bundles.totalClicks')}: {formatNumber(url.clickCount)}
+                        {t('bundles.totalClicks')}:{' '}
+                        {formatNumber(url.clickCount)}
                       </span>
                       <span>
                         {t('urls.createdAtCard')}: {formatDate(url.createdAt)}
@@ -436,10 +468,7 @@ export default function BundleDetailPage() {
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
-                    <Link
-                      href={url.shortUrl}
-                      target="_blank"
-                    >
+                    <Link href={url.shortUrl} target="_blank">
                       <Button variant="ghost" size="icon">
                         <ExternalLink className="h-4 w-4" />
                       </Button>
@@ -469,15 +498,16 @@ export default function BundleDetailPage() {
               <p className="mt-2 text-sm text-muted-foreground">
                 {t('bundles.emptyBundleDescription')}
               </p>
-              {bundle.status === 'ACTIVE' && filteredAvailableUrls.length > 0 && (
-                <Button
-                  className="mt-6"
-                  onClick={() => setAddUrlDialogOpen(true)}
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('bundles.addUrls')}
-                </Button>
-              )}
+              {bundle.status === 'ACTIVE' &&
+                filteredAvailableUrls.length > 0 && (
+                  <Button
+                    className="mt-6"
+                    onClick={() => setAddUrlDialogOpen(true)}
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('bundles.addUrls')}
+                  </Button>
+                )}
             </div>
           )}
         </CardContent>
@@ -544,7 +574,10 @@ export default function BundleDetailPage() {
       </AlertDialog>
 
       {/* Remove URL Confirmation */}
-      <AlertDialog open={removeUrlDialogOpen} onOpenChange={setRemoveUrlDialogOpen}>
+      <AlertDialog
+        open={removeUrlDialogOpen}
+        onOpenChange={setRemoveUrlDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('bundles.removeUrl')}</AlertDialogTitle>

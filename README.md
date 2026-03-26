@@ -57,16 +57,18 @@ Fully customizable branding:
 
 - RESTful API with comprehensive documentation
 - API key management for integrations
-- Webhook event notifications (HMAC-SHA256 signed)
+- Webhook event notifications (HMAC-SHA256 signed, manual retry)
+- SSO / OIDC authentication (Google, GitHub, and custom providers)
 - A/B testing (URL variants with traffic allocation)
 - Link bundles for organizing URLs
+- UTM templates and autocomplete for campaign tracking
 - Bot detection and filtering
 - Two-factor authentication (2FA)
 - Bulk URL management
 - QR code generation
 - Multi-language support (English, Traditional Chinese, Portuguese)
 - **AI-Powered Features**:
-  - Built-in AI Chat Assistant (Anthropic Claude, OpenAI GPT, Google Gemini)
+  - Built-in AI Chat Assistant (Anthropic Claude, OpenAI GPT, Google Gemini, Mistral, Cohere)
   - Model Context Protocol (MCP) server for external AI assistants
 
 Built for developers who need full API access and zero vendor lock-in.

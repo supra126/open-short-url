@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 import { Pagination } from '@/components/shared/pagination';
 import {
   useUsers,
@@ -11,7 +14,6 @@ import {
   useCreateUser,
   UserRole,
   type UserResponseDto,
-  type CreateUserDto,
 } from '@/hooks/use-users';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -39,6 +41,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -63,6 +75,21 @@ import { t } from '@/lib/i18n';
 import { Loading } from '@/components/ui/loading';
 import { formatDate } from '@/lib/utils';
 import Link from 'next/link';
+
+const createUserSchema = z.object({
+  email: z.string().email(t('users.invalidEmail')),
+  password: z.string().min(8, t('users.passwordMinLength')),
+  name: z.string().optional(),
+  role: z.nativeEnum(UserRole),
+});
+
+type CreateUserFormData = z.infer<typeof createUserSchema>;
+
+const resetPasswordSchema = z.object({
+  newPassword: z.string().min(8, t('users.passwordMinLength')),
+});
+
+type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
 export default function UsersPage() {
   const { toast } = useToast();
@@ -98,14 +125,26 @@ export default function UsersPage() {
   // Dialog states
   const [editUser, setEditUser] = useState<UserResponseDto | null>(null);
   const [deleteUser, setDeleteUser] = useState<UserResponseDto | null>(null);
-  const [resetPasswordUser, setResetPasswordUser] = useState<UserResponseDto | null>(null);
-  const [newPassword, setNewPassword] = useState('');
+  const [resetPasswordUser, setResetPasswordUser] =
+    useState<UserResponseDto | null>(null);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [createUserData, setCreateUserData] = useState<CreateUserDto>({
-    email: '',
-    password: '',
-    name: '',
-    role: UserRole.USER,
+
+  // Forms
+  const createForm = useForm<CreateUserFormData>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+      name: '',
+      role: UserRole.USER,
+    },
+  });
+
+  const resetPasswordForm = useForm<ResetPasswordFormData>({
+    resolver: zodResolver(resetPasswordSchema),
+    defaultValues: {
+      newPassword: '',
+    },
   });
 
   const handleUpdateRole = async (userId: string, role: UserRole) => {
@@ -117,7 +156,10 @@ export default function UsersPage() {
         description: t('users.updateRoleSuccessDesc'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('users.updateRoleErrorFallback');
+      const message =
+        error instanceof Error
+          ? error.message
+          : t('users.updateRoleErrorFallback');
       toast({
         title: t('users.updateRoleError'),
         description: message,
@@ -139,7 +181,10 @@ export default function UsersPage() {
           : t('users.deactivateSuccessDesc'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('users.updateStatusErrorFallback');
+      const message =
+        error instanceof Error
+          ? error.message
+          : t('users.updateStatusErrorFallback');
       toast({
         title: t('users.updateStatusError'),
         description: message,
@@ -158,7 +203,8 @@ export default function UsersPage() {
         description: t('users.deleteSuccessDesc'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('users.deleteErrorFallback');
+      const message =
+        error instanceof Error ? error.message : t('users.deleteErrorFallback');
       toast({
         title: t('users.deleteError'),
         description: message,
@@ -167,21 +213,24 @@ export default function UsersPage() {
     }
   };
 
-  const handleResetPassword = async () => {
-    if (!resetPasswordUser || !newPassword) return;
+  const handleResetPassword = async (data: ResetPasswordFormData) => {
+    if (!resetPasswordUser) return;
     try {
       await resetPasswordMutation.mutateAsync({
         id: resetPasswordUser.id,
-        data: { newPassword },
+        data: { newPassword: data.newPassword },
       });
       setResetPasswordUser(null);
-      setNewPassword('');
+      resetPasswordForm.reset();
       toast({
         title: t('users.resetPasswordSuccess'),
         description: t('users.resetPasswordSuccessDesc'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('users.resetPasswordErrorFallback');
+      const message =
+        error instanceof Error
+          ? error.message
+          : t('users.resetPasswordErrorFallback');
       toast({
         title: t('users.resetPasswordError'),
         description: message,
@@ -190,23 +239,18 @@ export default function UsersPage() {
     }
   };
 
-  const handleCreateUser = async () => {
-    if (!createUserData.email || !createUserData.password) return;
+  const handleCreateUser = async (data: CreateUserFormData) => {
     try {
-      await createUserMutation.mutateAsync(createUserData);
+      await createUserMutation.mutateAsync(data);
       setShowCreateDialog(false);
-      setCreateUserData({
-        email: '',
-        password: '',
-        name: '',
-        role: UserRole.USER,
-      });
+      createForm.reset();
       toast({
         title: t('users.createSuccess'),
         description: t('users.createSuccessDesc'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('users.createErrorFallback');
+      const message =
+        error instanceof Error ? error.message : t('users.createErrorFallback');
       toast({
         title: t('users.createError'),
         description: message,
@@ -220,7 +264,9 @@ export default function UsersPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-3xl font-display font-bold">{t('users.title')}</h1>
+          <h1 className="text-3xl font-display font-bold">
+            {t('users.title')}
+          </h1>
           <p className="text-muted-foreground mt-1">{t('users.description')}</p>
         </div>
         <Button onClick={() => setShowCreateDialog(true)}>
@@ -232,181 +278,185 @@ export default function UsersPage() {
       <div className="space-y-6">
         {/* Filters */}
         <div className="flex gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t('users.search')}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
-        </div>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              placeholder={t('users.search')}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
 
-        <Select
-          value={roleFilter || 'all'}
-          onValueChange={(value) =>
-            { setRoleFilter(value === 'all' ? undefined : (value as UserRole)); setPage(1); }
-          }
-        >
-          <SelectTrigger className="w-45">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('users.allRoles')}</SelectItem>
-            <SelectItem value={UserRole.ADMIN}>
-              {t('users.roleAdmin')}
-            </SelectItem>
-            <SelectItem value={UserRole.USER}>{t('users.roleUser')}</SelectItem>
-          </SelectContent>
-        </Select>
+          <Select
+            value={roleFilter || 'all'}
+            onValueChange={(value) => {
+              setRoleFilter(value === 'all' ? undefined : (value as UserRole));
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-45">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('users.allRoles')}</SelectItem>
+              <SelectItem value={UserRole.ADMIN}>
+                {t('users.roleAdmin')}
+              </SelectItem>
+              <SelectItem value={UserRole.USER}>
+                {t('users.roleUser')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
 
-        <Select
-          value={
-            statusFilter === undefined
-              ? 'all'
-              : statusFilter
-                ? 'active'
-                : 'inactive'
-          }
-          onValueChange={(value) => {
-            setStatusFilter(
-              value === 'all' ? undefined : value === 'active' ? true : false
-            );
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-45">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t('users.allStatus')}</SelectItem>
-            <SelectItem value="active">{t('users.statusActive')}</SelectItem>
-            <SelectItem value="inactive">
-              {t('users.statusInactive')}
-            </SelectItem>
-          </SelectContent>
-        </Select>
+          <Select
+            value={
+              statusFilter === undefined
+                ? 'all'
+                : statusFilter
+                  ? 'active'
+                  : 'inactive'
+            }
+            onValueChange={(value) => {
+              setStatusFilter(
+                value === 'all' ? undefined : value === 'active' ? true : false
+              );
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-45">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t('users.allStatus')}</SelectItem>
+              <SelectItem value="active">{t('users.statusActive')}</SelectItem>
+              <SelectItem value="inactive">
+                {t('users.statusInactive')}
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Table */}
         <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('users.tableEmail')}</TableHead>
-              <TableHead>{t('users.tableName')}</TableHead>
-              <TableHead>{t('users.tableRole')}</TableHead>
-              <TableHead>{t('users.tableStatus')}</TableHead>
-              <TableHead>{t('users.table2FA')}</TableHead>
-              <TableHead>{t('users.tableCreatedAt')}</TableHead>
-              <TableHead className="w-12.5"></TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12">
-                  <Loading />
-                </TableCell>
+                <TableHead>{t('users.tableEmail')}</TableHead>
+                <TableHead>{t('users.tableName')}</TableHead>
+                <TableHead>{t('users.tableRole')}</TableHead>
+                <TableHead>{t('users.tableStatus')}</TableHead>
+                <TableHead>{t('users.table2FA')}</TableHead>
+                <TableHead>{t('users.tableCreatedAt')}</TableHead>
+                <TableHead className="w-12.5"></TableHead>
               </TableRow>
-            ) : data?.data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center">
-                  {t('users.noUsers')}
-                </TableCell>
-              </TableRow>
-            ) : (
-              data?.data.map((user: UserResponseDto) => (
-                <TableRow key={user.id}>
-                  <TableCell className="font-medium">
-                    <Link href={`/users/${user.id}`} className="hover:underline">
-                      {user.email}
-                    </Link>
-                  </TableCell>
-                  <TableCell>{user.name || t('common.noValue')}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant={
-                        user.role === UserRole.ADMIN ? 'default' : 'secondary'
-                      }
-                    >
-                      {user.role === UserRole.ADMIN
-                        ? t('users.roleAdmin')
-                        : t('users.roleUser')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {user.isActive ? (
-                      <Badge variant="outline" className="text-success">
-                        <CheckCircle className="mr-1 h-3 w-3" />
-                        {t('users.statusActive')}
-                      </Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-destructive">
-                        <XCircle className="mr-1 h-3 w-3" />
-                        {t('users.statusInactive')}
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    {user.twoFactorEnabled
-                      ? t('common.enabled')
-                      : t('common.disabled')}
-                  </TableCell>
-                  <TableCell>
-                    {formatDate(user.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditUser(user)}>
-                          <Shield className="mr-2 h-4 w-4" />
-                          {t('users.changeRole')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() =>
-                            handleToggleStatus(user.id, !user.isActive)
-                          }
-                        >
-                          {user.isActive ? (
-                            <>
-                              <UserX className="mr-2 h-4 w-4" />
-                              {t('users.deactivate')}
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle className="mr-2 h-4 w-4" />
-                              {t('users.activate')}
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setResetPasswordUser(user)}
-                        >
-                          <Key className="mr-2 h-4 w-4" />
-                          {t('users.resetPassword')}
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => setDeleteUser(user)}
-                          className="text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          {t('users.delete')}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-12">
+                    <Loading />
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : data?.data.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center">
+                    {t('users.noUsers')}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                data?.data.map((user: UserResponseDto) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      <Link
+                        href={`/users/${user.id}`}
+                        className="hover:underline"
+                      >
+                        {user.email}
+                      </Link>
+                    </TableCell>
+                    <TableCell>{user.name || t('common.noValue')}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={
+                          user.role === UserRole.ADMIN ? 'default' : 'secondary'
+                        }
+                      >
+                        {user.role === UserRole.ADMIN
+                          ? t('users.roleAdmin')
+                          : t('users.roleUser')}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {user.isActive ? (
+                        <Badge variant="outline" className="text-success">
+                          <CheckCircle className="mr-1 h-3 w-3" />
+                          {t('users.statusActive')}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-destructive">
+                          <XCircle className="mr-1 h-3 w-3" />
+                          {t('users.statusInactive')}
+                        </Badge>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {user.twoFactorEnabled
+                        ? t('common.enabled')
+                        : t('common.disabled')}
+                    </TableCell>
+                    <TableCell>{formatDate(user.createdAt)}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => setEditUser(user)}>
+                            <Shield className="mr-2 h-4 w-4" />
+                            {t('users.changeRole')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              handleToggleStatus(user.id, !user.isActive)
+                            }
+                          >
+                            {user.isActive ? (
+                              <>
+                                <UserX className="mr-2 h-4 w-4" />
+                                {t('users.deactivate')}
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                {t('users.activate')}
+                              </>
+                            )}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setResetPasswordUser(user)}
+                          >
+                            <Key className="mr-2 h-4 w-4" />
+                            {t('users.resetPassword')}
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => setDeleteUser(user)}
+                            className="text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {t('users.delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
         </div>
 
         {/* Pagination */}
@@ -460,43 +510,45 @@ export default function UsersPage() {
       </Dialog>
 
       {/* Delete Dialog */}
-      <Dialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t('users.deleteTitle')}</DialogTitle>
-            <DialogDescription>
+      <AlertDialog open={!!deleteUser} onOpenChange={() => setDeleteUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t('users.deleteTitle')}</AlertDialogTitle>
+            <AlertDialogDescription>
               {t('users.deleteDescription')}
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           <div className="space-y-2">
             <p className="text-sm">
               {t('users.deleteConfirm')} <strong>{deleteUser?.email}</strong>?
             </p>
-            <p className="text-sm text-destructive">{t('users.deleteWarning')}</p>
+            <p className="text-sm text-destructive">
+              {t('users.deleteWarning')}
+            </p>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteUser(null)}>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setDeleteUser(null)}>
               {t('common.cancel')}
-            </Button>
-            <Button
-              variant="destructive"
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDeleteUser}
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending
                 ? t('common.deleting')
                 : t('common.delete')}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Reset Password Dialog */}
       <Dialog
         open={!!resetPasswordUser}
         onOpenChange={() => {
           setResetPasswordUser(null);
-          setNewPassword('');
+          resetPasswordForm.reset();
         }}
       >
         <DialogContent>
@@ -506,43 +558,47 @@ export default function UsersPage() {
               {t('users.resetPasswordDescription')}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>{t('users.tableEmail')}</Label>
-              <p className="text-sm text-muted-foreground">
-                {resetPasswordUser?.email}
-              </p>
+          <form onSubmit={resetPasswordForm.handleSubmit(handleResetPassword)}>
+            <div className="space-y-4">
+              <div>
+                <Label>{t('users.tableEmail')}</Label>
+                <p className="text-sm text-muted-foreground">
+                  {resetPasswordUser?.email}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">{t('users.newPassword')}</Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  {...resetPasswordForm.register('newPassword')}
+                  placeholder={t('users.newPasswordPlaceholder')}
+                />
+                {resetPasswordForm.formState.errors.newPassword && (
+                  <p className="text-sm text-destructive">
+                    {resetPasswordForm.formState.errors.newPassword.message}
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">{t('users.newPassword')}</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                placeholder={t('users.newPasswordPlaceholder')}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setResetPasswordUser(null);
-                setNewPassword('');
-              }}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button
-              onClick={handleResetPassword}
-              disabled={!newPassword || resetPasswordMutation.isPending}
-            >
-              {resetPasswordMutation.isPending
-                ? t('common.saving')
-                : t('users.resetPasswordButton')}
-            </Button>
-          </DialogFooter>
+            <DialogFooter className="mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setResetPasswordUser(null);
+                  resetPasswordForm.reset();
+                }}
+              >
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={resetPasswordMutation.isPending}>
+                {resetPasswordMutation.isPending
+                  ? t('common.saving')
+                  : t('users.resetPasswordButton')}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
 
@@ -551,12 +607,7 @@ export default function UsersPage() {
         open={showCreateDialog}
         onOpenChange={() => {
           setShowCreateDialog(false);
-          setCreateUserData({
-            email: '',
-            password: '',
-            name: '',
-            role: UserRole.USER,
-          });
+          createForm.reset();
         }}
       >
         <DialogContent>
@@ -566,102 +617,85 @@ export default function UsersPage() {
               {t('users.createUserDescription')}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">{t('users.tableEmail')}</Label>
-              <Input
-                id="email"
-                type="email"
-                value={createUserData.email}
-                onChange={(e) =>
-                  setCreateUserData({
-                    ...createUserData,
-                    email: e.target.value,
-                  })
-                }
-                placeholder={t('users.emailPlaceholder')}
-              />
+          <form onSubmit={createForm.handleSubmit(handleCreateUser)}>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">{t('users.tableEmail')}</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  {...createForm.register('email')}
+                  placeholder={t('users.emailPlaceholder')}
+                />
+                {createForm.formState.errors.email && (
+                  <p className="text-sm text-destructive">
+                    {createForm.formState.errors.email.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">{t('users.password')}</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  {...createForm.register('password')}
+                  placeholder={t('users.passwordPlaceholder')}
+                />
+                {createForm.formState.errors.password && (
+                  <p className="text-sm text-destructive">
+                    {createForm.formState.errors.password.message}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="name">{t('users.tableName')}</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  {...createForm.register('name')}
+                  placeholder={t('users.namePlaceholder')}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="role">{t('users.tableRole')}</Label>
+                <Select
+                  value={createForm.watch('role')}
+                  onValueChange={(value) =>
+                    createForm.setValue('role', value as UserRole)
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={UserRole.USER}>
+                      {t('users.roleUser')}
+                    </SelectItem>
+                    <SelectItem value={UserRole.ADMIN}>
+                      {t('users.roleAdmin')}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">{t('users.password')}</Label>
-              <Input
-                id="password"
-                type="password"
-                value={createUserData.password}
-                onChange={(e) =>
-                  setCreateUserData({
-                    ...createUserData,
-                    password: e.target.value,
-                  })
-                }
-                placeholder={t('users.passwordPlaceholder')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">{t('users.tableName')}</Label>
-              <Input
-                id="name"
-                type="text"
-                value={createUserData.name}
-                onChange={(e) =>
-                  setCreateUserData({ ...createUserData, name: e.target.value })
-                }
-                placeholder={t('users.namePlaceholder')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="role">{t('users.tableRole')}</Label>
-              <Select
-                value={createUserData.role}
-                onValueChange={(value) =>
-                  setCreateUserData({
-                    ...createUserData,
-                    role: value as UserRole,
-                  })
-                }
+            <DialogFooter className="mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setShowCreateDialog(false);
+                  createForm.reset();
+                }}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={UserRole.USER}>
-                    {t('users.roleUser')}
-                  </SelectItem>
-                  <SelectItem value={UserRole.ADMIN}>
-                    {t('users.roleAdmin')}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowCreateDialog(false);
-                setCreateUserData({
-                  email: '',
-                  password: '',
-                  name: '',
-                  role: UserRole.USER,
-                });
-              }}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button
-              onClick={handleCreateUser}
-              disabled={
-                !createUserData.email ||
-                !createUserData.password ||
-                createUserMutation.isPending
-              }
-            >
-              {createUserMutation.isPending
-                ? t('common.creating')
-                : t('users.createUserButton')}
-            </Button>
-          </DialogFooter>
+                {t('common.cancel')}
+              </Button>
+              <Button type="submit" disabled={createUserMutation.isPending}>
+                {createUserMutation.isPending
+                  ? t('common.creating')
+                  : t('users.createUserButton')}
+              </Button>
+            </DialogFooter>
+          </form>
         </DialogContent>
       </Dialog>
     </div>

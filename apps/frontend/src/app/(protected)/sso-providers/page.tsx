@@ -79,7 +79,10 @@ const createProviderSchema = z.object({
 
 const updateProviderSchema = z.object({
   name: z.string().min(1, t('oidcProviders.nameRequired')).max(100).optional(),
-  discoveryUrl: z.string().url(t('oidcProviders.discoveryUrlInvalid')).optional(),
+  discoveryUrl: z
+    .string()
+    .url(t('oidcProviders.discoveryUrlInvalid'))
+    .optional(),
   clientId: z.string().min(1, t('oidcProviders.clientIdRequired')).optional(),
   clientSecret: z.string().min(1).optional().or(z.literal('')),
   scopes: z.string().optional(),
@@ -99,21 +102,34 @@ export default function SsoProvidersPage() {
   const { toast } = useToast();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [editProvider, setEditProvider] = useState<OidcProviderResponseDto | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<{ slug: string; name: string } | null>(null);
+  const [editProvider, setEditProvider] =
+    useState<OidcProviderResponseDto | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{
+    slug: string;
+    name: string;
+  } | null>(null);
 
   const hasProviders = (providers?.length ?? 0) > 0;
-  const ssoEnforceEnabled = !!(ssoEnforceSetting?.value as { enabled?: boolean } | null)?.enabled;
+  const ssoEnforceEnabled = !!(
+    ssoEnforceSetting?.value as { enabled?: boolean } | null
+  )?.enabled;
 
   const handleToggleSsoEnforce = async (enabled: boolean) => {
     try {
       await updateSsoEnforce.mutateAsync(enabled);
       toast({
-        title: enabled ? t('oidcProviders.enforceEnabled') : t('oidcProviders.enforceDisabled'),
-        description: enabled ? t('oidcProviders.enforceEnabledDesc') : t('oidcProviders.enforceDisabledDesc'),
+        title: enabled
+          ? t('oidcProviders.enforceEnabled')
+          : t('oidcProviders.enforceDisabled'),
+        description: enabled
+          ? t('oidcProviders.enforceEnabledDesc')
+          : t('oidcProviders.enforceDisabledDesc'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('oidcProviders.enforceError');
+      const message =
+        error instanceof Error
+          ? error.message
+          : t('oidcProviders.enforceError');
       toast({
         title: t('oidcProviders.updateError'),
         description: message,
@@ -158,7 +174,10 @@ export default function SsoProvidersPage() {
         description: t('oidcProviders.createSuccessDesc'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('oidcProviders.createErrorFallback');
+      const message =
+        error instanceof Error
+          ? error.message
+          : t('oidcProviders.createErrorFallback');
       toast({
         title: t('oidcProviders.createError'),
         description: message,
@@ -198,7 +217,10 @@ export default function SsoProvidersPage() {
         description: t('oidcProviders.updateSuccessDesc'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('oidcProviders.updateErrorFallback');
+      const message =
+        error instanceof Error
+          ? error.message
+          : t('oidcProviders.updateErrorFallback');
       toast({
         title: t('oidcProviders.updateError'),
         description: message,
@@ -217,7 +239,10 @@ export default function SsoProvidersPage() {
         description: t('oidcProviders.deleteSuccessDesc'),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('oidcProviders.deleteErrorFallback');
+      const message =
+        error instanceof Error
+          ? error.message
+          : t('oidcProviders.deleteErrorFallback');
       toast({
         title: t('oidcProviders.deleteError'),
         description: message,
@@ -233,7 +258,9 @@ export default function SsoProvidersPage() {
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div>
-          <h1 className="text-3xl font-display font-bold">{t('oidcProviders.title')}</h1>
+          <h1 className="text-3xl font-display font-bold">
+            {t('oidcProviders.title')}
+          </h1>
           <p className="text-muted-foreground mt-1">
             {t('oidcProviders.description')}
           </p>
@@ -250,7 +277,9 @@ export default function SsoProvidersPage() {
                 </CardTitle>
                 <CardDescription>
                   {hasProviders
-                    ? t('oidcProviders.currentCount', { count: providers?.length || 0 })
+                    ? t('oidcProviders.currentCount', {
+                        count: providers?.length || 0,
+                      })
                     : t('oidcProviders.noProviders')}
                 </CardDescription>
               </div>
@@ -286,25 +315,37 @@ export default function SsoProvidersPage() {
                     <TableRow>
                       <TableHead>{t('oidcProviders.providerName')}</TableHead>
                       <TableHead>{t('oidcProviders.slug')}</TableHead>
-                      <TableHead className="text-center">{t('oidcProviders.status')}</TableHead>
+                      <TableHead className="text-center">
+                        {t('oidcProviders.status')}
+                      </TableHead>
                       <TableHead>{t('oidcProviders.discoveryUrl')}</TableHead>
                       <TableHead>{t('oidcProviders.clientId')}</TableHead>
                       <TableHead>{t('oidcProviders.createdAt')}</TableHead>
-                      <TableHead className="text-right">{t('urls.actions')}</TableHead>
+                      <TableHead className="text-right">
+                        {t('urls.actions')}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {providers!.map((provider) => (
                       <TableRow key={provider.id}>
-                        <TableCell className="font-medium">{provider.name}</TableCell>
+                        <TableCell className="font-medium">
+                          {provider.name}
+                        </TableCell>
                         <TableCell>
                           <code className="text-xs bg-muted px-1.5 py-0.5 rounded">
                             {provider.slug}
                           </code>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge variant={provider.isActive ? 'default' : 'secondary'}>
-                            {provider.isActive ? t('common.enabled') : t('common.disabled')}
+                          <Badge
+                            variant={
+                              provider.isActive ? 'default' : 'secondary'
+                            }
+                          >
+                            {provider.isActive
+                              ? t('common.enabled')
+                              : t('common.disabled')}
                           </Badge>
                         </TableCell>
                         <TableCell className="max-w-[200px] truncate text-xs text-muted-foreground">
@@ -329,7 +370,12 @@ export default function SsoProvidersPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setDeleteTarget({ slug: provider.slug, name: provider.name })}
+                              onClick={() =>
+                                setDeleteTarget({
+                                  slug: provider.slug,
+                                  name: provider.name,
+                                })
+                              }
                               title={t('common.delete')}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
@@ -359,7 +405,9 @@ export default function SsoProvidersPage() {
           <CardContent>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <Label className="text-base font-medium">{t('oidcProviders.enforceSsoLabel')}</Label>
+                <Label className="text-base font-medium">
+                  {t('oidcProviders.enforceSsoLabel')}
+                </Label>
                 <p className="text-sm text-muted-foreground">
                   {t('oidcProviders.enforceSsoHint')}
                 </p>
@@ -371,7 +419,7 @@ export default function SsoProvidersPage() {
               />
             </div>
             {ssoEnforceEnabled && !hasProviders && (
-              <p className="mt-3 text-sm text-amber-500">
+              <p className="mt-3 text-sm text-warning">
                 {t('oidcProviders.enforceWarningNoProviders')}
               </p>
             )}
@@ -384,25 +432,40 @@ export default function SsoProvidersPage() {
         open={isCreateOpen}
         onOpenChange={(open) => {
           setIsCreateOpen(open);
-          if (!open) createForm.reset({ scopes: 'openid email profile', isActive: true, name: '', slug: '', discoveryUrl: '', clientId: '', clientSecret: '' });
+          if (!open)
+            createForm.reset({
+              scopes: 'openid email profile',
+              isActive: true,
+              name: '',
+              slug: '',
+              discoveryUrl: '',
+              clientId: '',
+              clientSecret: '',
+            });
         }}
       >
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{t('oidcProviders.createTitle')}</DialogTitle>
-            <DialogDescription>{t('oidcProviders.createDescription')}</DialogDescription>
+            <DialogDescription>
+              {t('oidcProviders.createDescription')}
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={createForm.handleSubmit(handleCreate)}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="create-name">{t('oidcProviders.providerName')}</Label>
+                <Label htmlFor="create-name">
+                  {t('oidcProviders.providerName')}
+                </Label>
                 <Input
                   id="create-name"
                   placeholder={t('oidcProviders.namePlaceholder')}
                   {...createForm.register('name')}
                 />
                 {createForm.formState.errors.name && (
-                  <p className="text-sm text-destructive">{createForm.formState.errors.name.message}</p>
+                  <p className="text-sm text-destructive">
+                    {createForm.formState.errors.name.message}
+                  </p>
                 )}
               </div>
 
@@ -414,37 +477,51 @@ export default function SsoProvidersPage() {
                   {...createForm.register('slug')}
                 />
                 {createForm.formState.errors.slug && (
-                  <p className="text-sm text-destructive">{createForm.formState.errors.slug.message}</p>
+                  <p className="text-sm text-destructive">
+                    {createForm.formState.errors.slug.message}
+                  </p>
                 )}
-                <p className="text-xs text-muted-foreground">{t('oidcProviders.slugHint')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('oidcProviders.slugHint')}
+                </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="create-discoveryUrl">{t('oidcProviders.discoveryUrl')}</Label>
+                <Label htmlFor="create-discoveryUrl">
+                  {t('oidcProviders.discoveryUrl')}
+                </Label>
                 <Input
                   id="create-discoveryUrl"
                   placeholder={t('oidcProviders.discoveryUrlPlaceholder')}
                   {...createForm.register('discoveryUrl')}
                 />
                 {createForm.formState.errors.discoveryUrl && (
-                  <p className="text-sm text-destructive">{createForm.formState.errors.discoveryUrl.message}</p>
+                  <p className="text-sm text-destructive">
+                    {createForm.formState.errors.discoveryUrl.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="create-clientId">{t('oidcProviders.clientId')}</Label>
+                <Label htmlFor="create-clientId">
+                  {t('oidcProviders.clientId')}
+                </Label>
                 <Input
                   id="create-clientId"
                   placeholder={t('oidcProviders.clientIdPlaceholder')}
                   {...createForm.register('clientId')}
                 />
                 {createForm.formState.errors.clientId && (
-                  <p className="text-sm text-destructive">{createForm.formState.errors.clientId.message}</p>
+                  <p className="text-sm text-destructive">
+                    {createForm.formState.errors.clientId.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="create-clientSecret">{t('oidcProviders.clientSecret')}</Label>
+                <Label htmlFor="create-clientSecret">
+                  {t('oidcProviders.clientSecret')}
+                </Label>
                 <Input
                   id="create-clientSecret"
                   type="password"
@@ -452,27 +529,39 @@ export default function SsoProvidersPage() {
                   {...createForm.register('clientSecret')}
                 />
                 {createForm.formState.errors.clientSecret && (
-                  <p className="text-sm text-destructive">{createForm.formState.errors.clientSecret.message}</p>
+                  <p className="text-sm text-destructive">
+                    {createForm.formState.errors.clientSecret.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="create-scopes">{t('oidcProviders.scopes')}</Label>
+                <Label htmlFor="create-scopes">
+                  {t('oidcProviders.scopes')}
+                </Label>
                 <Input
                   id="create-scopes"
                   placeholder="openid email profile"
                   {...createForm.register('scopes')}
                 />
-                <p className="text-xs text-muted-foreground">{t('oidcProviders.scopesHint')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('oidcProviders.scopesHint')}
+                </p>
               </div>
             </div>
 
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreateOpen(false)}
+              >
                 {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={createProvider.isPending}>
-                {createProvider.isPending ? t('common.loading') : t('common.create')}
+                {createProvider.isPending
+                  ? t('common.loading')
+                  : t('common.create')}
               </Button>
             </DialogFooter>
           </form>
@@ -493,7 +582,10 @@ export default function SsoProvidersPage() {
               {t('oidcProviders.editDescription')}
               {editProvider && (
                 <span className="block mt-1">
-                  Slug: <code className="bg-muted px-1.5 py-0.5 rounded text-xs">{editProvider.slug}</code>
+                  Slug:{' '}
+                  <code className="bg-muted px-1.5 py-0.5 rounded text-xs">
+                    {editProvider.slug}
+                  </code>
                 </span>
               )}
             </DialogDescription>
@@ -501,50 +593,66 @@ export default function SsoProvidersPage() {
           <form onSubmit={editForm.handleSubmit(handleUpdate)}>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-name">{t('oidcProviders.providerName')}</Label>
+                <Label htmlFor="edit-name">
+                  {t('oidcProviders.providerName')}
+                </Label>
                 <Input
                   id="edit-name"
                   placeholder={t('oidcProviders.namePlaceholder')}
                   {...editForm.register('name')}
                 />
                 {editForm.formState.errors.name && (
-                  <p className="text-sm text-destructive">{editForm.formState.errors.name.message}</p>
+                  <p className="text-sm text-destructive">
+                    {editForm.formState.errors.name.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-discoveryUrl">{t('oidcProviders.discoveryUrl')}</Label>
+                <Label htmlFor="edit-discoveryUrl">
+                  {t('oidcProviders.discoveryUrl')}
+                </Label>
                 <Input
                   id="edit-discoveryUrl"
                   placeholder={t('oidcProviders.discoveryUrlPlaceholder')}
                   {...editForm.register('discoveryUrl')}
                 />
                 {editForm.formState.errors.discoveryUrl && (
-                  <p className="text-sm text-destructive">{editForm.formState.errors.discoveryUrl.message}</p>
+                  <p className="text-sm text-destructive">
+                    {editForm.formState.errors.discoveryUrl.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-clientId">{t('oidcProviders.clientId')}</Label>
+                <Label htmlFor="edit-clientId">
+                  {t('oidcProviders.clientId')}
+                </Label>
                 <Input
                   id="edit-clientId"
                   placeholder={t('oidcProviders.clientIdPlaceholder')}
                   {...editForm.register('clientId')}
                 />
                 {editForm.formState.errors.clientId && (
-                  <p className="text-sm text-destructive">{editForm.formState.errors.clientId.message}</p>
+                  <p className="text-sm text-destructive">
+                    {editForm.formState.errors.clientId.message}
+                  </p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="edit-clientSecret">{t('oidcProviders.clientSecret')}</Label>
+                <Label htmlFor="edit-clientSecret">
+                  {t('oidcProviders.clientSecret')}
+                </Label>
                 <Input
                   id="edit-clientSecret"
                   type="password"
                   placeholder={t('oidcProviders.clientSecretUpdatePlaceholder')}
                   {...editForm.register('clientSecret')}
                 />
-                <p className="text-xs text-muted-foreground">{t('oidcProviders.clientSecretUpdateHint')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('oidcProviders.clientSecretUpdateHint')}
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -560,18 +668,28 @@ export default function SsoProvidersPage() {
                 <Switch
                   id="edit-isActive"
                   checked={editForm.watch('isActive')}
-                  onCheckedChange={(checked) => editForm.setValue('isActive', checked)}
+                  onCheckedChange={(checked) =>
+                    editForm.setValue('isActive', checked)
+                  }
                 />
-                <Label htmlFor="edit-isActive">{t('oidcProviders.activeLabel')}</Label>
+                <Label htmlFor="edit-isActive">
+                  {t('oidcProviders.activeLabel')}
+                </Label>
               </div>
             </div>
 
             <DialogFooter className="mt-6">
-              <Button type="button" variant="outline" onClick={() => setEditProvider(null)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditProvider(null)}
+              >
                 {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={updateProvider.isPending}>
-                {updateProvider.isPending ? t('common.loading') : t('common.save')}
+                {updateProvider.isPending
+                  ? t('common.loading')
+                  : t('common.save')}
               </Button>
             </DialogFooter>
           </form>
@@ -579,14 +697,22 @@ export default function SsoProvidersPage() {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               {t('oidcProviders.deleteTitle')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              {t('oidcProviders.deleteConfirm').replace('{name}', deleteTarget?.name || '')}
+              {t('oidcProviders.deleteConfirm').replace(
+                '{name}',
+                deleteTarget?.name || ''
+              )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
