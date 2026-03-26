@@ -35,7 +35,8 @@ export type {
 export const webhookKeys = {
   all: ['webhooks'] as const,
   lists: () => [...webhookKeys.all, 'list'] as const,
-  list: (params?: PaginationParams) => [...webhookKeys.lists(), params] as const,
+  list: (params?: PaginationParams) =>
+    [...webhookKeys.lists(), params] as const,
   details: () => [...webhookKeys.all, 'detail'] as const,
   detail: (id: string) => [...webhookKeys.details(), id] as const,
   logs: (id: string, params?: PaginationParams) =>
@@ -44,9 +45,13 @@ export const webhookKeys = {
 
 // ==================== API Functions ====================
 
-async function getWebhooks(params?: PaginationParams): Promise<WebhookListResponseDto> {
+async function getWebhooks(
+  params?: PaginationParams
+): Promise<WebhookListResponseDto> {
   const query = params ? buildQueryParams(params) : '';
-  return apiClient.get<WebhookListResponseDto>(`/api/webhooks${query ? `?${query}` : ''}`);
+  return apiClient.get<WebhookListResponseDto>(
+    `/api/webhooks${query ? `?${query}` : ''}`
+  );
 }
 
 async function getWebhook(id: string): Promise<WebhookResponseDto> {
@@ -54,14 +59,14 @@ async function getWebhook(id: string): Promise<WebhookResponseDto> {
 }
 
 async function createWebhook(
-  data: CreateWebhookDto,
+  data: CreateWebhookDto
 ): Promise<WebhookResponseDto> {
   return apiClient.post<WebhookResponseDto>('/api/webhooks', data);
 }
 
 async function updateWebhook(
   id: string,
-  data: UpdateWebhookDto,
+  data: UpdateWebhookDto
 ): Promise<WebhookResponseDto> {
   return apiClient.put<WebhookResponseDto>(`/api/webhooks/${id}`, data);
 }
@@ -72,16 +77,26 @@ async function deleteWebhook(id: string): Promise<void> {
 
 async function getWebhookLogs(
   id: string,
-  params?: PaginationParams,
+  params?: PaginationParams
 ): Promise<WebhookLogsListResponseDto> {
   const query = params ? buildQueryParams(params) : '';
   return apiClient.get<WebhookLogsListResponseDto>(
-    `/api/webhooks/${id}/logs${query ? `?${query}` : ''}`,
+    `/api/webhooks/${id}/logs${query ? `?${query}` : ''}`
   );
 }
 
 async function testWebhook(id: string): Promise<WebhookTestResponseDto> {
   return apiClient.post<WebhookTestResponseDto>(`/api/webhooks/${id}/test`, {});
+}
+
+async function retryWebhookLog(
+  webhookId: string,
+  logId: string
+): Promise<WebhookLogResponseDto> {
+  return apiClient.post<WebhookLogResponseDto>(
+    `/api/webhooks/${webhookId}/logs/${logId}/retry`,
+    {}
+  );
 }
 
 // ==================== Hooks ====================
@@ -174,5 +189,24 @@ export function useDeleteWebhook() {
 export function useTestWebhook() {
   return useMutation({
     mutationFn: testWebhook,
+  });
+}
+
+/**
+ * Retry a failed webhook delivery
+ */
+export function useRetryWebhookLog() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ webhookId, logId }: { webhookId: string; logId: string }) =>
+      retryWebhookLog(webhookId, logId),
+    onSuccess: (_, variables) => {
+      // Refresh all log pages for this webhook (partial prefix match)
+      queryClient.invalidateQueries({
+        queryKey: [...webhookKeys.all, 'logs', variables.webhookId],
+      });
+      queryClient.invalidateQueries({ queryKey: webhookKeys.lists() });
+    },
   });
 }

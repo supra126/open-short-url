@@ -42,6 +42,7 @@ import {
   useDeleteWebhook,
   useTestWebhook,
   useWebhookLogs,
+  useRetryWebhookLog,
   type WebhookResponseDto,
   type WebhookLogResponseDto,
 } from '@/hooks/use-webhooks';
@@ -58,6 +59,7 @@ import {
   TestTube2,
   Eye,
   ExternalLink,
+  RotateCw,
 } from 'lucide-react';
 import { formatDistanceToNow } from '@/lib/utils';
 
@@ -87,7 +89,8 @@ export default function WebhooksPage() {
 
       setDeleteWebhookId(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('webhooks.deleteErrorDesc');
+      const message =
+        error instanceof Error ? error.message : t('webhooks.deleteErrorDesc');
       toast({
         title: t('webhooks.deleteError'),
         description: message,
@@ -113,7 +116,8 @@ export default function WebhooksPage() {
         });
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : t('webhooks.testErrorDesc');
+      const message =
+        error instanceof Error ? error.message : t('webhooks.testErrorDesc');
       toast({
         title: t('webhooks.testError'),
         description: message,
@@ -130,7 +134,9 @@ export default function WebhooksPage() {
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div>
-          <h1 className="text-3xl font-display font-bold">{t('webhooks.title')}</h1>
+          <h1 className="text-3xl font-display font-bold">
+            {t('webhooks.title')}
+          </h1>
           <p className="text-muted-foreground mt-1">
             {t('webhooks.description')}
             {webhooksDocsUrl && (
@@ -161,7 +167,9 @@ export default function WebhooksPage() {
                 </CardTitle>
                 <CardDescription>
                   {hasWebhooks
-                    ? t('webhooks.currentCount', { count: data?.total || webhooks.length })
+                    ? t('webhooks.currentCount', {
+                        count: data?.total || webhooks.length,
+                      })
                     : t('webhooks.noWebhooks')}
                 </CardDescription>
               </div>
@@ -176,13 +184,19 @@ export default function WebhooksPage() {
             ) : error ? (
               <div className="flex flex-col items-center justify-center py-12 gap-4">
                 <AlertCircle className="h-12 w-12 text-destructive" />
-                <p className="text-lg font-semibold">{t('webhooks.loadError')}</p>
-                <p className="text-sm text-muted-foreground">{t('webhooks.loadErrorDesc')}</p>
+                <p className="text-lg font-semibold">
+                  {t('webhooks.loadError')}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {t('webhooks.loadErrorDesc')}
+                </p>
               </div>
             ) : !hasWebhooks ? (
               <div className="text-center py-12">
                 <Webhook className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
-                <h3 className="text-lg font-semibold mb-2">{t('webhooks.noWebhooks')}</h3>
+                <h3 className="text-lg font-semibold mb-2">
+                  {t('webhooks.noWebhooks')}
+                </h3>
                 <p className="text-sm text-muted-foreground mb-4">
                   {t('webhooks.noWebhooksDesc')}
                 </p>
@@ -202,11 +216,21 @@ export default function WebhooksPage() {
                     <TableRow>
                       <TableHead>{t('webhooks.name')}</TableHead>
                       <TableHead>{t('webhooks.url')}</TableHead>
-                      <TableHead className="text-center">{t('webhooks.subscribedEvents')}</TableHead>
-                      <TableHead className="text-center">{t('webhooks.status')}</TableHead>
-                      <TableHead className="text-center">{t('webhooks.successRate')}</TableHead>
-                      <TableHead className="text-center">{t('webhooks.lastSent')}</TableHead>
-                      <TableHead className="text-right">{t('webhooks.actions')}</TableHead>
+                      <TableHead className="text-center">
+                        {t('webhooks.subscribedEvents')}
+                      </TableHead>
+                      <TableHead className="text-center">
+                        {t('webhooks.status')}
+                      </TableHead>
+                      <TableHead className="text-center">
+                        {t('webhooks.successRate')}
+                      </TableHead>
+                      <TableHead className="text-center">
+                        {t('webhooks.lastSent')}
+                      </TableHead>
+                      <TableHead className="text-right">
+                        {t('webhooks.actions')}
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -237,15 +261,25 @@ export default function WebhooksPage() {
                           <TableCell className="text-center">
                             <div className="flex flex-wrap gap-1 justify-center">
                               {webhook.events.map((event: string) => (
-                                <Badge key={event} variant="outline" className="text-xs">
+                                <Badge
+                                  key={event}
+                                  variant="outline"
+                                  className="text-xs"
+                                >
                                   {event}
                                 </Badge>
                               ))}
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant={webhook.isActive ? 'default' : 'secondary'}>
-                              {webhook.isActive ? t('webhooks.statusActive') : t('webhooks.statusInactive')}
+                            <Badge
+                              variant={
+                                webhook.isActive ? 'default' : 'secondary'
+                              }
+                            >
+                              {webhook.isActive
+                                ? t('webhooks.statusActive')
+                                : t('webhooks.statusInactive')}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
@@ -287,7 +321,9 @@ export default function WebhooksPage() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleTest(webhook.id, webhook.name)}
+                                onClick={() =>
+                                  handleTest(webhook.id, webhook.name)
+                                }
                                 disabled={testMutation.isPending}
                                 title={t('webhooks.test')}
                               >
@@ -296,7 +332,11 @@ export default function WebhooksPage() {
                               <WebhookDialog
                                 webhook={webhook}
                                 trigger={
-                                  <Button variant="ghost" size="sm" title={t('webhooks.edit')}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    title={t('webhooks.edit')}
+                                  >
                                     <Edit className="h-4 w-4" />
                                   </Button>
                                 }
@@ -381,7 +421,36 @@ function WebhookLogsDialog({
   onClose: () => void;
 }) {
   const [page, setPage] = useState(1);
+  const [retryingLogId, setRetryingLogId] = useState<string | null>(null);
   const { data, isLoading } = useWebhookLogs(webhookId, { page, pageSize: 10 });
+  const retryMutation = useRetryWebhookLog();
+  const { toast } = useToast();
+
+  const handleRetry = async (logId: string) => {
+    setRetryingLogId(logId);
+    try {
+      const result = await retryMutation.mutateAsync({ webhookId, logId });
+      toast({
+        title: result.isSuccess
+          ? t('webhooks.retrySuccess')
+          : t('webhooks.retryFailed'),
+        description: result.isSuccess
+          ? t('webhooks.retrySuccessDesc')
+          : result.error || t('webhooks.retryFailedDesc'),
+        variant: result.isSuccess ? 'default' : 'destructive',
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : t('webhooks.retryErrorDesc');
+      toast({
+        title: t('webhooks.retryError'),
+        description: message,
+        variant: 'destructive',
+      });
+    } finally {
+      setRetryingLogId(null);
+    }
+  };
 
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
@@ -426,7 +495,25 @@ function WebhookLogsDialog({
                         </Badge>
                       )}
                       {log.duration && <span>{log.duration}ms</span>}
-                      <span>{t('webhooks.logsAttempt', { attempt: log.attempt })}</span>
+                      <span>
+                        {t('webhooks.logsAttempt', { attempt: log.attempt })}
+                      </span>
+                      {!log.isSuccess && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRetry(log.id)}
+                          disabled={retryingLogId === log.id}
+                          title={t('webhooks.retry')}
+                          className="h-7 px-2"
+                        >
+                          {retryingLogId === log.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <RotateCw className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardHeader>

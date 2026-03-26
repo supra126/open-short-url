@@ -1,20 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { Prisma, Webhook } from '@prisma/client';
-import * as dns from 'dns';
-import { promisify } from 'util';
 import { PrismaService } from '@/common/database/prisma.service';
 import { LoggerService } from '@/common/logger/logger.service';
 import { WebhookService } from './webhook.service';
 import { parseUserAgent } from '@/common/utils/user-agent-parser';
 import { getGeoLocation } from '@/common/utils/geo-location';
 import { isBot } from '@/common/utils/bot-detector';
-import { validateResolvedIPs } from '@/common/validators/safe-url.validator';
-
-// Promisify DNS lookup functions
-const dnsLookup = promisify(dns.lookup);
-const dnsResolve4 = promisify(dns.resolve4);
-const dnsResolve6 = promisify(dns.resolve6);
+import { validateDNS } from '@/common/validators/dns-validator';
 
 /**
  * Available webhook events
@@ -110,7 +103,7 @@ export class WebhookDeliveryService {
   constructor(
     private prisma: PrismaService,
     private webhookService: WebhookService,
-    private loggerService: LoggerService,
+    private loggerService: LoggerService
   ) {}
 
   /**
@@ -145,7 +138,10 @@ export class WebhookDeliveryService {
       });
 
       if (!url) {
-        this.loggerService.warn(`URL not found for webhook: ${urlId}`, 'WebhookDeliveryService');
+        this.loggerService.warn(
+          `URL not found for webhook: ${urlId}`,
+          'WebhookDeliveryService'
+        );
         return;
       }
 
@@ -218,12 +214,13 @@ export class WebhookDeliveryService {
         clickData: enhancedClickData,
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
         `Failed to process URL clicked event for webhook: ${errorMessage}`,
         errorStack,
-        'WebhookDeliveryService',
+        'WebhookDeliveryService'
       );
     }
   }
@@ -303,7 +300,9 @@ export class WebhookDeliveryService {
    * Listen to routing rule matched event
    */
   @OnEvent('routing.rule_matched', { async: true })
-  async handleRoutingRuleMatched(payload: RoutingRuleMatchedPayload): Promise<void> {
+  async handleRoutingRuleMatched(
+    payload: RoutingRuleMatchedPayload
+  ): Promise<void> {
     await this.triggerWebhooks(WebhookEvent.ROUTING_RULE_MATCHED, {
       ruleId: payload.ruleId,
       urlId: payload.urlId,
@@ -318,7 +317,7 @@ export class WebhookDeliveryService {
    */
   private async triggerWebhooks(
     event: WebhookEvent,
-    data: Record<string, unknown>,
+    data: Record<string, unknown>
   ): Promise<void> {
     try {
       // Find all active webhooks subscribed to this event
@@ -332,64 +331,18 @@ export class WebhookDeliveryService {
       // Trigger webhooks in parallel
       await Promise.allSettled(
         webhooks.map((webhook: Webhook) =>
-          this.deliverWebhook(webhook, event, data, 1),
-        ),
+          this.deliverWebhook(webhook, event, data, 1)
+        )
       );
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
         `Failed to trigger webhooks for event ${event}: ${errorMessage}`,
         errorStack,
-        'WebhookDeliveryService',
+        'WebhookDeliveryService'
       );
-    }
-  }
-
-  /**
-   * Resolve DNS and validate IPs to prevent DNS rebinding attacks
-   * @returns Array of resolved IP addresses if safe, null if blocked
-   */
-  private async validateDNS(hostname: string): Promise<{ isValid: boolean; reason?: string }> {
-    try {
-      // Skip IP addresses - they were already validated during URL creation
-      if (/^[\d.:[\]]+$/.test(hostname)) {
-        return { isValid: true };
-      }
-
-      // Resolve IPv4 and IPv6 addresses
-      const resolvedIPs: string[] = [];
-
-      try {
-        const ipv4Addresses = await dnsResolve4(hostname);
-        resolvedIPs.push(...ipv4Addresses);
-      } catch {
-        // IPv4 resolution failed, try IPv6
-      }
-
-      try {
-        const ipv6Addresses = await dnsResolve6(hostname);
-        resolvedIPs.push(...ipv6Addresses);
-      } catch {
-        // IPv6 resolution failed
-      }
-
-      // If no IPs resolved, try general lookup
-      if (resolvedIPs.length === 0) {
-        try {
-          const result = await dnsLookup(hostname, { all: true });
-          const addresses = Array.isArray(result) ? result : [result];
-          resolvedIPs.push(...addresses.map((r) => r.address));
-        } catch {
-          return { isValid: false, reason: `DNS resolution failed for hostname: ${hostname}` };
-        }
-      }
-
-      // Validate resolved IPs against private IP ranges
-      return validateResolvedIPs(hostname, resolvedIPs);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown DNS error';
-      return { isValid: false, reason: `DNS validation error: ${errorMessage}` };
     }
   }
 
@@ -400,7 +353,7 @@ export class WebhookDeliveryService {
     webhook: Webhook,
     event: WebhookEvent,
     data: Record<string, unknown>,
-    attempt: number,
+    attempt: number
   ): Promise<void> {
     const payload: WebhookEventPayload = {
       event,
@@ -420,13 +373,13 @@ export class WebhookDeliveryService {
     try {
       // DNS rebinding protection: validate resolved IPs before making request
       const parsedUrl = new URL(webhook.url);
-      const dnsValidation = await this.validateDNS(parsedUrl.hostname);
+      const dnsValidation = await validateDNS(parsedUrl.hostname);
 
       if (!dnsValidation.isValid) {
         this.loggerService.error(
           `Webhook blocked due to DNS rebinding protection: ${webhook.name} (${webhook.id}) - ${dnsValidation.reason}`,
           undefined,
-          'WebhookDeliveryService',
+          'WebhookDeliveryService'
         );
         error = dnsValidation.reason || 'DNS rebinding attack detected';
         isSecurityBlock = true;
@@ -436,7 +389,10 @@ export class WebhookDeliveryService {
 
       // Decrypt secret and generate signature
       const decryptedSecret = this.webhookService.decryptSecret(webhook.secret);
-      const signature = this.webhookService.generateSignature(payload, decryptedSecret);
+      const signature = this.webhookService.generateSignature(
+        payload,
+        decryptedSecret
+      );
 
       // Prepare headers
       const headers: Record<string, string> = {
@@ -465,12 +421,12 @@ export class WebhookDeliveryService {
       if (isSuccess) {
         this.loggerService.debug(
           `Webhook delivered successfully: ${webhook.name} (${webhook.id}) - Event: ${event}`,
-          'WebhookDeliveryService',
+          'WebhookDeliveryService'
         );
       } else {
         this.loggerService.warn(
           `Webhook delivery failed with status ${statusCode}: ${webhook.name} (${webhook.id})`,
-          'WebhookDeliveryService',
+          'WebhookDeliveryService'
         );
       }
     } catch (err: unknown) {
@@ -479,7 +435,7 @@ export class WebhookDeliveryService {
       this.loggerService.error(
         `Webhook delivery error: ${webhook.name} (${webhook.id}) - ${error}`,
         errStack,
-        'WebhookDeliveryService',
+        'WebhookDeliveryService'
       );
     } finally {
       const duration = Date.now() - startTime;
@@ -507,7 +463,7 @@ export class WebhookDeliveryService {
       const delay = this.RETRY_DELAYS[attempt - 1] || 15000;
       this.loggerService.log(
         `Retrying webhook ${webhook.name} (${webhook.id}) in ${delay}ms (attempt ${attempt + 1}/${this.MAX_RETRIES})`,
-        'WebhookDeliveryService',
+        'WebhookDeliveryService'
       );
 
       // Schedule retry with exponential backoff
@@ -545,12 +501,13 @@ export class WebhookDeliveryService {
         },
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
         `Failed to save webhook log: ${errorMessage}`,
         errorStack,
-        'WebhookDeliveryService',
+        'WebhookDeliveryService'
       );
     }
   }
@@ -561,7 +518,7 @@ export class WebhookDeliveryService {
   private async updateWebhookStats(
     webhookId: string,
     isSuccess: boolean,
-    lastError?: string,
+    lastError?: string
   ): Promise<void> {
     try {
       await this.prisma.webhook.update({
@@ -576,12 +533,13 @@ export class WebhookDeliveryService {
         },
       });
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.loggerService.error(
         `Failed to update webhook stats: ${errorMessage}`,
         errorStack,
-        'WebhookDeliveryService',
+        'WebhookDeliveryService'
       );
     }
   }

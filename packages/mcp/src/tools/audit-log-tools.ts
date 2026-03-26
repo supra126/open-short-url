@@ -5,6 +5,60 @@
 import type { ApiClient } from '../utils/api-client.js';
 import { handleTool } from '../utils/tool-handler.js';
 
+const auditActionEnum = [
+  'URL_CREATED',
+  'URL_UPDATED',
+  'URL_DELETED',
+  'URL_BULK_CREATED',
+  'URL_BULK_UPDATED',
+  'URL_BULK_DELETED',
+  'USER_LOGIN',
+  'USER_LOGOUT',
+  'USER_CREATED',
+  'USER_UPDATED',
+  'USER_DELETED',
+  'API_KEY_CREATED',
+  'API_KEY_DELETED',
+  'SETTINGS_UPDATED',
+  'PASSWORD_CHANGED',
+  'TWO_FACTOR_ENABLED',
+  'TWO_FACTOR_DISABLED',
+  'VARIANT_CREATED',
+  'VARIANT_UPDATED',
+  'VARIANT_DELETED',
+  'BUNDLE_CREATED',
+  'BUNDLE_UPDATED',
+  'BUNDLE_DELETED',
+  'WEBHOOK_CREATED',
+  'WEBHOOK_UPDATED',
+  'WEBHOOK_DELETED',
+  'WEBHOOK_RETRIED',
+  'ROUTING_RULE_CREATED',
+  'ROUTING_RULE_UPDATED',
+  'ROUTING_RULE_DELETED',
+  'SSO_LOGIN',
+  'SSO_LOGIN_FAILED',
+  'OIDC_PROVIDER_CREATED',
+  'OIDC_PROVIDER_UPDATED',
+  'OIDC_PROVIDER_DELETED',
+  'OIDC_ACCOUNT_LINKED',
+  'OIDC_ACCOUNT_UNLINKED',
+  'SYSTEM_SETTING_UPDATED',
+  'SYSTEM_SETTING_DELETED',
+];
+
+const auditEntityTypeEnum = [
+  'url',
+  'user',
+  'api_key',
+  'bundle',
+  'webhook',
+  'variant',
+  'oidc_provider',
+  'oidc_account',
+  'system_setting',
+];
+
 export function registerAuditLogTools(apiClient: ApiClient) {
   return {
     get_audit_logs: {
@@ -23,12 +77,13 @@ export function registerAuditLogTools(apiClient: ApiClient) {
           },
           action: {
             type: 'string',
-            description:
-              'Filter by action type (e.g., URL_CREATED, USER_CREATED, optional)',
+            enum: auditActionEnum,
+            description: 'Filter by action type (optional)',
           },
           entityType: {
             type: 'string',
-            description: 'Filter by entity type (e.g., URL, USER, optional)',
+            enum: auditEntityTypeEnum,
+            description: 'Filter by entity type (optional)',
           },
           entityId: {
             type: 'string',

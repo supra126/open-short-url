@@ -848,6 +848,13 @@
     "logsAttempt": "Tentativa {attempt}",
     "logsError": "Erro:",
     "logsResponse": "Resposta:",
+    "retry": "Reenviar",
+    "retrySuccess": "Reenvio Bem-sucedido",
+    "retrySuccessDesc": "O reenvio do webhook foi bem-sucedido",
+    "retryFailed": "Reenvio Falhou",
+    "retryFailedDesc": "O reenvio do webhook falhou",
+    "retryError": "Reenvio Falhou",
+    "retryErrorDesc": "Não foi possível reenviar o webhook",
     "previousPage": "Anterior",
     "nextPage": "Próxima",
     "page": "Página {page} / {totalPages}"

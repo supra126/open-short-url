@@ -174,7 +174,7 @@ GET /api/urls/{id}
 ### 更新網址
 
 ```http
-PATCH /api/urls/{id}
+PUT /api/urls/{id}
 Content-Type: application/json
 
 {
@@ -258,7 +258,7 @@ GET /api/urls/{id}/variants
 ### 更新變體
 
 ```http
-PATCH /api/urls/{id}/variants/{variantId}
+PUT /api/urls/{id}/variants/{variantId}
 Content-Type: application/json
 
 {
@@ -412,7 +412,7 @@ GET /api/bundles/{id}
 ### 更新分組
 
 ```http
-PATCH /api/bundles/{id}
+PUT /api/bundles/{id}
 Content-Type: application/json
 
 {
@@ -531,7 +531,7 @@ GET /api/webhooks
 ### 更新 Webhook
 
 ```http
-PATCH /api/webhooks/{id}
+PUT /api/webhooks/{id}
 ```
 
 ### 刪除 Webhook
@@ -551,6 +551,14 @@ POST /api/webhooks/{id}/test
 ```http
 GET /api/webhooks/{id}/logs
 ```
+
+### 重試失敗的傳送
+
+```http
+POST /api/webhooks/{webhookId}/logs/{logId}/retry
+```
+
+使用原始 payload 和當前 webhook 設定重試失敗的傳送。速率限制為每分鐘 5 次。
 
 ---
 
@@ -588,7 +596,7 @@ GET /api/urls/{urlId}/routing-rules
 ### 更新路由規則
 
 ```http
-PATCH /api/urls/{urlId}/routing-rules/{ruleId}
+PUT /api/urls/{urlId}/routing-rules/{ruleId}
 ```
 
 ### 刪除路由規則
@@ -682,6 +690,85 @@ GET /api/audit-logs?page=1&limit=20&action=LOGIN&startDate=2025-01-01
 | `userId` | string | 篩選使用者 ID |
 | `startDate` | string | 開始日期 |
 | `endDate` | string | 結束日期 |
+
+---
+
+## SSO / OIDC（管理員）
+
+### 列出 OIDC 提供者
+
+```http
+GET /api/admin/oidc-providers
+```
+
+### 建立 OIDC 提供者
+
+```http
+POST /api/admin/oidc-providers
+Content-Type: application/json
+
+{
+  "name": "Google",
+  "slug": "google",
+  "discoveryUrl": "https://accounts.google.com/.well-known/openid-configuration",
+  "clientId": "your-client-id",
+  "clientSecret": "your-client-secret",
+  "scopes": "openid email profile",  // 選填，預設："openid email profile"
+  "isActive": true                    // 選填，預設：true
+}
+```
+
+### 取得 OIDC 提供者
+
+```http
+GET /api/admin/oidc-providers/{slug}
+```
+
+### 更新 OIDC 提供者
+
+```http
+PUT /api/admin/oidc-providers/{slug}
+Content-Type: application/json
+
+{
+  "name": "Google Workspace",
+  "discoveryUrl": "https://accounts.google.com/.well-known/openid-configuration",
+  "clientId": "new-client-id",
+  "clientSecret": "new-client-secret",
+  "scopes": "openid email profile",
+  "isActive": true
+}
+```
+
+### 刪除 OIDC 提供者
+
+```http
+DELETE /api/admin/oidc-providers/{slug}
+```
+
+### 列出可用的 SSO 提供者（公開）
+
+```http
+GET /api/auth/sso
+```
+
+回傳可用於登入的 SSO 提供者（公開端點，不需要認證）。
+
+### 發起 SSO 登入
+
+```http
+GET /api/auth/sso/{slug}/login?redirect=/dashboard
+```
+
+重新導向至 OIDC 提供者的授權 URL。選填的 `redirect` 查詢參數指定登入成功後的重新導向位置。
+
+### SSO 回呼
+
+```http
+GET /api/auth/sso/{slug}/callback
+```
+
+處理 OIDC 提供者認證後的回呼。此端點由身份提供者自動呼叫。
 
 ---
 

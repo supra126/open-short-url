@@ -20,6 +20,8 @@ Open Short URL is an open-source, white-label URL shortening platform that gives
 - [Bundles](https://supra126.github.io/open-short-url/en/features/bundles): Organize URLs into collections
 - [Webhooks](https://supra126.github.io/open-short-url/en/features/webhooks): Event notifications with HMAC-SHA256 signing
 - [API Keys](https://supra126.github.io/open-short-url/en/features/api-keys): Manage API access tokens
+- [SSO](https://supra126.github.io/open-short-url/en/features/sso): Single sign-on via OIDC (Google, Azure AD, Okta, Keycloak)
+- [Audit Logs](https://supra126.github.io/open-short-url/en/features/audit-logs): Track user actions and system events
 
 ## Deployment
 

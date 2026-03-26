@@ -39,6 +39,7 @@ Open Short URL is an open-source, white-label URL shortening platform designed f
 - [Webhooks](https://supra126.github.io/open-short-url/en/features/webhooks): Event notifications with HMAC-SHA256 signature verification
 - [API Keys](https://supra126.github.io/open-short-url/en/features/api-keys): Generate and manage API access tokens for integrations
 - [Audit Logs](https://supra126.github.io/open-short-url/en/features/audit-logs): Track all user actions and system events
+- [SSO](https://supra126.github.io/open-short-url/en/features/sso): Single sign-on via OIDC with support for Google, Azure AD, Okta, Keycloak
 
 ### API Reference
 
@@ -103,9 +104,9 @@ Manage URLs through conversational AI directly in the web interface.
 ## Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL 14+
-- Redis 6+ (optional, for caching)
+- Node.js 22+
+- PostgreSQL 16+
+- Redis 7+ (optional, for caching)
 
 ### Installation Steps
 

@@ -5,11 +5,22 @@
 import type { ApiClient } from '../utils/api-client.js';
 import { handleTool } from '../utils/tool-handler.js';
 
+const webhookEventEnum = [
+  'url.created',
+  'url.updated',
+  'url.deleted',
+  'url.clicked',
+  'routing.rule_created',
+  'routing.rule_updated',
+  'routing.rule_deleted',
+  'routing.rule_matched',
+];
+
 export function registerWebhookTools(apiClient: ApiClient) {
   return {
     create_webhook: {
       description:
-        'Create a webhook to receive event notifications (e.g., URL created, clicked, deleted).',
+        'Create a webhook to receive event notifications when URLs are created, clicked, deleted, or routing rules change.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -28,8 +39,9 @@ export function registerWebhookTools(apiClient: ApiClient) {
           },
           events: {
             type: 'array',
-            items: { type: 'string' },
-            description: 'Array of event types to subscribe to (min 1)',
+            items: { type: 'string', enum: webhookEventEnum },
+            description:
+              'Array of event types to subscribe to (min 1). Available events: url.created, url.updated, url.deleted, url.clicked, routing.rule_created, routing.rule_updated, routing.rule_deleted, routing.rule_matched',
           },
           headers: {
             type: 'object',
@@ -47,7 +59,8 @@ export function registerWebhookTools(apiClient: ApiClient) {
     },
 
     list_webhooks: {
-      description: 'List all webhooks with pagination.',
+      description:
+        'List all webhooks with pagination. Sorted by createdAt (descending) by default.',
       inputSchema: {
         type: 'object',
         properties: {
@@ -59,7 +72,11 @@ export function registerWebhookTools(apiClient: ApiClient) {
             type: 'number',
             description: 'Items per page (optional, defaults to 10)',
           },
-          sortBy: { type: 'string', description: 'Sort field (optional)' },
+          sortBy: {
+            type: 'string',
+            enum: ['createdAt', 'name', 'url'],
+            description: 'Sort field (optional, defaults to createdAt)',
+          },
           sortOrder: {
             type: 'string',
             enum: ['asc', 'desc'],
@@ -76,11 +93,11 @@ export function registerWebhookTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Webhook ID' },
+          webhookId: { type: 'string', description: 'Webhook ID' },
         },
-        required: ['id'],
+        required: ['webhookId'],
       },
-      handler: handleTool((args) => apiClient.getWebhook(args.id)),
+      handler: handleTool((args) => apiClient.getWebhook(args.webhookId)),
     },
 
     update_webhook: {
@@ -89,14 +106,15 @@ export function registerWebhookTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Webhook ID' },
+          webhookId: { type: 'string', description: 'Webhook ID' },
           name: { type: 'string', description: 'New name (optional)' },
           url: { type: 'string', description: 'New endpoint URL (optional)' },
           secret: { type: 'string', description: 'New secret (optional)' },
           events: {
             type: 'array',
-            items: { type: 'string' },
-            description: 'New event types (optional)',
+            items: { type: 'string', enum: webhookEventEnum },
+            description:
+              'New event types (optional). Available: url.created, url.updated, url.deleted, url.clicked, routing.rule_created, routing.rule_updated, routing.rule_deleted, routing.rule_matched',
           },
           headers: {
             type: 'object',
@@ -107,11 +125,11 @@ export function registerWebhookTools(apiClient: ApiClient) {
             description: 'Enable/disable (optional)',
           },
         },
-        required: ['id'],
+        required: ['webhookId'],
       },
       handler: handleTool((args) => {
-        const { id, ...data } = args;
-        return apiClient.updateWebhook(id, data);
+        const { webhookId, ...data } = args;
+        return apiClient.updateWebhook(webhookId, data);
       }),
     },
 
@@ -121,13 +139,13 @@ export function registerWebhookTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Webhook ID' },
+          webhookId: { type: 'string', description: 'Webhook ID' },
         },
-        required: ['id'],
+        required: ['webhookId'],
       },
       handler: handleTool(
-        (args) => apiClient.deleteWebhook(args.id),
-        (args) => `Webhook ${args.id} has been successfully deleted`
+        (args) => apiClient.deleteWebhook(args.webhookId),
+        (args) => `Webhook ${args.webhookId} has been successfully deleted`
       ),
     },
 
@@ -137,7 +155,7 @@ export function registerWebhookTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Webhook ID' },
+          webhookId: { type: 'string', description: 'Webhook ID' },
           page: {
             type: 'number',
             description: 'Page number (optional, defaults to 1)',
@@ -147,11 +165,11 @@ export function registerWebhookTools(apiClient: ApiClient) {
             description: 'Items per page (optional, defaults to 10)',
           },
         },
-        required: ['id'],
+        required: ['webhookId'],
       },
       handler: handleTool((args) => {
-        const { id, ...params } = args;
-        return apiClient.getWebhookLogs(id, params);
+        const { webhookId, ...params } = args;
+        return apiClient.getWebhookLogs(webhookId, params);
       }),
     },
 
@@ -161,11 +179,30 @@ export function registerWebhookTools(apiClient: ApiClient) {
       inputSchema: {
         type: 'object',
         properties: {
-          id: { type: 'string', description: 'Webhook ID' },
+          webhookId: { type: 'string', description: 'Webhook ID' },
         },
-        required: ['id'],
+        required: ['webhookId'],
       },
-      handler: handleTool((args) => apiClient.testWebhook(args.id)),
+      handler: handleTool((args) => apiClient.testWebhook(args.webhookId)),
+    },
+
+    retry_webhook_delivery: {
+      description:
+        'Retry a failed webhook delivery using the original event and payload. Creates a new log entry with the retry result. Only failed deliveries can be retried.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          webhookId: { type: 'string', description: 'Webhook ID' },
+          logId: {
+            type: 'string',
+            description: 'Webhook log ID of the failed delivery',
+          },
+        },
+        required: ['webhookId', 'logId'],
+      },
+      handler: handleTool((args) =>
+        apiClient.retryWebhookDelivery(args.webhookId, args.logId)
+      ),
     },
   };
 }

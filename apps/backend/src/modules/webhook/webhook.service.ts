@@ -9,6 +9,7 @@ import { Prisma, Webhook, WebhookLog } from '@prisma/client';
 import { PrismaService } from '@/common/database/prisma.service';
 import { AuditLogService } from '@/modules/audit-log/audit-log.service';
 import { RequestMeta } from '@/common/decorators/request-meta.decorator';
+import { validateDNS } from '@/common/validators/dns-validator';
 import {
   CreateWebhookDto,
   UpdateWebhookDto,
@@ -29,7 +30,7 @@ export class WebhookService implements OnModuleInit {
 
   constructor(
     private prisma: PrismaService,
-    private auditLogService: AuditLogService,
+    private auditLogService: AuditLogService
   ) {}
 
   /**
@@ -42,8 +43,8 @@ export class WebhookService implements OnModuleInit {
     if (!key) {
       this.logger.error(
         'WEBHOOK_SECRET_KEY environment variable is not set. ' +
-        'Webhook secret encryption will fail. ' +
-        'Generate a secure key using: openssl rand -hex 32',
+          'Webhook secret encryption will fail. ' +
+          'Generate a secure key using: openssl rand -hex 32'
       );
       // Don't throw here to allow app to start, but encryption will fail
       return;
@@ -52,7 +53,7 @@ export class WebhookService implements OnModuleInit {
     if (key.length < 32) {
       this.logger.warn(
         `WEBHOOK_SECRET_KEY is only ${key.length} characters. ` +
-        'Recommended minimum is 32 characters for AES-256 encryption.',
+          'Recommended minimum is 32 characters for AES-256 encryption.'
       );
     }
 
@@ -66,7 +67,7 @@ export class WebhookService implements OnModuleInit {
   private getEncryptionKey(): Buffer {
     if (!this.encryptionKey) {
       throw new BadRequestException(
-        'Webhook encryption is not configured. Please set WEBHOOK_SECRET_KEY environment variable.',
+        'Webhook encryption is not configured. Please set WEBHOOK_SECRET_KEY environment variable.'
       );
     }
     return this.encryptionKey;
@@ -78,7 +79,7 @@ export class WebhookService implements OnModuleInit {
   async create(
     userId: string,
     createWebhookDto: CreateWebhookDto,
-    meta?: RequestMeta,
+    meta?: RequestMeta
   ): Promise<WebhookResponseDto> {
     // Encrypt secret before storing
     const encryptedSecret = this.encryptSecret(createWebhookDto.secret);
@@ -101,7 +102,11 @@ export class WebhookService implements OnModuleInit {
       action: 'WEBHOOK_CREATED',
       entityType: 'webhook',
       entityId: webhook.id,
-      newValue: { name: webhook.name, url: webhook.url, events: webhook.events },
+      newValue: {
+        name: webhook.name,
+        url: webhook.url,
+        events: webhook.events,
+      },
       ipAddress: meta?.ipAddress,
       userAgent: meta?.userAgent,
     });
@@ -115,7 +120,7 @@ export class WebhookService implements OnModuleInit {
   async findAll(
     userId: string,
     query: WebhookQueryDto,
-    userRole?: 'ADMIN' | 'USER',
+    userRole?: 'ADMIN' | 'USER'
   ): Promise<WebhookListResponseDto> {
     const { page = 1, pageSize = 10 } = query;
     const skip = (page - 1) * pageSize;
@@ -139,7 +144,7 @@ export class WebhookService implements OnModuleInit {
       webhooks.map((w) => this.mapToResponse(w)),
       total,
       page,
-      pageSize,
+      pageSize
     );
   }
 
@@ -149,7 +154,7 @@ export class WebhookService implements OnModuleInit {
   async findOne(
     id: string,
     userId: string,
-    userRole?: 'ADMIN' | 'USER',
+    userRole?: 'ADMIN' | 'USER'
   ): Promise<WebhookResponseDto> {
     const webhook = await this.prisma.webhook.findFirst({
       where: {
@@ -173,7 +178,7 @@ export class WebhookService implements OnModuleInit {
     userId: string,
     updateWebhookDto: UpdateWebhookDto,
     userRole?: 'ADMIN' | 'USER',
-    meta?: RequestMeta,
+    meta?: RequestMeta
   ): Promise<WebhookResponseDto> {
     // Check if webhook exists
     const existing = await this.prisma.webhook.findFirst({
@@ -208,7 +213,11 @@ export class WebhookService implements OnModuleInit {
       action: 'WEBHOOK_UPDATED',
       entityType: 'webhook',
       entityId: id,
-      oldValue: { name: existing.name, url: existing.url, isActive: existing.isActive },
+      oldValue: {
+        name: existing.name,
+        url: existing.url,
+        isActive: existing.isActive,
+      },
       newValue: auditNewValue,
       ipAddress: meta?.ipAddress,
       userAgent: meta?.userAgent,
@@ -224,7 +233,7 @@ export class WebhookService implements OnModuleInit {
     id: string,
     userId: string,
     userRole?: 'ADMIN' | 'USER',
-    meta?: RequestMeta,
+    meta?: RequestMeta
   ): Promise<void> {
     const existing = await this.prisma.webhook.findFirst({
       where: {
@@ -260,7 +269,7 @@ export class WebhookService implements OnModuleInit {
     id: string,
     userId: string,
     query: WebhookLogsQueryDto,
-    userRole?: 'ADMIN' | 'USER',
+    userRole?: 'ADMIN' | 'USER'
   ): Promise<WebhookLogsListResponseDto> {
     const { page = 1, pageSize = 10 } = query;
 
@@ -292,7 +301,7 @@ export class WebhookService implements OnModuleInit {
       logs.map((log) => this.mapLogToResponse(log)),
       total,
       page,
-      pageSize,
+      pageSize
     );
   }
 
@@ -302,7 +311,7 @@ export class WebhookService implements OnModuleInit {
   async test(
     id: string,
     userId: string,
-    userRole?: 'ADMIN' | 'USER',
+    userRole?: 'ADMIN' | 'USER'
   ): Promise<WebhookTestResponseDto> {
     const webhook = await this.prisma.webhook.findFirst({
       where: {
@@ -366,6 +375,145 @@ export class WebhookService implements OnModuleInit {
   }
 
   /**
+   * Retry a failed webhook delivery
+   */
+  async retryLog(
+    webhookId: string,
+    logId: string,
+    userId: string,
+    userRole?: 'ADMIN' | 'USER',
+    meta?: RequestMeta
+  ): Promise<WebhookLogResponseDto> {
+    // 1. Check webhook exists and user has access
+    const webhook = await this.prisma.webhook.findFirst({
+      where: {
+        id: webhookId,
+        ...(userRole !== 'ADMIN' && { userId }),
+      },
+    });
+
+    if (!webhook) {
+      throw new NotFoundException('Webhook not found');
+    }
+
+    // 2. Check log exists and belongs to this webhook
+    const log = await this.prisma.webhookLog.findFirst({
+      where: { id: logId, webhookId },
+    });
+
+    if (!log) {
+      throw new NotFoundException('Webhook log not found');
+    }
+
+    // 3. Only allow retry on failed deliveries
+    if (log.isSuccess) {
+      throw new BadRequestException('Cannot retry a successful delivery');
+    }
+
+    // 3b. Don't retry if webhook is disabled
+    if (!webhook.isActive) {
+      throw new BadRequestException(
+        'Cannot retry delivery for a disabled webhook'
+      );
+    }
+
+    // 4. DNS rebinding / SSRF protection (same check as webhook-delivery.service)
+    const parsedUrl = new URL(webhook.url);
+    const dnsValidation = await validateDNS(parsedUrl.hostname);
+    if (!dnsValidation.isValid) {
+      this.logger.warn(
+        `Webhook retry blocked (SSRF): ${webhook.name} (${webhookId}) - ${dnsValidation.reason}`
+      );
+      throw new BadRequestException(
+        dnsValidation.reason || 'DNS validation failed: potential SSRF detected'
+      );
+    }
+
+    // 5. Re-deliver with current webhook config
+    const payload = log.payload as Record<string, unknown>;
+    const retryAttempt = log.attempt + 1;
+    const startTime = Date.now();
+    let statusCode: number | undefined;
+    let response: string | undefined;
+    let error: string | undefined;
+    let isSuccess = false;
+
+    try {
+      const decryptedSecret = this.decryptSecret(webhook.secret);
+      const signature = this.generateSignature(payload, decryptedSecret);
+
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'User-Agent': 'OpenShortURL-Webhook/1.0',
+        'X-Webhook-Signature': signature,
+        'X-Webhook-Event': log.event,
+        'X-Webhook-Delivery-Id': `${webhook.id}-${Date.now()}`,
+        'X-Webhook-Attempt': retryAttempt.toString(),
+        ...((webhook.headers as Record<string, string>) || {}),
+      };
+
+      const fetchResponse = await fetch(webhook.url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      statusCode = fetchResponse.status;
+      response = (await fetchResponse.text()).substring(0, 1000);
+      isSuccess = fetchResponse.ok;
+    } catch (err: unknown) {
+      error = err instanceof Error ? err.message : 'Unknown error';
+      this.logger.warn(
+        `Webhook retry failed: ${webhook.name} (${webhookId}) - ${error}`
+      );
+    }
+
+    const duration = Date.now() - startTime;
+
+    // 6. Create log + update stats atomically
+    const [newLog] = await this.prisma.$transaction([
+      this.prisma.webhookLog.create({
+        data: {
+          webhookId,
+          event: log.event,
+          payload: payload as Prisma.InputJsonValue,
+          statusCode,
+          response,
+          error,
+          duration,
+          attempt: retryAttempt,
+          isSuccess,
+        },
+      }),
+      this.prisma.webhook.update({
+        where: { id: webhookId },
+        data: {
+          totalSent: { increment: 1 },
+          ...(isSuccess
+            ? { totalSuccess: { increment: 1 } }
+            : { totalFailed: { increment: 1 } }),
+          lastSentAt: new Date(),
+          lastError: isSuccess ? null : (error ?? null),
+        },
+      }),
+    ]);
+
+    // Audit log
+    await this.auditLogService.create({
+      userId,
+      action: 'WEBHOOK_RETRIED',
+      entityType: 'webhook',
+      entityId: webhookId,
+      newValue: { logId, event: log.event, attempt: retryAttempt, isSuccess },
+      ipAddress: meta?.ipAddress,
+      userAgent: meta?.userAgent,
+    });
+
+    return this.mapLogToResponse(newLog);
+  }
+
+  /**
    * Encrypt secret for storage using AES-256-GCM
    * @throws BadRequestException if encryption key is not configured
    */
@@ -397,7 +545,7 @@ export class WebhookService implements OnModuleInit {
       const parts = encryptedSecret.split(':');
       if (parts.length !== 3) {
         throw new Error(
-          `Invalid encrypted secret format: expected 3 parts (iv:authTag:encrypted), got ${parts.length}`,
+          `Invalid encrypted secret format: expected 3 parts (iv:authTag:encrypted), got ${parts.length}`
         );
       }
 
@@ -409,7 +557,9 @@ export class WebhookService implements OnModuleInit {
 
       // Validate hex format
       if (!/^[0-9a-fA-F]+$/.test(ivHex) || !/^[0-9a-fA-F]+$/.test(authTagHex)) {
-        throw new Error('Invalid encrypted secret: IV or authTag is not valid hex');
+        throw new Error(
+          'Invalid encrypted secret: IV or authTag is not valid hex'
+        );
       }
 
       const algorithm = 'aes-256-gcm';
@@ -420,10 +570,14 @@ export class WebhookService implements OnModuleInit {
 
       // Validate IV and authTag lengths
       if (iv.length !== 16) {
-        throw new Error(`Invalid IV length: expected 16 bytes, got ${iv.length}`);
+        throw new Error(
+          `Invalid IV length: expected 16 bytes, got ${iv.length}`
+        );
       }
       if (authTag.length !== 16) {
-        throw new Error(`Invalid authTag length: expected 16 bytes, got ${authTag.length}`);
+        throw new Error(
+          `Invalid authTag length: expected 16 bytes, got ${authTag.length}`
+        );
       }
 
       const decipher = crypto.createDecipheriv(algorithm, key, iv);
@@ -437,11 +591,11 @@ export class WebhookService implements OnModuleInit {
       // Log the error for debugging but don't expose details to client
       this.logger.error(
         `Failed to decrypt webhook secret: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        error instanceof Error ? error.stack : undefined,
+        error instanceof Error ? error.stack : undefined
       );
 
       throw new BadRequestException(
-        'Failed to decrypt webhook secret. The secret may be corrupted or the encryption key may have changed.',
+        'Failed to decrypt webhook secret. The secret may be corrupted or the encryption key may have changed.'
       );
     }
   }

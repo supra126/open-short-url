@@ -848,6 +848,13 @@
     "logsAttempt": "第 {attempt} 次嘗試",
     "logsError": "錯誤：",
     "logsResponse": "響應：",
+    "retry": "重試",
+    "retrySuccess": "重試成功",
+    "retrySuccessDesc": "Webhook 重新發送成功",
+    "retryFailed": "重試失敗",
+    "retryFailedDesc": "Webhook 重新發送失敗",
+    "retryError": "重試失敗",
+    "retryErrorDesc": "無法重新發送 Webhook",
     "previousPage": "上一頁",
     "nextPage": "下一頁",
     "page": "第 {page} / {totalPages} 頁"

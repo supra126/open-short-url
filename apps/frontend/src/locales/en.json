@@ -848,6 +848,13 @@
     "logsAttempt": "Attempt {attempt}",
     "logsError": "Error:",
     "logsResponse": "Response:",
+    "retry": "Retry",
+    "retrySuccess": "Retry Successful",
+    "retrySuccessDesc": "Webhook delivery retry was successful",
+    "retryFailed": "Retry Failed",
+    "retryFailedDesc": "Webhook delivery retry failed",
+    "retryError": "Retry Failed",
+    "retryErrorDesc": "Unable to retry webhook delivery",
     "previousPage": "Previous",
     "nextPage": "Next",
     "page": "Page {page} / {totalPages}"

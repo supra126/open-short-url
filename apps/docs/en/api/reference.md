@@ -174,7 +174,7 @@ GET /api/urls/{id}
 ### Update URL
 
 ```http
-PATCH /api/urls/{id}
+PUT /api/urls/{id}
 Content-Type: application/json
 
 {
@@ -258,7 +258,7 @@ GET /api/urls/{id}/variants
 ### Update Variant
 
 ```http
-PATCH /api/urls/{id}/variants/{variantId}
+PUT /api/urls/{id}/variants/{variantId}
 Content-Type: application/json
 
 {
@@ -412,7 +412,7 @@ GET /api/bundles/{id}
 ### Update Bundle
 
 ```http
-PATCH /api/bundles/{id}
+PUT /api/bundles/{id}
 Content-Type: application/json
 
 {
@@ -531,7 +531,7 @@ GET /api/webhooks
 ### Update Webhook
 
 ```http
-PATCH /api/webhooks/{id}
+PUT /api/webhooks/{id}
 ```
 
 ### Delete Webhook
@@ -551,6 +551,14 @@ POST /api/webhooks/{id}/test
 ```http
 GET /api/webhooks/{id}/logs
 ```
+
+### Retry Failed Delivery
+
+```http
+POST /api/webhooks/{webhookId}/logs/{logId}/retry
+```
+
+Retries a failed webhook delivery using the original payload and current webhook configuration. Rate limited to 5 requests/minute.
 
 ---
 
@@ -588,7 +596,7 @@ GET /api/urls/{urlId}/routing-rules
 ### Update Routing Rule
 
 ```http
-PATCH /api/urls/{urlId}/routing-rules/{ruleId}
+PUT /api/urls/{urlId}/routing-rules/{ruleId}
 ```
 
 ### Delete Routing Rule
@@ -682,6 +690,85 @@ GET /api/audit-logs?page=1&limit=20&action=LOGIN&startDate=2025-01-01
 | `userId` | string | Filter by user ID |
 | `startDate` | string | Start date |
 | `endDate` | string | End date |
+
+---
+
+## SSO / OIDC (Admin)
+
+### List OIDC Providers
+
+```http
+GET /api/admin/oidc-providers
+```
+
+### Create OIDC Provider
+
+```http
+POST /api/admin/oidc-providers
+Content-Type: application/json
+
+{
+  "name": "Google",
+  "slug": "google",
+  "discoveryUrl": "https://accounts.google.com/.well-known/openid-configuration",
+  "clientId": "your-client-id",
+  "clientSecret": "your-client-secret",
+  "scopes": "openid email profile",  // Optional, default: "openid email profile"
+  "isActive": true                    // Optional, default: true
+}
+```
+
+### Get OIDC Provider
+
+```http
+GET /api/admin/oidc-providers/{slug}
+```
+
+### Update OIDC Provider
+
+```http
+PUT /api/admin/oidc-providers/{slug}
+Content-Type: application/json
+
+{
+  "name": "Google Workspace",
+  "discoveryUrl": "https://accounts.google.com/.well-known/openid-configuration",
+  "clientId": "new-client-id",
+  "clientSecret": "new-client-secret",
+  "scopes": "openid email profile",
+  "isActive": true
+}
+```
+
+### Delete OIDC Provider
+
+```http
+DELETE /api/admin/oidc-providers/{slug}
+```
+
+### List Active SSO Providers (Public)
+
+```http
+GET /api/auth/sso
+```
+
+Returns active SSO providers available for login (public endpoint, no authentication required).
+
+### Initiate SSO Login
+
+```http
+GET /api/auth/sso/{slug}/login?redirect=/dashboard
+```
+
+Redirects to the OIDC provider's authorization URL. The optional `redirect` query parameter specifies where to redirect after successful login.
+
+### SSO Callback
+
+```http
+GET /api/auth/sso/{slug}/callback
+```
+
+Handles the OIDC provider callback after authentication. This endpoint is called automatically by the identity provider.
 
 ---
 

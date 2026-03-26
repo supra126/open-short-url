@@ -300,13 +300,45 @@ Each webhook tracks:
 | `lastSentAt`   | Last delivery timestamp    |
 | `lastError`    | Last error message         |
 
-### Retry Behavior
+### Automatic Retry
 
 Failed deliveries are retried automatically:
 
 - Exponential backoff
 - Maximum 3 retry attempts
 - Logged for debugging
+
+### Manual Retry
+
+You can manually retry a failed delivery from the webhook logs:
+
+```
+POST /api/webhooks/{webhookId}/logs/{logId}/retry
+```
+
+**Behavior:**
+
+- Resends the original payload using the current webhook configuration
+- Only failed deliveries can be retried (retrying a successful delivery returns `400`)
+- Creates a new log entry with an incremented `attempt` number
+- Updates webhook delivery statistics (`totalSent`, `totalSuccess`/`totalFailed`)
+- DNS/SSRF validation is performed before each retry
+- Rate limited to **5 requests per minute**
+
+**Response:** Returns the new `WebhookLog` entry for the retry attempt.
+
+**Error Codes:**
+
+| Status | Description                                     |
+| ------ | ----------------------------------------------- |
+| 200    | Retry completed (check `isSuccess` in response) |
+| 400    | Cannot retry a successful delivery              |
+| 404    | Webhook or log not found                        |
+| 429    | Rate limit exceeded                             |
+
+::: tip
+In the UI, failed deliveries show a **Retry** button in the webhook logs dialog.
+:::
 
 ### Webhook Logs
 
@@ -458,6 +490,7 @@ Feed data to your own analytics:
 | Operation          | Limit             |
 | ------------------ | ----------------- |
 | Webhook management | 5 requests/minute |
+| Manual retry       | 5 requests/minute |
 | Webhook deliveries | No limit (async)  |
 
 ## Webhook Timeout

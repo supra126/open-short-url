@@ -300,13 +300,45 @@ def verify_webhook_signature(payload, signature, secret):
 | `lastSentAt`   | 最後傳送時間 |
 | `lastError`    | 最後錯誤訊息 |
 
-### 重試行為
+### 自動重試
 
 失敗的傳送會自動重試：
 
 - 指數退避
 - 最多重試 3 次
 - 記錄以供除錯
+
+### 手動重試
+
+您可以從 webhook 日誌中手動重試失敗的傳送：
+
+```
+POST /api/webhooks/{webhookId}/logs/{logId}/retry
+```
+
+**行為：**
+
+- 使用當前 webhook 設定重新發送原始 payload
+- 僅能重試失敗的傳送（重試成功的傳送會返回 `400`）
+- 建立新的日誌記錄，`attempt` 編號遞增
+- 更新 webhook 傳送統計（`totalSent`、`totalSuccess`/`totalFailed`）
+- 每次重試前會進行 DNS/SSRF 驗證
+- 速率限制為**每分鐘 5 次**
+
+**回應：** 返回重試的新 `WebhookLog` 記錄。
+
+**錯誤碼：**
+
+| 狀態碼 | 說明                                 |
+| ------ | ------------------------------------ |
+| 200    | 重試完成（檢查回應中的 `isSuccess`） |
+| 400    | 無法重試成功的傳送                   |
+| 404    | 找不到 Webhook 或日誌                |
+| 429    | 超過速率限制                         |
+
+::: tip
+在 UI 中，失敗的傳送會在 webhook 日誌對話框中顯示**重試**按鈕。
+:::
 
 ### Webhook 日誌
 
@@ -458,6 +490,7 @@ Webhook 可能會傳送多次：
 | 操作         | 限制             |
 | ------------ | ---------------- |
 | Webhook 管理 | 5 次/分鐘        |
+| 手動重試     | 5 次/分鐘        |
 | Webhook 傳送 | 無限制（非同步） |
 
 ## Webhook 逾時

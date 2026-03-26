@@ -47,6 +47,7 @@ import type {
   WebhookListResponse,
   WebhookLogsListResponse,
   WebhookTestResponse,
+  WebhookLogResponse,
   CreateUserRequest,
   UpdateUserRoleRequest,
   UpdateUserStatusRequest,
@@ -613,6 +614,16 @@ export class ApiClient {
     return this.request<WebhookTestResponse>(`/api/webhooks/${id}/test`, {
       method: 'POST',
     });
+  }
+
+  async retryWebhookDelivery(
+    webhookId: string,
+    logId: string
+  ): Promise<WebhookLogResponse> {
+    return this.request<WebhookLogResponse>(
+      `/api/webhooks/${webhookId}/logs/${logId}/retry`,
+      { method: 'POST' }
+    );
   }
 
   // ==================== User Management (Admin) ====================
